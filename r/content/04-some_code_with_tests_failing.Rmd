@@ -1,0 +1,17 @@
+# Some Code With Tests Failing
+
+This chapter contains tests that fail, oh no!
+
+```{r, code_chunk2}
+success <- 499 + 1
+success
+```
+
+```{r, test_chunk2, opts.label = "test"}
+test_that("code_chunk2 runs correctly", {
+  expect_equal(success, 200)
+})
+  
+```
+
+

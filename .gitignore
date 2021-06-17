@@ -1,0 +1,4 @@
+r/content/_book/**
+r/*.Rproj
+*.Rproj
+.Rproj.user

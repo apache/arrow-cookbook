@@ -1,0 +1,20 @@
+---
+title: "Arrow Cookbook"
+params:
+  inline_test_output: FALSE
+---
+
+```{r setup, include = FALSE}
+testrmd::init()
+library(arrow)
+library(testthat)
+# Include test 
+knitr::opts_template$set(test = list(
+  test = TRUE,
+  eval = params$inline_test_output
+))
+```
+
+# Preface
+
+This cookbook aims to provide a number of recipes showing how to perform common tasks using `arrow`.

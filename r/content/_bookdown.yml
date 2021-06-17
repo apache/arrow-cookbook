@@ -1,0 +1,7 @@
+delete_merged_file: TRUE
+# need this option to run all chunks in 1 session
+new_session: FALSE
+clean: ["_book/*"]
+output_dir: _book
+edit: https://github.com/thisisnic/arrow-r-cookbook/edit/master/%s
+rmd_files: ["index.Rmd", "01-reading_and_writing_data.Rmd"]

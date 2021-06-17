@@ -1,0 +1,39 @@
+# Reading and Writing Data
+
+Recipes related to reading and writing data from disk using Apache Arrow.
+
+## Write a Parquet file
+
+Given an array with all numbers from 0 to 100
+
+```{r, write_parquet}
+
+```
+```{r, test_write_parquet, opts.label = "test"}
+
+```
+ 
+To write it to a Parquet file, as Parquet is a columnar format,
+we must create a :class:`pyarrow.Table` out of it,
+so that we get a table of a single column which can then be
+written to a Parquet file.
+ 
+Once we have a table, it can be written to a Parquet File 
+using the functions provided by the ``pyarrow.parquet`` module
+
+
+## Reading a Parquet file
+
+Given a Parquet file, it can be read back to a :class:`pyarrow.Table`
+by using :func:`pyarrow.parquet.read_table` function
+
+```{r, read_parquet}
+
+```
+```{r, test_read_parquet, opts.label = "test"}
+
+```
+
+
+The resulting table will contain the same columns that existed in
+the parquet file as :class:`ChunkedArray`

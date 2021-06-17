@@ -1,0 +1,17 @@
+# Some Code With Tests
+
+This chapter is more advanced, and contains code with tests!  But, do they pass?
+
+```{r, code_chunk}
+
+success <- 200 + 0
+success
+```
+
+```{r, test_chunk, opts.label = "test"}
+test_that("success == 200", {
+  expect_equal(success, 200)
+})
+```
+
+

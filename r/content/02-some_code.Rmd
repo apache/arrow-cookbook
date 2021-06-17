@@ -1,0 +1,9 @@
+# Some Code
+
+This section contains actual, real code! How exciting!
+
+```{r}
+not_found <- 400 + 4
+not_found
+```
+
