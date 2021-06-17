@@ -47,6 +47,6 @@ r: rdeps
 
 rtest: rdeps
 	@echo ">>> Testing R Cookbook <<<\n"
-	cd ./r && Rscript ./test.R
+	cd ./r && Rscript ./scripts/test.R
 
 
