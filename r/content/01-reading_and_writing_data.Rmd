@@ -4,36 +4,63 @@ Recipes related to reading and writing data from disk using Apache Arrow.
 
 ## Write a Parquet file
 
-Given an array with all numbers from 0 to 100
-
+You can write Parquet files to disk using `arrow::write_parquet()`.
 ```{r, write_parquet}
-
+write_parquet(mtcars, "mtcars.parquet")
 ```
 ```{r, test_write_parquet, opts.label = "test"}
-
+testthat::test_that("write_parquet chunk works as expected", {
+  expect_true(file.exists("mtcars.parquet"))
+})
 ```
- 
-To write it to a Parquet file, as Parquet is a columnar format,
-we must create a :class:`pyarrow.Table` out of it,
-so that we get a table of a single column which can then be
-written to a Parquet file.
- 
-Once we have a table, it can be written to a Parquet File 
-using the functions provided by the ``pyarrow.parquet`` module
-
 
 ## Reading a Parquet file
 
-Given a Parquet file, it can be read back to a :class:`pyarrow.Table`
-by using :func:`pyarrow.parquet.read_table` function
+Given a Parquet file, it can be read back to an Arrow Table by using `arrow::read_parquet()`.
 
 ```{r, read_parquet}
-
+mtcars_table <- read_parquet("mtcars.parquet")
+head(mtcars_table)
 ```
 ```{r, test_read_parquet, opts.label = "test"}
-
+test_that("read_parquet works as expected", {
+  expect_equivalent(mtcars_table, mtcars)
+})
 ```
 
+If the argument `as_data_frame` was set to `TRUE` (the default), the file was read in as a `data.frame` object.
 
-The resulting table will contain the same columns that existed in
-the parquet file as :class:`ChunkedArray`
+```{r, read_parquet_2}
+class(mtcars_table)
+```
+```{r, test_read_parquet_2, opts.label = "test"}
+test_that("read_parquet_2 works as expected", {
+  expect_s3_class(mtcars_table, "data.frame")
+})
+```
+
+If you set `as_data_frame` to `FALSE`, the file will be read in as an Arrow Table.
+
+```{r, read_parquet_table}
+mtcars_arrow_table <- read_parquet("mtcars.parquet", as_data_frame = FALSE)
+head(mtcars_arrow_table)
+```
+```{r, test_read_parquet_table,  opts.label = "test"}
+test_that("read_parquet_table chunk gives expected result", {
+  expect_equivalent(mtcars_arrow_table, Table$create(mtcars))
+})
+```
+```{r, read_parquet_table_class}
+class(mtcars_arrow_table)
+```
+```{r, test_read_parquet_table_class, opts.label = "test"}
+test_that("read_parquet_table_class works as expected", {
+  expect_s3_class(mtcars_arrow_table, "Table")
+})
+```
+
+```{r, include = FALSE}
+# cleanup
+unlink("mtcars.parquet")
+```
+

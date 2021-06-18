@@ -36,7 +36,7 @@ pytest: pydeps
 rdeps:
 	@echo ">>> Installing R Dependencies <<<\n"
 	R -s -e 'if (!require("pacman")) install.packages("pacman")'
-	R -s -e 'pacman::p_load("testthat", "bookdown", "xfun", "knitr", "purrr", "remotes")'
+	R -s -e 'pacman::p_load("testthat", "bookdown", "xfun", "knitr", "purrr", "remotes", "dplyr")'
 	R -s -e 'pacman::p_load_gh("rmflight/testrmd", "apache/arrow/r")'
 
 r: rdeps
