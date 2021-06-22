@@ -26,7 +26,7 @@ extract_r_code <- function(file, dir){
   bn <- basename(file)
   fn <- strsplit(bn, ".Rmd")
   # prefix index file with "setup" so is run first as it may contain dependencies
-  if (bn == "index") {
+  if (startsWith(bn, "index")) {
     prefix <- "setup"
   } else {
     prefix <- "test"
