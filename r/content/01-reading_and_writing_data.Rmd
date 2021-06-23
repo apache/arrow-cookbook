@@ -2,19 +2,80 @@
 
 Recipes related to reading and writing data from disk using Apache Arrow.
 
-## Write a Parquet file
+## Arrow IPC Stream Format
+
+### Write Arrow IPC file
+
+The Arrow IPC file format is identical to the Feather version 2 format.  If you call `write_arrow()`, you will get a warning telling you to use `write_feather()` instead.
+
+```{r, write_arrow}
+write_arrow(iris, "iris.arrow")
+```
+```{r, test_write_arrow, opts.label = "test"}
+test_that("write_arrow chunk works as expected", {
+  expect_true(file.exists("iris.arrow"))
+  expect_warning(
+    write_arrow(iris, "iris.arrow"),
+    regexp = "Use 'write_ipc_stream' or 'write_feather' instead."
+  )
+})
+```
+
+### Write Arrow IPC stream
+
+```{r, write_ipc_stream}
+write_ipc_stream(iris, "iris.arrows")
+```
+```{r, test_write_ipc_stream, opts.label = "test"}
+test_that("write_ipc_stream chunk works as expected", {
+  expect_true(file.exists("iris.arrows"))
+})
+```
+
+## Feather 
+
+### Write a Feather (version 2) file
+
+You can write Feather files to disk using `write_feather()`.  If you are using the default parameters, this is identical to calling `write_arrow()`.
+
+```{r, write_feather}
+write_feather(mtcars, "mtcars.feather")
+```
+```{r, test_write_feather, opts.label = "test"}
+test_that("write_feather chunk works as expected", {
+  expect_true(file.exists("mtcars.feather"))
+})
+```
+
+### Write a Feather (version 1) file
+
+You can write data in the original Feather format by setting the `version` parameter to `1`.
+
+```{r, write_feather1}
+write_feather(mtcars, "mtcars_f1.feather", version = 1)
+```
+```{r, test_write_feather1, opts.label = "test"}
+test_that("write_feather1 chunk works as expected", {
+  expect_true(file.exists("mtcars_f1.feather"))
+})
+
+```
+
+## Parquet
+
+### Writing a Parquet file
 
 You can write Parquet files to disk using `arrow::write_parquet()`.
-```{r, write_parquet}
+```{r, write_parquet, eval = FALSE}
 write_parquet(mtcars, "mtcars.parquet")
 ```
 ```{r, test_write_parquet, opts.label = "test"}
-testthat::test_that("write_parquet chunk works as expected", {
+test_that("write_parquet chunk works as expected", {
   expect_true(file.exists("mtcars.parquet"))
 })
 ```
 
-## Reading a Parquet file
+### Reading a Parquet file
 
 Given a Parquet file, it can be read back to an Arrow Table by using `arrow::read_parquet()`.
 
@@ -38,7 +99,6 @@ test_that("read_parquet_2 works as expected", {
   expect_s3_class(mtcars_table, "data.frame")
 })
 ```
-
 If you set `as_data_frame` to `FALSE`, the file will be read in as an Arrow Table.
 
 ```{r, read_parquet_table}
@@ -62,5 +122,6 @@ test_that("read_parquet_table_class works as expected", {
 ```{r, include = FALSE}
 # cleanup
 unlink("mtcars.parquet")
+unlink("mtcars.feather")
 ```
 
