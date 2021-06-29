@@ -62,7 +62,7 @@ test_that("write_ipc_stream chunk works as expected", {
 ### Writing a Parquet file
 
 You can write Parquet files to disk using `arrow::write_parquet()`.
-```{r, write_parquet, eval = FALSE}
+```{r, write_parquet}
 write_parquet(mtcars, "mtcars.parquet")
 ```
 ```{r, test_write_parquet, opts.label = "test"}
