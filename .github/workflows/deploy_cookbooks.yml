@@ -14,7 +14,7 @@ jobs:
       - uses: r-lib/actions/setup-r@v1
       - uses: r-lib/actions/setup-pandoc@v1
       - name: Install dependencies
-        run: sudo apt install libcurl4-openssl-dev libssl-dev
+        run: brew install openssl@1.1
       - name: Build and render books
         run: make all
       - uses: actions/upload-artifact@v1
