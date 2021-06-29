@@ -70,7 +70,7 @@ test_that("write_parquet chunk works as expected", {
   expect_true(file.exists("mtcars.parquet"))
 })
 ```
-
+ 
 ### Reading a Parquet file
 
 Given a Parquet file, it can be read back to an Arrow Table by using `arrow::read_parquet()`.
