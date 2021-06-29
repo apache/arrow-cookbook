@@ -34,13 +34,14 @@ jobs:
          # Artifact name
          name: build_book # optional
          # Destination path
-         path: .r/ # optional
+         path: r # optional
      - name: Deploy to GitHub Pages
        uses: Cecilapp/GitHub-Pages-deploy@v3
        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # https://github.com/settings/tokens
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
        with:
-          build_dir: ./r               # optional
+          email: ${{ secrets.EMAIL }}
+          build_dir: r               # optional
           jekyll: no                     # optional
 
 
