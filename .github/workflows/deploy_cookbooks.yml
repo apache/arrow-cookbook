@@ -3,28 +3,26 @@ on:
      branches:
        - master
 
-
-
-name: renderbook
+name: render_cookbooks
 
 jobs:
-  bookdown:
+  make_books:
     name: Render-Book
-    runs-on: macOS-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
       - uses: r-lib/actions/setup-r@v1
       - uses: r-lib/actions/setup-pandoc@v1
-      - name: Build and render book
-        run: make r
+      - name: Build and render books
+        run: make all
       - uses: actions/upload-artifact@v1
         with:
           name: build_book
-          path: build/r/
+          path: build/
 
   checkout-and-deploy:
    runs-on: ubuntu-latest
-   needs: bookdown
+   needs: make_books
    steps:
      - name: Checkout
        uses: actions/checkout@master
@@ -41,7 +39,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
        with:
           email: ${{ secrets.EMAIL }}
-          build_dir: r               # optional
+          build_dir: .                   # optional
           jekyll: no                     # optional
 
 
