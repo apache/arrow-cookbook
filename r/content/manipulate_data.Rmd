@@ -1,0 +1,34 @@
+# Manipulate Data
+
+
+
+## Manipulate and analyze Arrow data with dplyr verbs 
+## Using simple mathematical and statistical function 
+## Work with character data (stringr functions and Arrow functions)
+## Work with datetime data (lubridate functions)
+
+### Extracting date components
+
+If you want to extract individual components from a date, you can use the following functions that mimic the behaviour of the equivalent `lubridate` functions:
+
+* `year`
+* `isoyear`
+* `quarter`
+* `month`
+* `day`
+* `wday`
+* `yday`
+* `isoweek`
+* `hour`
+* `minute`
+* `second`
+
+```{r, extract_week}
+
+```
+
+## Call an Arrow compute function which doesn't yet have an R binding
+## Access and manipulate Arrow objects through low-level bindings to the C++ library
+
+
+

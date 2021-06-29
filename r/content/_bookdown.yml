@@ -3,5 +3,6 @@ delete_merged_file: TRUE
 new_session: FALSE
 clean: ["_book/*"]
 output_dir: _book
-edit: https://github.com/thisisnic/arrow-r-cookbook/edit/master/%s
-rmd_files: ["index.Rmd", "01-reading_and_writing_data.Rmd"]
+edit: https://github.com/ursa-computing/arrow-r-cookbook/edit/master/%s
+rmd_files: ["index.Rmd", "configure_arrow.Rmd", "work_with_data_in_different_formats.Rmd",
+"work_with_compressed_or_partitioned_data.Rmd", "create_arrow_objects_from_r.Rmd", "specify_data_types_and_schemas.Rmd", "manipulate_data.Rmd", "work_with_arrow_in_both_python_and_r.Rmd"]
