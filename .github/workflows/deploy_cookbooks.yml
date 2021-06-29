@@ -42,4 +42,3 @@ jobs:
           build_dir: .                   # optional
           jekyll: no                     # optional
 
-
