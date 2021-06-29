@@ -8,13 +8,13 @@ name: render_cookbooks
 jobs:
   make_books:
     name: Render-Book
-    runs-on: macOS-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
       - uses: r-lib/actions/setup-r@v1
       - uses: r-lib/actions/setup-pandoc@v1
       - name: Install dependencies
-        run: brew install openssl@1.1
+        run: sudo apt install libcurl4-openssl-dev libssl-dev
       - name: Build and render books
         run: make all
       - uses: actions/upload-artifact@v1
