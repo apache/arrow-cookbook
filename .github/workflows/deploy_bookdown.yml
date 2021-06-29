@@ -34,7 +34,7 @@ jobs:
          # Artifact name
          name: build_book # optional
          # Destination path
-         path: build/r/ # optional
+         path: .r/ # optional
      - name: Deploy to GitHub Pages
        uses: Cecilapp/GitHub-Pages-deploy@v3
        env:
