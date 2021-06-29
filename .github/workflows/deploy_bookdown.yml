@@ -36,10 +36,14 @@ jobs:
          # Destination path
          path: build/r/ # optional
      - name: Deploy to GitHub Pages
-       uses: Cecilapp/GitHub-Pages-deploy@master
+       uses: Cecilapp/GitHub-Pages-deploy@v3
        env:
           EMAIL: ${{ secrets.EMAIL }}               # must be a verified email
           GH_TOKEN: ${{ secrets.GH_PAT }} # https://github.com/settings/tokens
           BUILD_DIR: r/                     # "_site/" by default
+       with:
+          email: ${{ secrets.EMAIL }}
+          build_dir: ./r               # optional
+          jekyll: no                     # optional
 
 
