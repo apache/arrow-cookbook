@@ -256,8 +256,61 @@ iteratively load a chunk of data at the time returning a
     col1 = 10 .. 19
     col1 = 20 .. 29
 
-.. note::
+Reading Partitioned Data from S3
+================================
 
-    The ``dataset`` function also supports reading data from cloud
-    storages, so it's perfectly possible to point the dataset class
-    to something like a S3 bucket instead of a local directory.
+The :class:`pyarrow.dataset.Dataset` is also able to abstract
+partitioned data coming from remote sources like S3 or HDFS.
+
+.. testcode::
+
+    from pyarrow import fs
+
+    # List content of s3://ursa-labs-taxi-data/2011
+    s3 = fs.SubTreeFileSystem("ursa-labs-taxi-data", fs.S3FileSystem(region="us-east-2"))
+    for entry in s3.get_file_info(fs.FileSelector("2011", recursive=True)):
+        if entry.type == fs.FileType.File:
+            print(entry.path)
+
+.. testoutput::
+
+    2011/01/data.parquet
+    2011/02/data.parquet
+    2011/03/data.parquet
+    2011/04/data.parquet
+    2011/05/data.parquet
+    2011/06/data.parquet
+    2011/07/data.parquet
+    2011/08/data.parquet
+    2011/09/data.parquet
+    2011/10/data.parquet
+    2011/11/data.parquet
+    2011/12/data.parquet
+
+The data in the bucket can be loaded as a single big dataset partitioned
+by ``year`` and ``month`` using
+
+.. testcode::
+
+    dataset = ds.dataset("s3://ursa-labs-taxi-data/", 
+                         partitioning=["year", "month"])
+    for f in dataset.files[:10]:
+        print(f)
+    print("...")
+
+.. testoutput::
+
+    ursa-labs-taxi-data/2009/01/data.parquet
+    ursa-labs-taxi-data/2009/02/data.parquet
+    ursa-labs-taxi-data/2009/03/data.parquet
+    ursa-labs-taxi-data/2009/04/data.parquet
+    ursa-labs-taxi-data/2009/05/data.parquet
+    ursa-labs-taxi-data/2009/06/data.parquet
+    ursa-labs-taxi-data/2009/07/data.parquet
+    ursa-labs-taxi-data/2009/08/data.parquet
+    ursa-labs-taxi-data/2009/09/data.parquet
+    ursa-labs-taxi-data/2009/10/data.parquet
+    ...
+
+The dataset can then be used with :meth:`pyarrow.dataset.Dataset.to_table`
+or :meth:`pyarrow.dataset.Dataset.to_batches` like you would for a local one.
