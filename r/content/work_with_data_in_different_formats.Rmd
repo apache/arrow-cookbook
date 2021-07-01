@@ -2,60 +2,154 @@
 
 This chapter contains recipes related to reading and writing data from disk using Apache Arrow.
 
-## Read and write Feather files
+## Manually create a table from an arrow object
+
+You may want to convert an existing data frame in R to an Arrow Table object.
+
+```{r, table_create}
+# Create an example data frame
+my_tibble <- tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99))
+# Convert to Arrow Table
+my_table <- Table$create(my_tibble)
+# View table
+my_table
+```
+```{r, test_table_create, opts.label = "test"}
+testthat("table_create works as expected", {
+  expect_s3_class(my_table, "Table")
+  expect_identical(dplyr::collect(my_table), my_tibble)
+})
+```
+### View the contents of an Arrow Table
+
+You can view the contents of an Arrow table using `dplyr::collect()`
+
+```{r, table_collect}
+# View Table
+dplyr::collect(my_table)
+```
+```{r, test_table_collect, opts.label = "test"}
+test_that("table_collect works as expected", {
+  expect_identical(dplyr::collect(my_table), my_tibble)
+})
+```
+
+## Manually create a RecordBatch
+
+You may want to convert an existing data frame in R to an Arrow Table object.
+
+```{r, record_batch_create}
+# Create an example data frame
+my_tibble <- tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99))
+# Convert to Arrow RecordBatch
+my_record_batch <- record_batch(my_tibble)
+# View RecordBatch
+my_record_batch
+```
+```{r, record_batch_create, opts.label = "test"}
+test_that("record_batch_create works as expected", {
+  expect_s3_class(my_record_batch, "RecordBatch")
+  expect_identical(dplyr::collect(my_record_batch), my_tibble)
+})
+```
+### View the contents of a RecordBatch
+
+You can view the contents of a RecordBatch using `dplyr::collect()`
+
+```{r, rb_collect}
+# View RecordBatch
+dplyr::collect(my_record_batch)
+```
+```{r, test_rb_collect, opts.label = "test"}
+test_that("table_collect works as expected", {
+  expect_identical(dplyr::collect(my_record_batch), my_tibble)
+})
+```
+
+## Read and write Feather or Arrow IPC files
 
 The Arrow IPC file format is identical to the Feather version 2 format.  If you call `write_arrow()`, you will get a warning telling you to use `write_feather()` instead.
 
 ```{r, write_arrow}
-write_arrow(iris, "iris.arrow")
+# Create table
+my_table <- Table$create(tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99)))
+write_arrow(my_table, "my_table.arrow")
 ```
 ```{r, test_write_arrow, opts.label = "test"}
 test_that("write_arrow chunk works as expected", {
-  expect_true(file.exists("iris.arrow"))
+  expect_true(file.exists("my_table.arrow"))
   expect_warning(
-    write_arrow(iris, "iris.arrow"),
+    write_arrow(iris, "my_table.arrow"),
     regexp = "Use 'write_ipc_stream' or 'write_feather' instead."
   )
 })
 ```
 
-You can write Feather files to disk using `write_feather()`.  If you are using the default parameters, this is identical to calling `write_arrow()`.
+Instead, you can use `write_feather()`.
 
 ```{r, write_feather}
-write_feather(mtcars, "mtcars.feather")
+my_table <- Table$create(tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99)))
+write_feather(my_table, "my_table.arrow")
 ```
 ```{r, test_write_feather, opts.label = "test"}
 test_that("write_feather chunk works as expected", {
-  expect_true(file.exists("mtcars.feather"))
+  expect_true(file.exists("my_table.arrow"))
 })
 ```
-
 ### Write a Feather (version 1) file
 
 You can write data in the original Feather format by setting the `version` parameter to `1`.
 
 ```{r, write_feather1}
-write_feather(mtcars, "mtcars_f1.feather", version = 1)
+# Create table
+my_table <- Table$create(tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99)))
+# Write to Feather format V1
+write_feather(mtcars, "my_table.feather", version = 1)
 ```
 ```{r, test_write_feather1, opts.label = "test"}
 test_that("write_feather1 chunk works as expected", {
-  expect_true(file.exists("mtcars_f1.feather"))
+  expect_true(file.exists("my_table.feather"))
 })
+```
 
+### Read a Feather file
+
+You can read Feather files in.
+
+```{r, read_feather}
+my_feather_tbl <- read_feather("my_table.arrow")
+```
+```{r, test_read_feather, opts.label = "test"}
+test_that("read_feather chunk works as expected", {
+  expect_identical(dplyr::collect(my_feather_tbl), my_tibble)
+})
 ```
 
 ## Read and writing streaming IPC files
 
+You can write to the IPC stream format.
 
 ```{r, write_ipc_stream}
-write_ipc_stream(iris, "iris.arrows")
+# Create table
+my_table <- Table$create(tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99)))
+# Write to IPC stream format
+write_ipc_stream(my_table, "my_table.arrows")
 ```
 ```{r, test_write_ipc_stream, opts.label = "test"}
 test_that("write_ipc_stream chunk works as expected", {
-  expect_true(file.exists("iris.arrows"))
+  expect_true(file.exists("my_table.arrows"))
 })
 ```
+You can read from IPC stream format.
 
+```{r, read_ipc_stream}
+my_ipc_stream <- arrow::read_ipc_stream("iris.arrows")
+```
+```{r, test_read_ipc_stream, opts.label = "test"}
+test_that("read_ipc_stream chunk works as expected", {
+  
+})
+```
 
 ## Read and write Parquet files
 
@@ -63,11 +157,14 @@ test_that("write_ipc_stream chunk works as expected", {
 
 You can write Parquet files to disk using `arrow::write_parquet()`.
 ```{r, write_parquet}
-write_parquet(mtcars, "mtcars.parquet")
+# Create table
+my_table <- Table$create(tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99)))
+# Write to Parquet
+write_parquet(my_table, "my_table.parquet")
 ```
 ```{r, test_write_parquet, opts.label = "test"}
 test_that("write_parquet chunk works as expected", {
-  expect_true(file.exists("mtcars.parquet"))
+  expect_true(file.exists("my_table.parquet"))
 })
 ```
  
@@ -116,6 +213,25 @@ test_that("read_parquet_table_class works as expected", {
 ```
 
 ## Read and write CSV (and other delimited files) and JSON files
+
+```{r, write_csv_arrow}
+write_csv_arrow(cars, "cars.csv")
+```
+```{r, write_csv_arrow, opts.label = "test"}
+test_that("write_csv_arrow chunk works as expected", {
+  expect_true(file.exists("cars.csv"))
+})
+```
+
+```{r, read_csv_arrow}
+my_csv <- read_csv_arrow("cars.csv")
+```
+```{r, read_csv_arrow, opts.label = "test"}
+test_that("read_csv_arrow chunk works as expected", {
+  expect_equal(my_csv, cars, ignore_attr = TRUE)
+})
+```
+
 
 ## Read and write multi-file, larger-than-memory datasets
 
