@@ -2,7 +2,7 @@
 
 This chapter contains recipes related to reading and writing data from disk using Apache Arrow.
 
-## Manually create a table from an arrow object
+## Manually create a table from an R object
 
 You may want to convert an existing data frame in R to an Arrow Table object.
 
@@ -173,12 +173,12 @@ test_that("write_parquet chunk works as expected", {
 Given a Parquet file, it can be read back to an Arrow Table by using `arrow::read_parquet()`.
 
 ```{r, read_parquet}
-mtcars_table <- read_parquet("mtcars.parquet")
-head(mtcars_table)
+parquet_tbl <- read_parquet("my_table.parquet")
+head(parquet_tbl)
 ```
 ```{r, test_read_parquet, opts.label = "test"}
 test_that("read_parquet works as expected", {
-  expect_equivalent(mtcars_table, mtcars)
+  expect_equivalent(parquet_tbl, my_tibble)
 })
 ```
 
@@ -236,6 +236,14 @@ test_that("read_csv_arrow chunk works as expected", {
 ## Read and write multi-file, larger-than-memory datasets
 
 ## Read and write files in Amazon S3 buckets
+
+You can open a file saved on S3 by passing the relevant URI as the `file` argument.
+
+```{r, read_parquet, eval = FALSE}
+df <- read_parquet("s3://ursa-labs-taxi-data/2019/06/data.parquet")
+```
+For more in-depth instructions, including how to work with S3 buckets which require authentication, you can find a guide to reading and writing to/from S3 buckets here: https://arrow.apache.org/docs/r/articles/fs.html.
+
 
 ## Send and receive data over a network using an Arrow Flight RPC server
 
