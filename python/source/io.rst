@@ -73,6 +73,42 @@ the parquet file as :class:`ChunkedArray`
     col1: int64
     ChunkedArray = 0 .. 99
 
+Reading a subset of Parquet data
+================================
+
+When reading a Parquet file with :func:`pyarrow.parquet.read_table` 
+it is possible to restrict which Columns and Rows have to be read
+in memory by using the ``filters`` and ``columns`` arguments
+
+.. testcode::
+
+    import pyarrow.parquet as pq
+
+    table = pq.read_table("example.parquet", 
+                          columns=["col1"],
+                          filters=[
+                              ("col1", ">", 5),
+                              ("col1", "<", 10),
+                          ])
+
+The resulting table will contain only the projected columns
+and filtered rows. Refer to :func:`pyarrow.parquet.read_table`
+documentation for details about filters syntax.
+
+.. testcode::
+
+    print(table)
+
+    col1 = table["col1"]
+    print(f"{type(col1).__name__} = {col1[0]} .. {col1[-1]}")
+
+.. testoutput::
+
+    pyarrow.Table
+    col1: int64
+    ChunkedArray = 6 .. 9
+    
+
 Saving Arrow Arrays to disk
 ===========================
 
