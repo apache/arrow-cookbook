@@ -226,7 +226,7 @@ test_that("write_csv_arrow chunk works as expected", {
 ```{r, read_csv_arrow}
 my_csv <- read_csv_arrow("cars.csv")
 ```
-```{r, read_csv_arrow, opts.label = "test"}
+```{r, test_read_csv_arrow, opts.label = "test"}
 test_that("read_csv_arrow chunk works as expected", {
   expect_equal(my_csv, cars, ignore_attr = TRUE)
 })

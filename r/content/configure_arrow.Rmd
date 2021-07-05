@@ -16,7 +16,7 @@ cpu_count()
 set_cpu_count(4)
 ```
 
-## Control IO Tthread count
+## Control IO Thread count
 
 ```{r, io_thread_count}
 io_thread_count()
