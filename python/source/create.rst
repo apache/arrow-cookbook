@@ -40,3 +40,73 @@ from nearly all supported inputs, including plain python objects
     All values provided in the dictionary will be passed to
     :func:`pyarrow.array` for conversion to Arrow arrays,
     and will benefit from zero copy behaviour when possible.
+
+Store Categorical Data
+======================
+
+Arrow provides the :class:`pyarrow.DictionaryArray` type
+to represent in memory categorical data without the cost of
+storing and repeating the categories over and over when they
+consist of some expensive types like text.
+
+If you have an array containing repeated categorical data,
+it is possible to convert it to a :class:`pyarrow.DictionaryArray`
+using :meth:`pyarrow.Array.dictionary_encode`
+
+.. testcode::
+
+    arr = pa.array(["red", "green", "blue", "blue", "green", "red"])
+
+    categorical = arr.dictionary_encode()
+    print(categorical)
+
+.. testoutput::
+
+    ...
+    -- dictionary:
+      [
+        "red",
+        "green",
+        "blue"
+      ]
+    -- indices:
+      [
+        0,
+        1,
+        2,
+        2,
+        1,
+        0
+      ]
+
+If you already know the categories and indices, you can skip the encode
+step and directly create the ``DictionaryArray`` using 
+:meth:`pyarrow.DictionaryArray.from_arrays`
+
+.. testcode::
+
+    categorical = pa.DictionaryArray.from_arrays(
+        indices=[0, 1, 2, 2, 1, 0],
+        dictionary=["red", "green", "blue"]
+    )
+    print(categorical)
+
+.. testoutput::
+
+    ...
+    -- dictionary:
+      [
+        "red",
+        "green",
+        "blue"
+      ]
+    -- indices:
+      [
+        0,
+        1,
+        2,
+        2,
+        1,
+        0
+      ]
+
