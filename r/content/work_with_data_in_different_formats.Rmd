@@ -46,7 +46,7 @@ my_record_batch <- record_batch(my_tibble)
 # View RecordBatch
 my_record_batch
 ```
-```{r, record_batch_create, opts.label = "test"}
+```{r, test_record_batch_create, opts.label = "test"}
 test_that("record_batch_create works as expected", {
   expect_s3_class(my_record_batch, "RecordBatch")
   expect_identical(dplyr::collect(my_record_batch), my_tibble)
@@ -234,6 +234,16 @@ test_that("read_csv_arrow chunk works as expected", {
 
 
 ## Read and write multi-file, larger-than-memory datasets
+
+## Read and write memory-mapped files
+
+```{r}
+mmap_create("mmap.arrow", 100)
+```
+```{r}
+mmap_open("mmap.arrow", mode = "write")
+```
+
 
 ## Read and write files in Amazon S3 buckets
 
