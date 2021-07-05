@@ -143,7 +143,7 @@ test_that("write_ipc_stream chunk works as expected", {
 You can read from IPC stream format.
 
 ```{r, read_ipc_stream}
-my_ipc_stream <- arrow::read_ipc_stream("iris.arrows")
+my_ipc_stream <- arrow::read_ipc_stream("my_table.arrows")
 ```
 ```{r, test_read_ipc_stream, opts.label = "test"}
 test_that("read_ipc_stream chunk works as expected", {
@@ -178,31 +178,27 @@ head(parquet_tbl)
 ```
 ```{r, test_read_parquet, opts.label = "test"}
 test_that("read_parquet works as expected", {
-  expect_equivalent(parquet_tbl, my_tibble)
+  expect_equivalent(dplyr::collect(parquet_tbl), tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99)))
 })
 ```
 
 If the argument `as_data_frame` was set to `TRUE` (the default), the file was read in as a `data.frame` object.
 
 ```{r, read_parquet_2}
-class(mtcars_table)
+class(parquet_tbl)
 ```
 ```{r, test_read_parquet_2, opts.label = "test"}
 test_that("read_parquet_2 works as expected", {
-  expect_s3_class(mtcars_table, "data.frame")
+  expect_s3_class(parquet_tbl, "data.frame")
 })
 ```
 If you set `as_data_frame` to `FALSE`, the file will be read in as an Arrow Table.
 
 ```{r, read_parquet_table}
-mtcars_arrow_table <- read_parquet("mtcars.parquet", as_data_frame = FALSE)
+mtcars_arrow_table <- read_parquet("my_table.parquet", as_data_frame = FALSE)
 head(mtcars_arrow_table)
 ```
-```{r, test_read_parquet_table,  opts.label = "test"}
-test_that("read_parquet_table chunk gives expected result", {
-  expect_equivalent(mtcars_arrow_table, Table$create(mtcars))
-})
-```
+
 ```{r, read_parquet_table_class}
 class(mtcars_arrow_table)
 ```
@@ -225,11 +221,6 @@ test_that("write_csv_arrow chunk works as expected", {
 
 ```{r, read_csv_arrow}
 my_csv <- read_csv_arrow("cars.csv")
-```
-```{r, test_read_csv_arrow, opts.label = "test"}
-test_that("read_csv_arrow chunk works as expected", {
-  expect_equal(my_csv, cars, ignore_attr = TRUE)
-})
 ```
 
 
