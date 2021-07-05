@@ -11,7 +11,7 @@ Welcome to Apache Arrow Cookbook's documentation!
    :caption: Contents:
 
    io
-
+   create
 
 Indices and tables
 ==================
