@@ -15,7 +15,7 @@ my_table <- Table$create(my_tibble)
 my_table
 ```
 ```{r, test_table_create, opts.label = "test"}
-testthat("table_create works as expected", {
+test_that("table_create works as expected", {
   expect_s3_class(my_table, "Table")
   expect_identical(dplyr::collect(my_table), my_tibble)
 })
@@ -217,7 +217,7 @@ test_that("read_parquet_table_class works as expected", {
 ```{r, write_csv_arrow}
 write_csv_arrow(cars, "cars.csv")
 ```
-```{r, write_csv_arrow, opts.label = "test"}
+```{r, test_write_csv_arrow, opts.label = "test"}
 test_that("write_csv_arrow chunk works as expected", {
   expect_true(file.exists("cars.csv"))
 })
@@ -249,7 +249,7 @@ mmap_open("mmap.arrow", mode = "write")
 
 You can open a file saved on S3 by passing the relevant URI as the `file` argument.
 
-```{r, read_parquet, eval = FALSE}
+```{r, read_parquet_s3, eval = FALSE}
 df <- read_parquet("s3://ursa-labs-taxi-data/2019/06/data.parquet")
 ```
 For more in-depth instructions, including how to work with S3 buckets which require authentication, you can find a guide to reading and writing to/from S3 buckets here: https://arrow.apache.org/docs/r/articles/fs.html.
