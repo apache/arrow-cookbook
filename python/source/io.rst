@@ -350,3 +350,69 @@ by ``year`` and ``month`` using
 
 The dataset can then be used with :meth:`pyarrow.dataset.Dataset.to_table`
 or :meth:`pyarrow.dataset.Dataset.to_batches` like you would for a local one.
+
+Write a Feather file
+====================
+
+.. testsetup::
+
+    import numpy as np
+    import pyarrow as pa
+
+    arr = pa.array(np.arange(100))
+
+Given an array with all numbers from 0 to 100
+
+.. testcode::
+
+    print(f"{arr[0]} .. {arr[-1]}")
+
+.. testoutput::
+
+    0 .. 99
+
+To write it to a Feather file, as Feather is a columnar format,
+we must create a :class:`pyarrow.Table` out of it,
+so that we get a table of a single column which can then be
+written to a Feather file. 
+
+.. testcode::
+
+    table = pa.Table.from_arrays([arr], names=["col1"])
+
+Once we have a table, it can be written to a Feather File 
+using the functions provided by the ``pyarrow.feather`` module
+
+.. testcode::
+
+    import pyarrow.feather as ft
+    
+    ft.write_feather(table, 'example.feather')
+
+Reading a Feather file
+======================
+
+Given a Feather file, it can be read back to a :class:`pyarrow.Table`
+by using :func:`pyarrow.feather.read_table` function
+
+.. testcode::
+
+    import pyarrow.feather as ft
+
+    table = ft.read_table("example.feather")
+
+The resulting table will contain the same columns that existed in
+the parquet file as :class:`ChunkedArray`
+
+.. testcode::
+
+    print(table)
+
+    col1 = table["col1"]
+    print(f"{type(col1).__name__} = {col1[0]} .. {col1[-1]}")
+
+.. testoutput::
+
+    pyarrow.Table
+    col1: int64
+    ChunkedArray = 0 .. 99
