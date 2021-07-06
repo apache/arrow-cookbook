@@ -3,8 +3,12 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Apache Arrow Cookbook's documentation!
-=================================================
+Welcome to Apache Arrow Cookbook
+================================
+
+The Apache Arrow Cookbook is a collection of recipes to solve the
+most common tasks that users might need to perform the "arrow way",
+trying to document robust and well performing solutions to those tasks.
 
 .. toctree::
    :maxdepth: 2
@@ -12,6 +16,7 @@ Welcome to Apache Arrow Cookbook's documentation!
 
    io
    create
+   data
 
 Indices and tables
 ==================
