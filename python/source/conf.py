@@ -17,7 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'Apache Arrow Cookbook'
+project = 'Apache Arrow Python Cookbook'
 copyright = '2021, Apache Software Foundation'
 author = 'Apache Software Foundation'
 

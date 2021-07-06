@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Apache Arrow Cookbook
-================================
+Apache Arrow Python Cookbook
+============================
 
 The Apache Arrow Cookbook is a collection of recipes to solve the
 most common tasks that users might need to perform the "arrow way",
