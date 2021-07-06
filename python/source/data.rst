@@ -7,6 +7,8 @@ arrays and tables.
 
 .. contents::
 
+See :ref:`compute` for a complete list of all available compute functions
+
 Computing Mean/Min/Max values of an array
 =========================================
 
