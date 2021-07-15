@@ -37,3 +37,10 @@ Building Platform Specificic Cookbook
 Refer to ``make help`` to know the
 command that builds or tests the cookbook for the platform you
 are targeting.
+
+Contributing to the Cookbook
+============================
+
+Please refer to the `CONTRIBUTING.md <CONTRIBUTING.md>`_ file
+for instructions about how to contribute to the Apache Arrow Cookbook.
+
