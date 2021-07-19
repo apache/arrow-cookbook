@@ -3,8 +3,8 @@ delete_merged_file: TRUE
 new_session: FALSE
 clean: ["_book/*"]
 output_dir: _book
-edit: https://github.com/ursa-computing/arrow-cookbook/edit/master/%s
-rmd_files: ["index.Rmd"]
+edit: https://github.com/ursacomputing/arrow-cookbook/edit/master/r/content/%s
+rmd_files: ["index.Rmd", "initial_recipes.Rmd", "creating_arrow_objects.Rmd", "manipulating_data.Rmd"]
 
 # This is the full list
 # rmd_files: ["index.Rmd", "configure_arrow.Rmd", "work_with_data_in_different_formats.Rmd",

@@ -1,0 +1,86 @@
+# Creating Arrow Objects
+
+## Build an Arrow Table from native language types
+
+### Manually create a table from an R object
+
+You may want to convert an existing data frame in R to an Arrow Table object.
+
+```{r, table_create}
+# Create an example data frame
+my_tibble <- tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99))
+# Convert to Arrow Table
+my_table <- Table$create(my_tibble)
+# View table
+my_table
+```
+```{r, test_table_create, opts.label = "test"}
+test_that("table_create works as expected", {
+  expect_s3_class(my_table, "Table")
+  expect_identical(dplyr::collect(my_table), my_tibble)
+})
+```
+#### View the contents of an Arrow Table
+
+You can view the contents of an Arrow table using `dplyr::collect()`
+
+```{r, table_collect}
+# View Table
+dplyr::collect(my_table)
+```
+```{r, test_table_collect, opts.label = "test"}
+test_that("table_collect works as expected", {
+  expect_identical(dplyr::collect(my_table), my_tibble)
+})
+```
+
+### Manually create a RecordBatch
+
+You may want to convert an existing data frame in R to an Arrow Record Batch object.
+
+```{r, record_batch_create}
+# Create an example data frame
+my_tibble <- tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99))
+# Convert to Arrow RecordBatch
+my_record_batch <- record_batch(my_tibble)
+# View RecordBatch
+my_record_batch
+```
+```{r, test_record_batch_create, opts.label = "test"}
+test_that("record_batch_create works as expected", {
+  expect_s3_class(my_record_batch, "RecordBatch")
+  expect_identical(dplyr::collect(my_record_batch), my_tibble)
+})
+```
+#### View the contents of a RecordBatch
+
+You can view the contents of a RecordBatch using `dplyr::collect()`
+
+```{r, rb_collect}
+# View RecordBatch
+dplyr::collect(my_record_batch)
+```
+```{r, test_rb_collect, opts.label = "test"}
+test_that("rb_collect works as expected", {
+  expect_identical(dplyr::collect(my_record_batch), my_tibble)
+})
+```
+
+## Storing Categorical Data in Arrow
+
+An Arrow Dictionary object is similar to a factor in R, in that it allows for efficient storage of categorical data by allowing you to map between indices and values, reducing the amount of storage.  If you have an R data frame containing factors, converting it to an Arrow object will automatically encode that column as a dictionary.
+
+```{r}
+class(iris$Species)
+```
+
+```{r, dictionary}
+iris_rb <- record_batch(iris)
+iris_rb
+```
+```{r, test_dictionary, opts.label = "test"}
+test_that("dictionary works as expected", {
+  expect_s3_class(iris_rb$Species, "DictionaryArray")
+})
+```
+

@@ -1,0 +1,29 @@
+# Work with data in different formats
+
+
+## Read and write Feather or Arrow IPC files
+
+## Read and writing streaming IPC files
+
+
+
+## Read and write Parquet files
+## Read and write CSV (and other delimited files) and JSON files
+## Read and write multi-file, larger-than-memory datasets
+## Read and write memory-mapped files
+
+```{r}
+mmap_create("mmap.arrow", 100)
+```
+```{r}
+mmap_open("mmap.arrow", mode = "write")
+```
+
+## Send and receive data over a network using an Arrow Flight RPC server
+
+```{r, include = FALSE}
+# cleanup
+unlink("mtcars.parquet")
+unlink("mtcars.feather")
+```
+

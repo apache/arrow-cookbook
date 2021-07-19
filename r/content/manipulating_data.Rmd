@@ -1,0 +1,66 @@
+# Manipulating Data
+
+## Computing Mean/Min/Max, etc value of an array
+
+Many base R functions such as `mean()`, `min()`, and `max()` have been mapped to their Arrow equivalents, and so can be called on Arrow Array objects in the same way.  They will return Arrow object themselves.
+
+```{r, array_mean_na}
+my_values <- Array$create(c(1:5, NA))
+mean(my_values, na.rm = TRUE)
+```
+```{r, test_array_mean_na, opts.label = "test"}
+test_that("array_mean_na works as expected", {
+  expect_equal(mean(my_values, na.rm = TRUE), Scalar$create(3))
+})
+```
+If you want to use an R function which does not have an Arrow mapping, you can use `as.vector()` to convert Arrow objects to base R vectors.
+
+```{r, fivenum}
+fivenum(as.vector(my_values))
+```
+```{r, test_fivenum, opts.label = "test"}
+test_that("fivenum works as expected", {
+  expect_equal(fivenum(as.vector(my_values)), 1:5)
+})
+```
+
+## Counting occurrences of elements in an array
+
+You can use `value_count()` to count elements in an Array.
+
+```{r, value_counts}
+repeated_vals <- Array$create(c(1, 1, 2, 3, 3, 3, 3, 3))
+value_counts(repeated_vals)
+```
+```{r, test_value_counts, opts.label = "test"}
+test_that("value_counts works as expected", {
+  expect_equal(as.vector(value_counts(repeated_vals)), tibble::tibble(values = c(1, 2, 3), counts = c(2L, 1L, 5L)))
+})
+```
+
+## Applying arithmetic functions to arrays.
+
+You can use the various arithmetic operators on Array objects.
+
+```{r, add_array}
+num_array <- Array$create(1:10)
+num_array + 10
+```
+```{r, test_add_array, opts.label = "test"}
+test_that("add_array works as expected", {
+  # need to specify expected array as 1:10 as 10 instead of 11:20 so is double not integer
+  expect_equal(num_array + 10, Array$create(1:10 + 10))
+})
+```
+
+You'll get the same result if you pass in the value you're adding as an Arrow object.
+
+```{r, add_array_scalar}
+num_array + Scalar$create(10)
+```
+```{r, test_add_array_scalar, opts.label = "test"}
+test_that("add_array_scalar works as expected", {
+  # need to specify expected array as 1:10 as 10 instead of 11:20 so is double not integer
+  expect_equal(num_array + Scalar$create(10), Array$create(1:10 + 10))
+})
+```

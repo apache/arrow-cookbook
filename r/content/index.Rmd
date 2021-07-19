@@ -8,6 +8,7 @@ params:
 testrmd::init()
 library(arrow)
 library(testthat)
+library(dplyr)
 # Include test 
 knitr::opts_template$set(test = list(
   test = TRUE,
