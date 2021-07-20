@@ -35,10 +35,12 @@ pytest: pydeps
 
 rdeps:
 	@echo ">>> Installing R Dependencies <<<\n"
-	R -s -e 'if (!require("pacman")) install.packages("pacman")'
-	R -s -e 'pacman::p_load("testthat", "bookdown", "xfun", "knitr", "purrr", "remotes", "dplyr")'
-	R -s -e 'pacman::p_load_gh("rmflight/testrmd")'
-	R -s -e 'install.packages("arrow", repos = c("https://arrow-r-nightly.s3.amazonaws.com", getOption("repos")))'
+ifdef arrow_r_version
+	cd ./r && Rscript ./scripts/install_dependencies.R $(arrow_r_version)
+else
+	cd ./r && Rscript ./scripts/install_dependencies.R
+endif
+
 
 r: rdeps
 	@echo ">>> Building R Cookbook <<<\n"
