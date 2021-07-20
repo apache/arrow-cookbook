@@ -4,7 +4,7 @@ new_session: FALSE
 clean: ["_book/*"]
 output_dir: _book
 edit: https://github.com/ursacomputing/arrow-cookbook/edit/master/r/content/%s
-rmd_files: ["index.Rmd", "initial_recipes.Rmd", "creating_arrow_objects.Rmd", "manipulating_data.Rmd"]
+rmd_files: ["index.Rmd", "reading_and_writing_data.Rmd", "creating_arrow_objects.Rmd", "manipulating_data.Rmd"]
 
 # This is the full list
 # rmd_files: ["index.Rmd", "configure_arrow.Rmd", "work_with_data_in_different_formats.Rmd",
