@@ -8,9 +8,9 @@ The recipes are written in RMarkdown format using `bookdown`.
 
 You can add new recipes to one of the existing ``.Rmd`` files, or you can create new sections by adding additional ``.Rmd`` files in the `content` directory.  If you add a new file, you should add it to the `rmd_files` list in `content/_bookdown.yml` for it to be visible in the rendered cookbook.
 
-After each code chunk in the recipe, you should add a test chunk which tests that the output of the code chunk is as expected.  This will allow your recipe to be tested against the latest version of arrow, and make it easier to detect if any changes made to arrow result in your recipe becoming out-of-date.
+After each code chunk in the recipe, you should add a test chunk that tests that the code chunk's output is as expected.  Using a test chunk will allow your recipe to be tested against the latest version of arrow, and make it easier to detect if any changes made to arrow result in your recipe becoming out-of-date.
 
-Each major code chunk must be given a descriptive label, and be immediately followed by a unit test of its output.  This test should be labelled "test_" followed by the name of the chunk that it is testing.  The test chunk should also have the `opts.label` attribute set to "test" - this will ensure that the test is not rendered as part of the cookbook.
+Each significant code chunk must be given a descriptive label, and be immediately followed by a unit test of its output.  This test should be labelled "test_" followed by the name of the chunk that it is testing.  The test chunk should also have the `opts.label` attribute set to "test" - this will ensure that the test is not rendered as part of the cookbook.
 
 Here's an example of a recipe and a test:
 
@@ -40,7 +40,7 @@ Running ``make rtest`` from the cookbook root directory will verify that the cod
 
 The Arrow R cookbook has been written using `bookdown`.
 
-Running ``make r`` from the cookbook root directory (the one where the ``Makefile`` exists) will install all necessary dependencies (including the latest nightly build of the Arrow R package) and will compile the cookbook to HTML.
+Running ``make r`` from the cookbook root directory (the one where the ``Makefile`` exists) will install all necessary dependencies (including the latest nightly build of the Arrow R package) and compile the cookbook to HTML.
 
 You can see the compiled result inside the ``build/r`` directory.
 
