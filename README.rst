@@ -31,8 +31,8 @@ Listing Available Commands
 
 ``make help``
 
-Building Platform Specificic Cookbook
--------------------------------------
+Building Platform Specific Cookbook
+-----------------------------------
 
 Refer to ``make help`` to know the
 command that builds or tests the cookbook for the platform you
