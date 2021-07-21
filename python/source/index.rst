@@ -6,9 +6,10 @@
 Apache Arrow Python Cookbook
 ============================
 
-The Apache Arrow Cookbook is a collection of recipes to solve the
-most common tasks that users might need to perform the "arrow way",
-trying to document robust and well performing solutions to those tasks.
+The Apache Arrow Cookbook is a collection of recipes which demonstrate
+how to solve many common tasks that users might need to perform
+when working with arrow data.  The examples in this cookbook will also
+serve as robust and well performing solutions to those tasks.
 
 .. toctree::
    :maxdepth: 2

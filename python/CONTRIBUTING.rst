@@ -26,13 +26,13 @@ The recipes are written in **reStructuredText** format using
 the `Sphinx <https://www.sphinx-doc.org/>`_ documentation system.
 
 New recipes can be added to one of the existing ``.rst`` files if
-they suite that section or you can create new sections by adding
+they suit that section or you can create new sections by adding
 additional ``.rst`` files in the ``source`` directory. You just
 need to remember to add them to the ``index.rst`` file in the
 ``toctree`` for them to become visible.
 
 The only requirement for recipes is that each code block in the recipe 
-must be written using ``.. testcode::`` directive, 
+must be written using the ``.. testcode::`` directive, 
 so that it can get tested.
 
 If the code block changes, alters or creates data, the recipe should
@@ -65,4 +65,5 @@ might look like:
 
 If you refer to any ``pyarrow`` class, function or method using
 ``:class:``, ``:meth:`` or ``:func:`` directives a link to their
-documentation in pyarrow API reference will be automatically created.
+documentation in the pyarrow API reference will be automatically
+created.

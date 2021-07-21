@@ -2,7 +2,7 @@
 Data Manipulation
 =================
 
-Recipes related to how to filter or transform data in
+Recipes related to filtering or transforming data in
 arrays and tables.
 
 .. contents::
@@ -12,8 +12,8 @@ See :ref:`compute` for a complete list of all available compute functions
 Computing Mean/Min/Max values of an array
 =========================================
 
-Arrow provides compute functions that can be applied to arrays,
-those compute functions are exposed through the :mod:`arrow.compute`
+Arrow provides compute functions that can be applied to arrays.
+Those compute functions are exposed through the :mod:`arrow.compute`
 module.
 
 .. testsetup::
@@ -112,7 +112,7 @@ Applying arithmetic functions to arrays.
 =========================================
 
 The compute functions in :mod:`arrow.compute` also include
-most common transformation functions, like airthmetic ones.
+common transformations such as arithmetic functions.
 
 Given an array with all numbers from 0 to 100
 
@@ -124,7 +124,7 @@ Given an array with all numbers from 0 to 100
 
   0 .. 99
 
-We can multiple all values by 2 using the :func:`arrow.compute.multiply`
+We can multiply all values by 2 using the :func:`arrow.compute.multiply`
 function
 
 .. testcode::

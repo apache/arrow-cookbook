@@ -77,8 +77,8 @@ Reading a subset of Parquet data
 ================================
 
 When reading a Parquet file with :func:`pyarrow.parquet.read_table` 
-it is possible to restrict which Columns and Rows have to be read
-in memory by using the ``filters`` and ``columns`` arguments
+it is possible to restrict which Columns and Rows will be read
+into memory by using the ``filters`` and ``columns`` arguments
 
 .. testcode::
 
@@ -93,7 +93,7 @@ in memory by using the ``filters`` and ``columns`` arguments
 
 The resulting table will contain only the projected columns
 and filtered rows. Refer to :func:`pyarrow.parquet.read_table`
-documentation for details about filters syntax.
+documentation for details about the syntax for filters.
 
 .. testcode::
 
@@ -112,9 +112,10 @@ documentation for details about filters syntax.
 Saving Arrow Arrays to disk
 ===========================
 
-Apart using arrow to read and save common file formats like Parquet,
+Apart from using arrow to read and save common file formats like Parquet,
 it is possible to dump data in the raw arrow format which allows 
-direct memory mapping of data from disk. 
+direct memory mapping of data from disk. This format is called
+the Arrow IPC format.
 
 Given an array with all numbers from 0 to 100
 
@@ -147,8 +148,8 @@ them all to the ``record_batch`` call.
 Memory Mapping Arrow Arrays from disk
 =====================================
 
-Arrow arrays that have been written to disk in the Arrow
-format itself can be memory mapped back directly from the disk.
+Arrow arrays that have been written to disk in the Arrow IPC
+format can be memory mapped back directly from the disk.
 
 .. testcode::
 
@@ -188,7 +189,7 @@ optimized codepath that can leverage multiple threads.
 
     table = pa.csv.read_csv("table.csv")
 
-Arrow will do its best to guess data types, further options can be
+Arrow will do its best to infer data types.  Further options can be
 provided to :func:`pyarrow.csv.read_csv` to drive
 :class:`pyarrow.csv.ConvertOptions`.
 
@@ -238,9 +239,9 @@ For example if we have a structure like:
     ├── dataset2.parquet
     └── dataset3.parquet
 
-Then, pointing the ``dataset`` function to the ``examples`` directory
+Then, pointing the :func:`pyarrow.dataset.dataset` function to the ``examples`` directory
 will discover those parquet files and will expose them all as a single
-dataset:
+:class:`pyarrow.dataset.Dataset`:
 
 .. testcode::
 
@@ -256,7 +257,7 @@ dataset:
 The whole dataset can be viewed as a single big table using
 :meth:`pyarrow.dataset.Dataset.to_table`. While each parquet file
 contains only 10 rows, converting the dataset to a table will
-expose them as a single block of data
+expose them as a single Table.
 
 .. testcode::
 
@@ -273,11 +274,11 @@ expose them as a single block of data
     ChunkedArray = 0 .. 29
 
 Notice that converting to a table will force all data to be loaded 
-in memory, which for big datasets is not what you usually want.
+in memory.  For big datasets is usually not what you want.
 
 For this reason, it might be better to rely on the 
-:meth:`pyarrow.dataset.Dataset.to_batches` method, which allows to
-iteratively load a chunk of data at the time returning a 
+:meth:`pyarrow.dataset.Dataset.to_batches` method, which will
+iteratively load the dataset one chunk of data at the time returning a 
 :class:`pyarrow.RecordBatch` for each one of them.
 
 .. testcode::

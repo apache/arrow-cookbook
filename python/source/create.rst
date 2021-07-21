@@ -2,17 +2,17 @@
 Creating Arrow Objects
 ======================
 
-Recipes related to how to create Arrays, Tables,
+Recipes related to the creation of Arrays, Tables,
 Tensors and all other Arrow entities.
 
 .. contents::
 
-Create Table from plain types
+Create Table from Plain Types
 =============================
 
 Arrow allows fast zero copy creation of arrow arrays
 from numpy and pandas arrays and series, but it's also
-possible to create Arrow arrays and Tables from 
+possible to create Arrow Arrays and Tables from 
 plain Python structures.
 
 the :func:`pyarrow.table` function allows creation of Tables
@@ -45,9 +45,9 @@ Store Categorical Data
 ======================
 
 Arrow provides the :class:`pyarrow.DictionaryArray` type
-to represent in memory categorical data without the cost of
-storing and repeating the categories over and over when they
-consist of some expensive types like text.
+to represent categorical data without the cost of
+storing and repeating the categories over and over.  This can reduce memory use
+when columns might have large values (such as text).
 
 If you have an array containing repeated categorical data,
 it is possible to convert it to a :class:`pyarrow.DictionaryArray`
@@ -79,7 +79,7 @@ using :meth:`pyarrow.Array.dictionary_encode`
         0
       ]
 
-If you already know the categories and indices, you can skip the encode
+If you already know the categories and indices then you can skip the encode
 step and directly create the ``DictionaryArray`` using 
 :meth:`pyarrow.DictionaryArray.from_arrays`
 
@@ -109,4 +109,3 @@ step and directly create the ``DictionaryArray`` using
         1,
         0
       ]
-
