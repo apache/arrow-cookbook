@@ -34,7 +34,11 @@ value_counts(repeated_vals)
 ```
 ```{r, test_value_counts, opts.label = "test"}
 test_that("value_counts works as expected", {
-  expect_equal(as.vector(value_counts(repeated_vals)), tibble::tibble(values = c(1, 2, 3), counts = c(2L, 1L, 5L)))
+  expect_equal(as.vector(value_counts(repeated_vals)),
+  tibble(
+    values = as.numeric(names(table(as.vector(repeated_vals)))),
+    counts = as.vector(table(as.vector(repeated_vals)))
+  )
 })
 ```
 
