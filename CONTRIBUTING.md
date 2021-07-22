@@ -15,3 +15,9 @@ to make your recipes testable.
 
  * [Contributing to Python Cookbook](python/CONTRIBUTING.rst)
  * [Contributing to R Cookbook](r/CONTRIBUTING.md)
+ 
+ ------------------------------------------------------------------------
+
+All participation in the Apache Arrow project is governed by the Apache
+Software Foundation’s [code of
+conduct](https://www.apache.org/foundation/policies/conduct.html).
