@@ -22,7 +22,7 @@ test_that("table_create works as expected", {
 ```
 #### View the contents of an Arrow Table
 
-You can view the contents of an Arrow table using `dplyr::collect()`
+You can view the contents of an Arrow Table using `dplyr::collect()`
 
 ```{r, table_collect}
 # View Table
@@ -83,4 +83,3 @@ test_that("dictionary works as expected", {
   expect_s3_class(iris_rb$Species, "DictionaryArray")
 })
 ```
-
