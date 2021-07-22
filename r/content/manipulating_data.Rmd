@@ -60,7 +60,7 @@ num_array + Scalar$create(10)
 ```
 ```{r, test_add_array_scalar, opts.label = "test"}
 test_that("add_array_scalar works as expected", {
-  # need to specify expected array as 1:10 as 10 instead of 11:20 so is double not integer
+  # need to specify expected array as 1:10 + 10 instead of 11:20 so is double not integer
   expect_equal(num_array + Scalar$create(10), Array$create(1:10 + 10))
 })
 ```
