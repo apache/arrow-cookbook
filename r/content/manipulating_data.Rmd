@@ -53,7 +53,7 @@ test_that("add_array works as expected", {
 })
 ```
 
-You'll get the same result if you pass in the value you're adding as an Arrow object.
+You will get the same result if you pass in the value you're adding as an Arrow object.
 
 ```{r, add_array_scalar}
 num_array + Scalar$create(10)
