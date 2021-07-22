@@ -2,7 +2,7 @@
 
 ## Computing Mean/Min/Max, etc value of an Array
 
-Many base R functions such as `mean()`, `min()`, and `max()` have been mapped to their Arrow equivalents, and so can be called on Arrow Array objects in the same way.  They will return Arrow object themselves.
+Many base R generic functions such as `mean()`, `min()`, and `max()` have been mapped to their Arrow equivalents, and so can be called on Arrow Array objects in the same way. They will return Arrow objects themselves.
 
 ```{r, array_mean_na}
 my_values <- Array$create(c(1:5, NA))
