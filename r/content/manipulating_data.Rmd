@@ -1,6 +1,6 @@
 # Manipulating Data
 
-## Computing Mean/Min/Max, etc value of an array
+## Computing Mean/Min/Max, etc value of an Array
 
 Many base R functions such as `mean()`, `min()`, and `max()` have been mapped to their Arrow equivalents, and so can be called on Arrow Array objects in the same way.  They will return Arrow object themselves.
 
@@ -24,7 +24,7 @@ test_that("fivenum works as expected", {
 })
 ```
 
-## Counting occurrences of elements in an array
+## Counting occurrences of elements in an Array
 
 You can use `value_count()` to count elements in an Array.
 
@@ -38,7 +38,7 @@ test_that("value_counts works as expected", {
 })
 ```
 
-## Applying arithmetic functions to arrays.
+## Applying arithmetic functions to Arrays.
 
 You can use the various arithmetic operators on Array objects.
 
