@@ -48,7 +48,7 @@ num_array + 10
 ```
 ```{r, test_add_array, opts.label = "test"}
 test_that("add_array works as expected", {
-  # need to specify expected array as 1:10 as 10 instead of 11:20 so is double not integer
+  # need to specify expected array as 1:10 + 10 instead of 11:20 so is double not integer
   expect_equal(num_array + 10, Array$create(1:10 + 10))
 })
 ```
