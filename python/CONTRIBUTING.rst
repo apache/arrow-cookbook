@@ -1,7 +1,7 @@
 Bulding the Python Cookbook
 ===========================
 
-The python cookbook is based on Sphinx documentation system.
+The python cookbook uses the Sphinx documentation system.
 
 Running ``make py`` from the cookbook root directory (the one where
 the ``README.rst`` exists) will install all necessary dependencies
