@@ -2,7 +2,7 @@
 
 ## Build an Arrow Table from native language types
 
-### Manually create a table from an R object
+### Manually create a Table from an R object
 
 You may want to convert an existing data frame in R to an Arrow Table object.
 
@@ -36,7 +36,7 @@ test_that("table_collect works as expected", {
 
 ### Manually create a RecordBatch
 
-You may want to convert an existing data frame in R to an Arrow Record Batch object.
+You may want to convert an existing data frame in R to an Arrow RecordBatch object.
 
 ```{r, record_batch_create}
 # Create an example data frame

@@ -43,3 +43,9 @@ Contributing to the Cookbook
 
 Please refer to the `CONTRIBUTING.md <CONTRIBUTING.md>`_ file
 for instructions about how to contribute to the Apache Arrow Cookbook.
+
+------------------------------------------------------------------------
+
+All participation in the Apache Arrow project is governed by the Apache
+Software Foundation’s 
+`code of conduct <https://www.apache.org/foundation/policies/conduct.html>`_.

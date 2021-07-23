@@ -67,3 +67,9 @@ If you refer to any ``pyarrow`` class, function or method using
 ``:class:``, ``:meth:`` or ``:func:`` directives a link to their
 documentation in the pyarrow API reference will be automatically
 created.
+
+------------------------------------------------------------------------
+
+All participation in the Apache Arrow project is governed by the Apache
+Software Foundation’s 
+`code of conduct <https://www.apache.org/foundation/policies/conduct.html>`_.
