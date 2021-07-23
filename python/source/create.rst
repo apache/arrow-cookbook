@@ -16,7 +16,7 @@ possible to create Arrow Arrays and Tables from
 plain Python structures.
 
 the :func:`pyarrow.table` function allows creation of Tables
-from nearly all supported inputs, including plain python objects
+from a variety of inputs, including plain python objects
 
 .. testcode::
 
