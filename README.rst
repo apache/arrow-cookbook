@@ -38,6 +38,15 @@ Refer to ``make help`` to learn the
 commands that build or test the cookbook for the platform you
 are targeting.
 
+Prerequisites
+=============
+
+Both the R and Python cookbooks will try to install the
+dependencies they need (including latests pyarrow/arrow-R version).
+This means that as far as you have a working Python/R environment
+able to install dependencies through the respective package manager
+you shouldn't need to install anything manually.
+
 Contributing to the Cookbook
 ============================
 
