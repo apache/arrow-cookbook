@@ -19,7 +19,7 @@
 
 project = 'Apache Arrow Python Cookbook'
 copyright = '2021, Apache Software Foundation'
-author = 'Apache Software Foundation'
+author = 'The Apache Software Foundation'
 
 
 # -- General configuration ---------------------------------------------------
