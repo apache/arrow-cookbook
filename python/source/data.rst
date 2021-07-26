@@ -59,7 +59,7 @@ function
 
 .. testoutput::
 
-  {'min': 0, 'max': 99}
+  [('min', 0), ('max', 99)]
 
 Counting Occurrences of Elements
 ================================
@@ -97,16 +97,16 @@ We can count occurences of all entries in the array using the
 
 .. testoutput::
 
-  {'values': 0, 'counts': 10}
-  {'values': 1, 'counts': 10}
-  {'values': 2, 'counts': 10}
-  {'values': 3, 'counts': 10}
-  {'values': 4, 'counts': 10}
-  {'values': 5, 'counts': 10}
-  {'values': 6, 'counts': 10}
-  {'values': 7, 'counts': 10}
-  {'values': 8, 'counts': 10}
-  {'values': 9, 'counts': 10}
+  [('values', 0), ('counts', 10)]
+  [('values', 1), ('counts', 10)]
+  [('values', 2), ('counts', 10)]
+  [('values', 3), ('counts', 10)]
+  [('values', 4), ('counts', 10)]
+  [('values', 5), ('counts', 10)]
+  [('values', 6), ('counts', 10)]
+  [('values', 7), ('counts', 10)]
+  [('values', 8), ('counts', 10)]
+  [('values', 9), ('counts', 10)]
 
 Applying arithmetic functions to arrays.
 =========================================
