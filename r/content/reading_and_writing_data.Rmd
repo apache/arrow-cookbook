@@ -21,7 +21,7 @@ test_that("write_parquet chunk works as expected", {
  
 ### Reading a Parquet file
 
-Given a Parquet file, it can be read back to an Arrow Table by using `arrow::read_parquet()`.
+Given a Parquet file, it can be read back in by using `arrow::read_parquet()`.
 
 ```{r, read_parquet}
 parquet_tbl <- read_parquet("my_table.parquet")
@@ -33,7 +33,7 @@ test_that("read_parquet works as expected", {
 })
 ```
 
-If the argument `as_data_frame` was set to `TRUE` (the default), the file was read in as a `data.frame` object.
+As the argument `as_data_frame` was left set to its default value of `TRUE`, the file was read in as a `data.frame` object.
 
 ```{r, read_parquet_2}
 class(parquet_tbl)
