@@ -68,7 +68,7 @@ df <- read_parquet(file = "s3://ursa-labs-taxi-data/2019/06/data.parquet")
 ```
 For more in-depth instructions, including how to work with S3 buckets which require authentication, you can find a guide to reading and writing to/from S3 buckets here: https://arrow.apache.org/docs/r/articles/fs.html.
 
-## How to filter rows or columns while reading a Parquet file 
+## How to filter columns while reading a Parquet file 
 
 When reading in a Parquet file, you can specify which columns to read in via the `col_select` argument.
 
