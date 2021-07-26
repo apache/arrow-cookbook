@@ -34,12 +34,15 @@ For example, the `value_count()` function in the Arrow R package is loosely equi
 repeated_vals <- Array$create(c(1, 1, 2, 3, 3, 3, 3, 3))
 value_counts(repeated_vals)
 ```
+
 ```{r, test_value_counts, opts.label = "test"}
 test_that("value_counts works as expected", {
-  expect_equal(as.vector(value_counts(repeated_vals)),
-  tibble(
-    values = as.numeric(names(table(as.vector(repeated_vals)))),
-    counts = as.vector(table(as.vector(repeated_vals)))
+  expect_equal(
+    as.vector(value_counts(repeated_vals)),
+    tibble(
+      values = as.numeric(names(table(as.vector(repeated_vals)))),
+      counts = as.vector(table(as.vector(repeated_vals)))
+    )
   )
 })
 ```
