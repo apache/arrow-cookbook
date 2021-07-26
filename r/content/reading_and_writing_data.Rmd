@@ -237,9 +237,6 @@ list.files("airquality_partitioned/Month=5/Day=10")
 You can use `open_dataset()` to read partitioned data.
 
 ```{r, open_dataset}
-# Write some partitioned data to disk to read back in
-write_dataset(airquality, "airquality_partitioned", partitioning = c("Month", "Day"))
-
 # Read data from directory
 air_data <- open_dataset("airquality_partitioned")
 
