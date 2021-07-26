@@ -93,7 +93,7 @@ We can count occurences of all entries in the array using the
 
   counts = pc.value_counts(nums_arr)
   for pair in counts:
-    print(pair)
+      print(pair)
 
 .. testoutput::
 

@@ -2,7 +2,7 @@
 
 ## Computing Mean/Min/Max, etc value of an Array
 
-Many base R functions such as `mean()`, `min()`, and `max()` have been mapped to their Arrow equivalents, and so can be called on Arrow Array objects in the same way.  They will return Arrow object themselves.
+Many base R generic functions such as `mean()`, `min()`, and `max()` have been mapped to their Arrow equivalents, and so can be called on Arrow Array objects in the same way. They will return Arrow objects themselves.
 
 ```{r, array_mean_na}
 my_values <- Array$create(c(1:5, NA))
@@ -34,7 +34,11 @@ value_counts(repeated_vals)
 ```
 ```{r, test_value_counts, opts.label = "test"}
 test_that("value_counts works as expected", {
-  expect_equal(as.vector(value_counts(repeated_vals)), tibble::tibble(values = c(1, 2, 3), counts = c(2L, 1L, 5L)))
+  expect_equal(as.vector(value_counts(repeated_vals)),
+  tibble(
+    values = as.numeric(names(table(as.vector(repeated_vals)))),
+    counts = as.vector(table(as.vector(repeated_vals)))
+  )
 })
 ```
 
@@ -48,19 +52,19 @@ num_array + 10
 ```
 ```{r, test_add_array, opts.label = "test"}
 test_that("add_array works as expected", {
-  # need to specify expected array as 1:10 as 10 instead of 11:20 so is double not integer
+  # need to specify expected array as 1:10 + 10 instead of 11:20 so is double not integer
   expect_equal(num_array + 10, Array$create(1:10 + 10))
 })
 ```
 
-You'll get the same result if you pass in the value you're adding as an Arrow object.
+You will get the same result if you pass in the value you're adding as an Arrow object.
 
 ```{r, add_array_scalar}
 num_array + Scalar$create(10)
 ```
 ```{r, test_add_array_scalar, opts.label = "test"}
 test_that("add_array_scalar works as expected", {
-  # need to specify expected array as 1:10 as 10 instead of 11:20 so is double not integer
+  # need to specify expected array as 1:10 + 10 instead of 11:20 so is double not integer
   expect_equal(num_array + Scalar$create(10), Array$create(1:10 + 10))
 })
 ```

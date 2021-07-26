@@ -46,4 +46,8 @@ You can see the compiled result inside the ``build/r`` directory.
 
 If you add a new recipe to the cookbook, you do not need to commit changes to `build/r` to the repo, as this is automatically run by our CI when building the latest version of the cookbook on the main branch.
 
+------------------------------------------------------------------------
 
+All participation in the Apache Arrow project is governed by the Apache
+Software Foundation’s [code of
+conduct](https://www.apache.org/foundation/policies/conduct.html).

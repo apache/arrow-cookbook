@@ -200,7 +200,7 @@ test_that("write_feather chunk works as expected", {
 ```
 ### Write a Feather (version 1) file
 
-You can write data in the original Feather format by setting the `version` parameter to `1`.
+For legacy support, you can write data in the original Feather format by setting the `version` parameter to `1`.
 
 ```{r, write_feather1}
 # Create table
@@ -252,4 +252,3 @@ test_that("read_ipc_stream chunk works as expected", {
   expect_equal(my_ipc_stream, tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99)))
 })
 ```
-
