@@ -191,7 +191,7 @@ test_that("write_csv_arrow chunk works as expected", {
 You can use `read_csv_arrow()` to read in a CSV file as an Arrow Table.
 
 ```{r, read_csv_arrow}
-my_csv <- read_csv_arrow("cars.csv")
+my_csv <- read_csv_arrow("cars.csv", as_data_frame = FALSE)
 ```
 
 ```{r, test_read_csv_arrow, opts.label = "test"}
