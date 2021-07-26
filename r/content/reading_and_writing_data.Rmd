@@ -59,7 +59,7 @@ test_that("read_parquet_table_class works as expected", {
 })
 ```
 
-## How to read a (partitioned) Parquet file from S3 
+## How to read a Parquet file from S3 
 
 You can open a Parquet file saved on S3 by calling `read_parquet()` and passing the relevant URI as the `file` argument.
 
