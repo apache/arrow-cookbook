@@ -26,7 +26,9 @@ test_that("fivenum works as expected", {
 
 ## Counting occurrences of elements in an Array
 
-You can use `value_count()` to count elements in an Array.
+Some functions in the Arrow R package do not have base R equivalents. In other cases, the base R equivalents are not generic functions so they cannot be called directly on Arrow Array objects.
+
+For example, the `value_count()` function in the Arrow R package is loosely equivalent to the base R function `table()`, which is not a generic function. To count the elements in an R vector, you can use `table()`; to count the elements in an Arrow Array, you can use `value_count()`.
 
 ```{r, value_counts}
 repeated_vals <- Array$create(c(1, 1, 2, 3, 3, 3, 3, 3))
