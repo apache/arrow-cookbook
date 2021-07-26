@@ -17,7 +17,7 @@ Write a Parquet file
 
     arr = pa.array(np.arange(100))
 
-Given an array with all numbers from 0 to 100
+Given an array with 100 numbers, from 0 to 99
 
 .. testcode::
 
@@ -117,7 +117,7 @@ it is possible to dump data in the raw arrow format which allows
 direct memory mapping of data from disk. This format is called
 the Arrow IPC format.
 
-Given an array with all numbers from 0 to 100
+Given an array with 100 numbers, from 0 to 99
 
 .. testcode::
 
@@ -367,7 +367,7 @@ Write a Feather file
 
     arr = pa.array(np.arange(100))
 
-Given an array with all numbers from 0 to 100
+Given an array with 100 numbers, from 0 to 99
 
 .. testcode::
 

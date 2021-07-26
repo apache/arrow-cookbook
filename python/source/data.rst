@@ -23,7 +23,7 @@ module.
 
   arr = pa.array(np.arange(100))
 
-Given an array with all numbers from 0 to 100
+Given an array with 100 numbers, from 0 to 99
 
 .. testcode::
 
@@ -74,7 +74,7 @@ module.
 
   nums_arr = pa.array(list(range(10))*10)
 
-Given an array with all numbers from 0 to 10 repeated 10 times
+Given an array with all numbers from 0 to 9 repeated 10 times
 
 .. testcode::
 
@@ -114,7 +114,7 @@ Applying arithmetic functions to arrays.
 The compute functions in :mod:`arrow.compute` also include
 common transformations such as arithmetic functions.
 
-Given an array with all numbers from 0 to 100
+Given an array with 100 numbers, from 0 to 99
 
 .. testcode::
 
