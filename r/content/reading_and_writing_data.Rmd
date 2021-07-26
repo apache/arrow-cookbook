@@ -1,6 +1,41 @@
 # Reading and Writing Data
 
-This chapter contains recipes related to reading and writing data from disk using Apache Arrow.
+This chapter contains recipes related to reading and writing data using Apache Arrow.  When reading data using Apache Arrow, there are 2 different ways you may choose to read in the data:
+1. a `tibble`
+2. an Arrow Table
+
+There are a number of circumstances in which you may want to read in the data as an Arrow Table:
+* your dataset is large and if you load it into memory, it may lead to performance issues
+* you want faster performance from your `dplyr` queries
+* you want to be able to take advantage of Arrow's compute functions
+
+## Converting from a tibble to an Arrow Table
+
+You can convert an existing `tibble` or `data.frame` into an Arrow Table.
+
+```{r, table_create}
+air_table <- Table$create(airquality)
+air_table
+```
+```{r, test_table_create, opts.label = "test"}
+test_that("table_create chunk works as expected", {
+  expect_s3_class(air_table, "Table")
+})
+```
+
+## Converting data from an Arrow Table to a tibble
+
+You may want to convert an Arrow Table to a tibble to view the data or work with it in your usual analytics pipeline.  You can use either `dplyr::collect()` or `as.data.frame()` to do this.
+
+```{r, collect_table}
+air_tibble <- dplyr::collect(air_table)
+air_tibble
+```
+```{r, test_collect_table, opts.label = "test"}
+test_that("collect_table chunk works as expected", {
+  expect_identical(air_tibble, airquality) 
+})
+```
 
 ## Reading and Writing Parquet Files
 
