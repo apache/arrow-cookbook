@@ -27,7 +27,8 @@ Given an array with 100 numbers, from 0 to 99
 
     0 .. 99
 
-To write it to a Parquet file, as Parquet is a columnar format,
+To write it to a Parquet file, 
+as Parquet is a format that contains multiple named columns,
 we must create a :class:`pyarrow.Table` out of it,
 so that we get a table of a single column which can then be
 written to a Parquet file. 
