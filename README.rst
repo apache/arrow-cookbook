@@ -4,7 +4,7 @@ Apache Arrow Cookbooks
 Cookbooks are a collection of recipes about common tasks
 that Arrow users might want to do. The cookbook is actually
 composed of multiple cookbooks, one for each supported platform,
-that contain the recipes for that specific platform.
+which contain the recipes for that specific platform.
 
 All cookbooks are buildable to HTML and verifiable by running
 a set of tests that confirm that the recipes are still working
