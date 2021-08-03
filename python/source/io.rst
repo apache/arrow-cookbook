@@ -21,6 +21,11 @@ Given an array with 100 numbers, from 0 to 99
 
 .. testcode::
 
+    import numpy as np
+    import pyarrow as pa
+
+    arr = pa.array(np.arange(100))
+
     print(f"{arr[0]} .. {arr[-1]}")
 
 .. testoutput::
@@ -121,6 +126,11 @@ the Arrow IPC format.
 Given an array with 100 numbers, from 0 to 99
 
 .. testcode::
+
+    import numpy as np
+    import pyarrow as pa
+
+    arr = pa.array(np.arange(100))
 
     print(f"{arr[0]} .. {arr[-1]}")
 
@@ -371,6 +381,11 @@ Write a Feather file
 Given an array with 100 numbers, from 0 to 99
 
 .. testcode::
+
+    import numpy as np
+    import pyarrow as pa
+
+    arr = pa.array(np.arange(100))
 
     print(f"{arr[0]} .. {arr[-1]}")
 
