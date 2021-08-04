@@ -17,8 +17,8 @@ jobs:
         uses: r-lib/actions/setup-pandoc@v1
       - name: Install dependencies
         run: sudo apt install libcurl4-openssl-dev libssl-dev python3-pip
-  #     - name: Run tests
-  #       run: make test
+      - name: Run tests
+        run: make test
       - name: Build and render books
         run: make all
       - name: Upload book artifact
@@ -40,7 +40,7 @@ jobs:
         with:
           name: build_book
           path: .
-      - name: Stage changes
+      - name: Push changes to gh-pages branch
         run: |
           git config --global user.name 'GitHub Actions'
           git config --global user.email 'actions@github.com'
