@@ -13,11 +13,11 @@ There are a number of circumstances in which you may want to read in the data as
 
 You can convert an existing `tibble` or `data.frame` into an Arrow Table.
 
-```{r, table_create}
+```{r, table_create_from_tibble}
 air_table <- Table$create(airquality)
 air_table
 ```
-```{r, test_table_create, opts.label = "test"}
+```{r, test_table_create_from_tibble, opts.label = "test"}
 test_that("table_create chunk works as expected", {
   expect_s3_class(air_table, "Table")
 })
