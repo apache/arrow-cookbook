@@ -1,0 +1,12 @@
+github:
+  features:
+    # Enable wiki for documentation
+    wiki: false
+    # Enable issue management
+    issues: true
+    # Enable projects for project management boards
+    projects: false
+    
+github:
+  ghp_branch:  gh-pages
+  ghp_path:    .
