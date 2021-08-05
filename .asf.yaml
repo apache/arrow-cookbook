@@ -20,4 +20,7 @@ github:
     issues: true
   ghp_branch:  gh-pages
   ghp_path:    .
+  collaborators:
+    - thisisnic
+    - amol-
 
