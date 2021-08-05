@@ -18,6 +18,9 @@
 github:
   features:
     issues: true
+  protected_branches:
+    main:
+      foo: bar # dummy value to make main a dictionary
   ghp_branch:  gh-pages
   ghp_path:    .
 
