@@ -15,57 +15,54 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# Set the version of Arrow to build based on command line arguments
 args <- commandArgs(trailingOnly = TRUE)
 
-install_release <- FALSE
-build_version <- NA
-
-# get arguments used to run this script
-if (length(args) == 0) {
-  install_release <- TRUE
-} else {
+if (length(args) > 0) {
   build_version <- package_version(args[1])
+} else {
+  build_version <- NA
 }
 
-# get installed version of a package
-get_installed_version <- function(pkg){
+#' Get installed version of a package
+#'
+#' @param pkg Package name, character
+#' @return Package version number, or 0.0.0 if not installed.
+get_installed_version <- function(pkg) {
   tryCatch(
     packageVersion(pkg),
     error = function(e) {
-      return(structure(list(c(0L, 0L, 0L)), class = c("package_version", "numeric_version")))
+      return(
+        structure(
+          list(
+            c(0L, 0L, 0L)
+          ),
+          class = c("package_version", "numeric_version")
+        )
+      )
     }
   )
 }
 
-# install dependencies if not installed
-load_package <- function(pkg_name){
+#' Load package, installing it first if not already installed
+#'
+#' @param pkg Package name, character.
+load_package <- function(pkg) {
   if (!require(pkg_name, character.only = TRUE)) {
-    install.packages(pkg_name)
-  } 
-  library(pkg_name, character.only = TRUE)
+    install.packages(pkg)
+  }
+  library(pkg, character.only = TRUE)
 }
 
-dependencies <- c("testthat", "bookdown", "knitr", "purrr", "remotes", "dplyr")
-
-lapply(dependencies, load_package)
-
-
-
-#' Install the appropriate Arrow version
-#' 
-#' If `build_release` is TRUE, install the latest version of Arrow, else 
-#' installs the specified version 
-#' 
-#' @param release_version Install last released Arrow R package? Logical.
-#' @param build_version The version to install
-install_arrow_version <- function(release_version = FALSE, build_version = NULL){
-  
+#' Install a specific version of the Arrow R package
+#'
+#' @param build_version The version to install. Default value of NA installs the last release.
+install_arrow_version <- function(build_version = NA) {
   installed_version <- get_installed_version("arrow")
-  
-  if (release_version) {
-    
-    last_release <- available.packages()["arrow",]["Version"]
-    
+
+  if (is.na(build_version)) {
+    last_release <- available.packages()["arrow", ]["Version"]
+
     # Only install the latest released version if it's not already installed
     if (package_version(last_release) != installed_version) {
       Sys.setenv(NOT_CRAN = TRUE)
@@ -79,4 +76,7 @@ install_arrow_version <- function(release_version = FALSE, build_version = NULL)
   }
 }
 
-install_arrow_version(install_release, build_version)
+dependencies <- c("testthat", "bookdown", "knitr", "purrr", "remotes", "dplyr")
+lapply(dependencies, load_package)
+
+install_arrow_version(build_version)
