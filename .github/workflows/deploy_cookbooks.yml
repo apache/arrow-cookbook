@@ -29,10 +29,47 @@ jobs:
           name: build_book
           path: build/
 
+  make_cpp:
+    name: build c++
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+      - uses: actions/checkout@v1
+      - name: Cache conda
+        uses: actions/cache@v2
+        env:
+          # Increase this value to reset cache if cpp/environment.yml has not changed
+          CACHE_NUMBER: 0
+        with:
+          path: ~/conda_pkgs_dir
+          key:
+            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('cpp/environment.yml') }}
+      - name: Setup environment
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          python-version: 3.9
+          activate-environment: cookbook-cpp
+          environment-file: cpp/environment.yml
+          auto-activate-base: false
+      - name: Test
+        run:
+          echo ${CONDA_PREFIX}
+      - name: Build cookbook
+        run:
+          make cpp
+      - name: Upload cpp book
+        uses: actions/upload-artifact@v1
+        with:
+          name: cpp_book
+          path: build/cpp
+
   deploy_cookbooks:
     name: deploy
     runs-on: ubuntu-latest
-    needs: make_cookbooks
+    needs: [make_cookbooks, make_cpp]
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
@@ -47,6 +84,11 @@ jobs:
         with:
           name: build_book
           path: .
+      - name: Download cpp book
+        uses: actions/download-artifact@v1.0.0
+        with:
+          name: cpp_book
+          path: ./cpp
       - name: Push changes to gh-pages/asf-site branch
         run: |
           git config --global user.name 'GitHub Actions'
