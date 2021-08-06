@@ -17,6 +17,8 @@ jobs:
         uses: r-lib/actions/setup-pandoc@v1
       - name: Install dependencies
         run: sudo apt install libcurl4-openssl-dev libssl-dev python3-pip
+      - name: Run tests
+        run: make test
       - name: Build and render books
         run: make all
       - name: Upload book artifact
