@@ -48,7 +48,7 @@ get_installed_version <- function(pkg) {
 #'
 #' @param pkg Package name, character.
 load_package <- function(pkg) {
-  if (!require(pkg_name, character.only = TRUE)) {
+  if (!require(pkg, character.only = TRUE)) {
     install.packages(pkg)
   }
   library(pkg, character.only = TRUE)
