@@ -18,9 +18,16 @@ get_installed_version <- function(pkg){
 }
 
 # install dependencies if not installed
-if (!require("pacman")) install.packages("pacman")
-pacman::p_load("testthat", "bookdown", "xfun", "knitr", "purrr", "remotes", "dplyr")
-pacman::p_load_gh("rmflight/testrmd")
+load_package <- function(pkg_name){
+  if (!require(pkg_name, character.only = TRUE)) {
+    install.packages(pkg_name)
+  } 
+  library(pkg_name, character.only = TRUE)
+}
+
+dependencies <- c("testthat", "bookdown", "knitr", "purrr", "remotes", "dplyr")
+
+lapply(dependencies, load_package)
 
 # check version of Arrow installed, and install correct one
 if (!inherits(build_version, "package_version") && build_version == "latest") {
