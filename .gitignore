@@ -2,4 +2,11 @@ r/content/_book/**
 r/*.Rproj
 *.Rproj
 .Rproj.user
-python/build
+
+*build/
+
+*.parquet
+*.arrow
+*.arrows
+*.csv
+*.feather
