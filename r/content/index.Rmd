@@ -5,7 +5,6 @@ params:
 ---
 
 ```{r setup, include = FALSE}
-testrmd::init()
 library(arrow)
 library(testthat)
 library(dplyr)

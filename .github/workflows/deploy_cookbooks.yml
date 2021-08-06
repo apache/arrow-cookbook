@@ -3,11 +3,11 @@ on:
      branches:
        - main
 
-name: render_cookbooks
+name: Deploy Cookbooks
 
 jobs:
-  make_books:
-    name: Render-Book
+  make_cookbooks:
+    name: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -27,9 +27,10 @@ jobs:
           name: build_book
           path: build/
 
-  checkout-and-deploy:
+  deploy_cookbooks:
+    name: deploy
     runs-on: ubuntu-latest
-    needs: make_books
+    needs: make_cookbooks
     steps:
       - name: Checkout gh-pages branch
         uses: actions/checkout@v2
