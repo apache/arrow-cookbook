@@ -6,7 +6,7 @@ on:
 name: Test Cookbooks
 
 jobs:
-  make_books:
+  test_cookbooks:
     name: test
     runs-on: ubuntu-latest
     steps:

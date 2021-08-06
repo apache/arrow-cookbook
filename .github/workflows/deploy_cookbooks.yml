@@ -6,7 +6,7 @@ on:
 name: Deploy Cookbooks
 
 jobs:
-  make_books:
+  make_cookbooks:
     name: build
     runs-on: ubuntu-latest
     steps:
