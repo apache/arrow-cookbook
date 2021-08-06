@@ -1,0 +1,23 @@
+on:
+  pull_request:
+    branches:
+       - main
+
+name: Test Cookbooks
+
+jobs:
+  test_cookbooks:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v1
+      - name: Setup pandoc
+        uses: r-lib/actions/setup-pandoc@v1
+      - name: Install dependencies
+        run: sudo apt install libcurl4-openssl-dev libssl-dev python3-pip
+      - name: Run tests
+        run: make test
+      - name: Build cookbooks
+        run: make all
