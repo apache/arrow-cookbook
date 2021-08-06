@@ -25,7 +25,7 @@ load_package <- function(pkg_name){
   library(pkg_name, character.only = TRUE)
 }
 
-dependencies <- c("testthat", "bookdown", "xfun", "knitr", "purrr", "remotes", "dplyr")
+dependencies <- c("testthat", "bookdown", "knitr", "purrr", "remotes", "dplyr")
 
 lapply(dependencies, load_package)
 
