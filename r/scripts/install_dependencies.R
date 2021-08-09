@@ -77,6 +77,9 @@ install_arrow_version <- function(version_to_install) {
 }
 
 dependencies <- c("testthat", "bookdown", "knitr", "purrr", "remotes", "dplyr")
-lapply(dependencies, load_package)
+
+for (dependency in dependencies) {
+  load_package(dependency)
+}
 
 install_arrow_version(build_version)
