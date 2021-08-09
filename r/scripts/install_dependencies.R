@@ -48,7 +48,7 @@ get_installed_version <- function(pkg) {
 #'
 #' @param pkg Package name, character.
 load_package <- function(pkg) {
-  if (!require(pkg, character.only = TRUE)) {
+  if (!suppressWarnings(suppressMessages(require(pkg, character.only = TRUE)))) {
     install.packages(pkg, repos = "https://cran.rstudio.com")
   }
   library(pkg, character.only = TRUE)
@@ -59,7 +59,7 @@ load_package <- function(pkg) {
 #' @param version_to_install The version to install. Default is latest CRAN version.
 install_arrow_version <- function(version_to_install) {
 
-  # TODO: refactor this to get the latest available version on the nightlies 
+  # TODO: refactor this to get the latest available version on the nightlies
   # given we set NOT_CRAN = TRUE
   latest_release <- package_version(available.packages()["arrow", ]["Version"])
   installed_version <- get_installed_version("arrow")
@@ -69,7 +69,7 @@ install_arrow_version <- function(version_to_install) {
     Sys.setenv(NOT_CRAN = TRUE)
     install.packages("arrow")
     # Otherwise installed the build version specified if not already installed
-    # TODO: refactor this to install the specific version from the nightlies if 
+    # TODO: refactor this to install the specific version from the nightlies if
     # a binary is available
   } else if (installed_version != version_to_install) {
     remotes::install_version("arrow", version = version_to_install)
