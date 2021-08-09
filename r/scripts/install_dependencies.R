@@ -68,7 +68,7 @@ install_arrow_version <- function(version_to_install) {
   if (version_to_install == latest_release && installed_version != latest_release) {
     Sys.setenv(NOT_CRAN = TRUE)
     install.packages("arrow")
-    # Otherwise installed the build version specified if not already installed
+    # Otherwise install the build version specified if not already installed
     # TODO: refactor this to install the specific version from the nightlies if
     # a binary is available
   } else if (installed_version != version_to_install) {
