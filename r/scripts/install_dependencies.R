@@ -49,30 +49,31 @@ get_installed_version <- function(pkg) {
 #' @param pkg Package name, character.
 load_package <- function(pkg) {
   if (!require(pkg, character.only = TRUE)) {
-    install.packages(pkg, repos = 'https://cran.rstudio.com')
+    install.packages(pkg, repos = "https://cran.rstudio.com")
   }
   library(pkg, character.only = TRUE)
 }
 
 #' Install a specific version of the Arrow R package
 #'
-#' @param build_version The version to install. Default value of NA installs the last release.
-install_arrow_version <- function(build_version = NA) {
+#' @param build_version The version to install. Default is latest CRAN version.
+install_arrow_version <- function(
+  build_version = package_version(available.packages()["arrow", ]["Version"])) {
+
+  # TODO: refactor this to get the latest available version on the nightlies 
+  # given we set NOT_CRAN = TRUE
+  latest_release <- package_version(available.packages()["arrow", ]["Version"])
   installed_version <- get_installed_version("arrow")
 
-  if (is.na(build_version)) {
-    last_release <- available.packages()["arrow", ]["Version"]
-
-    # Only install the latest released version if it's not already installed
-    if (package_version(last_release) != installed_version) {
-      Sys.setenv(NOT_CRAN = TRUE)
-      install.packages("arrow")
-    }
-  } else {
+  # Only install the latest released version if it's not already installed
+  if (build_version == latest_release && installed_version != latest_release) {
+    Sys.setenv(NOT_CRAN = TRUE)
+    install.packages("arrow")
     # Otherwise installed the build version specified if not already installed
-    if (installed_version != build_version) {
-      remotes::install_version("arrow", version = build_version)
-    }
+    # TODO: refactor this to install the specific version from the nightlies if 
+    # a binary is available
+  } else if (installed_version != build_version) {
+    remotes::install_version("arrow", version = build_version)
   }
 }
 
