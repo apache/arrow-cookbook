@@ -49,7 +49,7 @@ get_installed_version <- function(pkg) {
 #' @param pkg Package name, character.
 load_package <- function(pkg) {
   if (!suppressWarnings(suppressMessages(require(pkg, character.only = TRUE)))) {
-    install.packages(pkg, repos = "https://cran.rstudio.com")
+    install.packages(pkg)
   }
   library(pkg, character.only = TRUE)
 }
