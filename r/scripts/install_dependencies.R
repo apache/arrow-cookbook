@@ -60,7 +60,7 @@ load_package <- function(pkg) {
 install_arrow_version <- function(version_to_install) {
 
   # TODO: refactor this to get the latest available version on the nightlies
-  # given we set NOT_CRAN = TRUE
+  # given we set NOT_CRAN = TRUE (#29)
   latest_release <- package_version(available.packages()["arrow", ]["Version"])
   installed_version <- get_installed_version("arrow")
 
@@ -70,7 +70,7 @@ install_arrow_version <- function(version_to_install) {
     install.packages("arrow")
     # Otherwise install the build version specified if not already installed
     # TODO: refactor this to install the specific version from the nightlies if
-    # a binary is available
+    # a binary is available (#29)
   } else if (installed_version != version_to_install) {
     remotes::install_version("arrow", version = version_to_install)
   }
