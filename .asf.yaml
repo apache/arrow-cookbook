@@ -26,4 +26,5 @@ github:
   collaborators:
     - thisisnic
     - amol-
-
+  publish:
+    whoami:   gh-pages
