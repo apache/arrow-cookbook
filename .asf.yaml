@@ -23,4 +23,7 @@ github:
       foo: bar # dummy value to make main a dictionary
   ghp_branch:  gh-pages
   ghp_path:    .
+  collaborators:
+    - thisisnic
+    - amol-
 
