@@ -25,6 +25,9 @@ on:
      - "r/**"
      - ".github/workflows/test_r_cookbook.yml"
 
+concurrency:
+  cancel-in-progress: true
+
 jobs:
   test_r:
     name: "Test R Cookbook"

@@ -24,6 +24,9 @@ on:
     paths:
      - "python/**"
      - ".github/workflows/test_python_cookbook.yml"
+     
+concurrency:
+  cancel-in-progress: true
 
 jobs:
   test_py:
