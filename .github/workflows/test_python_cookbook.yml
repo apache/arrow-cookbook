@@ -27,7 +27,7 @@ on:
 
 jobs:
   test_py:
-    name: test
+    name: "Test Python Cookbook"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1

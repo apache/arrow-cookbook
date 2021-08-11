@@ -26,8 +26,8 @@ on:
      - ".github/workflows/test_r_cookbook.yml"
 
 jobs:
-  test_cookbooks:
-    name: test
+  test_r:
+    name: "Test R Cookbook"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
