@@ -41,3 +41,4 @@ jobs:
         run: make pytest
       - name: Build cookbook
         run: make py
+
