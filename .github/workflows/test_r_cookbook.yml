@@ -23,7 +23,7 @@ on:
        - main
     paths:
      - "r/**"
-     - ".github/workflows/r/**"
+     - ".github/workflows/test_r_cookbook.yml"
 
 jobs:
   test_cookbooks:

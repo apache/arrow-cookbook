@@ -23,7 +23,7 @@ on:
        - main
     paths:
      - "python/**"
-     - ".github/workflows/python/**"
+     - ".github/workflows/test_python_cookbook.yml"
 
 jobs:
   test_py:
