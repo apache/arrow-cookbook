@@ -26,6 +26,7 @@ on:
      - ".github/workflows/test_python_cookbook.yml"
      
 concurrency:
+  group: ${{ github.repository }}-${{ github.ref }}-${{ github.workflow }}
   cancel-in-progress: true
 
 jobs:
