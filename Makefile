@@ -45,8 +45,13 @@ endif
 r: rdeps
 	@echo ">>> Building R Cookbook <<<\n"
 	R -s -e 'bookdown::render_book("./r/content", output_format = "bookdown::gitbook")'
-	mkdir -p build/r
-	cp -r r/content/_book/* build/r
+ifdef arrow_r_version
+		mkdir -p build/r/$(arrow_r_version)/
+		cp -r r/content/_book/* build/r/$(arrow_r_version)/
+else
+		cp -r r/content/_book/* build/r/
+endif
+		
 
 rtest: rdeps
 	@echo ">>> Testing R Cookbook <<<\n"
