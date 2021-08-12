@@ -59,6 +59,11 @@ load_package <- function(pkg) {
 #' @param version_to_install The version to install. Default is latest CRAN version.
 install_arrow_version <- function(version_to_install) {
 
+  # Unset the ARROW_HOME environment variable so we build the correct C++
+  old_home <- Sys.getenv("ARROW_HOME")
+  Sys.setenv("ARROW_HOME" = "")
+  on.exit(Sys.setenv("ARROW_HOME" = old_home))
+  
   # TODO: refactor this to get the latest available version on the nightlies
   # given we set NOT_CRAN = TRUE (#29)
   latest_release <- package_version(available.packages()["arrow", ]["Version"])
