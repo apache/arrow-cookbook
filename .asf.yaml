@@ -25,7 +25,6 @@ github:
   ghp_path:    .
   collaborators:
     - thisisnic
-    - amol-
 
 notifications:
   commits:      commits@arrow.apache.org
