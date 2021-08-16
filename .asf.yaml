@@ -34,5 +34,3 @@ notifications:
 publish:
   whoami: asf-site
   subdir: cookbook
-
-
