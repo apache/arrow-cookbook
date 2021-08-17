@@ -21,6 +21,8 @@ jobs:
         run: make test
       - name: Build and render books
         run: make all
+      - name: Copy .asf.yaml
+        run: cp .asf.yaml build/.asf.yaml
       - name: Upload book artifact
         uses: actions/upload-artifact@v1
         with:
