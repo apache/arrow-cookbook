@@ -60,11 +60,11 @@ Given a Parquet file, it can be read back in by using `arrow::read_parquet()`.
 
 ```{r, read_parquet}
 parquet_tbl <- read_parquet("my_table.parquet")
-head(parquet_tbl)
+parquet_tbl
 ```
 ```{r, test_read_parquet, opts.label = "test"}
 test_that("read_parquet works as expected", {
-  expect_equivalent(dplyr::collect(parquet_tbl), tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99)))
+  expect_identical(as.data.frame(parquet_tbl), tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99)))
 })
 ```
 
@@ -82,7 +82,7 @@ If you set `as_data_frame` to `FALSE`, the file will be read in as an Arrow Tabl
 
 ```{r, read_parquet_table}
 my_table_arrow_table <- read_parquet("my_table.parquet", as_data_frame = FALSE)
-head(my_table_arrow_table)
+my_table_arrow_table
 ```
 
 ```{r, read_parquet_table_class}
@@ -115,7 +115,7 @@ write_parquet(dist_time, "dist_time.parquet")
 
 # Read in only the "time" column
 time_only <- read_parquet("dist_time.parquet", col_select = "time")
-head(time_only)
+time_only
 ```
 ```{r, test_read_parquet_filter, opts.label = "test"}
 test_that("read_parquet_filter works as expected", {
