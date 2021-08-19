@@ -20,11 +20,9 @@
 
 #include "common.h"
 
-using namespace std;
-
 TEST(BasicArrow, ReturnNotOkNoMacro) {
   StartRecipe("ReturnNotOkNoMacro");
-  function<arrow::Status()> test_fn = [] {
+  std::function<arrow::Status()> test_fn = [] {
     arrow::NullBuilder builder;
     arrow::Status st = builder.Reserve(2);
     // Tedious return value check
@@ -36,26 +34,26 @@ TEST(BasicArrow, ReturnNotOkNoMacro) {
     if (!st.ok()) {
       return st;
     }
-    rout << "Appended -1 null values?" << endl;
+    rout << "Appended -1 null values?" << std::endl;
     return arrow::Status::OK();
   };
   arrow::Status st = test_fn();
-  rout << st << endl;
+  rout << st << std::endl;
   EndRecipe("ReturnNotOkNoMacro");
   ASSERT_FALSE(st.ok());
 }
 
 TEST(BasicArrow, ReturnNotOk) {
   StartRecipe("ReturnNotOk");
-  function<arrow::Status()> test_fn = [] {
+  std::function<arrow::Status()> test_fn = [] {
     arrow::NullBuilder builder;
     ARROW_RETURN_NOT_OK(builder.Reserve(2));
     ARROW_RETURN_NOT_OK(builder.AppendNulls(-1));
-    rout << "Appended -1 null values?" << endl;
+    rout << "Appended -1 null values?" << std::endl;
     return arrow::Status::OK();
   };
   arrow::Status st = test_fn();
-  rout << st << endl;
+  rout << st << std::endl;
   EndRecipe("ReturnNotOk");
   ASSERT_FALSE(st.ok());
 }

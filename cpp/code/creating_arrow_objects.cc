@@ -20,38 +20,36 @@
 
 #include "common.h"
 
-using namespace std;
-
 TEST(CreatingArrowObjects, CreateArrays) {
   StartRecipe("CreatingArrays");
   arrow::Int32Builder builder;
   ASSERT_OK(builder.Append(1));
   ASSERT_OK(builder.Append(2));
   ASSERT_OK(builder.Append(3));
-  ASSERT_OK_AND_ASSIGN(shared_ptr<arrow::Array> arr, builder.Finish())
-  rout << arr->ToString() << endl;
+  ASSERT_OK_AND_ASSIGN(std::shared_ptr<arrow::Array> arr, builder.Finish())
+  rout << arr->ToString() << std::endl;
   EndRecipe("CreatingArrays");
 
   StartRecipe("CreatingArraysPtr");
   // Raw pointers
   arrow::Int64Builder long_builder = arrow::Int64Builder();
-  array<int64_t, 4> values = {1, 2, 3, 4};
+  std::array<int64_t, 4> values = {1, 2, 3, 4};
   ASSERT_OK(long_builder.AppendValues(values.data(), values.size()));
   ASSERT_OK_AND_ASSIGN(arr, long_builder.Finish());
-  rout << arr->ToString() << endl;
+  rout << arr->ToString() << std::endl;
 
   // Vectors
   arrow::StringBuilder str_builder = arrow::StringBuilder();
-  vector<string> strvals = {"x", "y", "z"};
+  std::vector<std::string> strvals = {"x", "y", "z"};
   ASSERT_OK(str_builder.AppendValues(strvals));
   ASSERT_OK_AND_ASSIGN(arr, str_builder.Finish());
-  rout << arr->ToString() << endl;
+  rout << arr->ToString() << std::endl;
 
   // Iterators
   arrow::DoubleBuilder dbl_builder = arrow::DoubleBuilder();
-  set<double> dblvals = {1.1, 1.1, 2.3};
+  std::set<double> dblvals = {1.1, 1.1, 2.3};
   ASSERT_OK(dbl_builder.AppendValues(dblvals.begin(), dblvals.end()));
   ASSERT_OK_AND_ASSIGN(arr, dbl_builder.Finish());
-  rout << arr->ToString() << endl;
+  rout << arr->ToString() << std::endl;
   EndRecipe("CreatingArraysPtr");
 }

@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
     if (!st.ok()) {
       std::cerr << "Tests ran successfully but failed to dump recipe output: " << st
                 << std::endl;
-      // return -1;
+      return -1;
     }
     std::cout << "Created recipe file "
               << std::filesystem::current_path().append("recipes_out.arrow").string()
