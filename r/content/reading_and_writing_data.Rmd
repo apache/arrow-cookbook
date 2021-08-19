@@ -64,7 +64,7 @@ parquet_tbl
 ```
 ```{r, test_read_parquet, opts.label = "test"}
 test_that("read_parquet works as expected", {
-  expect_identical(as.data.frame(parquet_tbl), tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99)))
+  expect_identical(parquet_tbl, tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99)))
 })
 ```
 
