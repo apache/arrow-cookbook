@@ -217,6 +217,63 @@ provided to :func:`pyarrow.csv.read_csv` to drive
     col1: int64
     ChunkedArray = 0 .. 99
 
+Writing Partitioned Datasets 
+============================
+
+When your dataset is big it usually makes sense to split it into
+multiple separate files. You can do this manually or use 
+:func:`pyarrow.dataset.write_dataset` to let Arrow do the effort
+of splitting the data in chunks for you.
+
+The ``partitioning`` argument allows to tell :func:`pyarrow.dataset.write_dataset`
+for which columns the data should be split. For example given a table
+with 100 numbers, we could add a ``chunk`` column that groups numbers
+in chunks of 10 numbers each.
+
+.. testcode::
+
+    data = pa.table({"numbers": range(100), 
+                     "chunk": [x // 10 for x in range(100)]})
+
+Then we could partition the data by the chunk column so that it
+gets saved in 10 different files:
+
+.. testcode::
+
+    import pyarrow as pa
+    import pyarrow.dataset as ds
+
+    ds.write_dataset(data, "./partitioned", format="parquet",
+                     partitioning=ds.partitioning(pa.schema([("chunk", pa.int8())])))
+
+Arrow will partition datasets in subdirectories by default, which will
+result in 10 different directories named with the value of the partitioning
+column and with file containing the data partition inside:
+
+.. testcode::
+
+    from pyarrow import fs
+
+    s3 = fs.LocalFileSystem()
+    partitioned_dir_content = s3.get_file_info(fs.FileSelector("./partitioned", recursive=True))
+    files = sorted((f.path for f in partitioned_dir_content if f.type == fs.FileType.File))
+
+    for file in files:
+        print(file)
+
+.. testoutput::
+
+    ./partitioned/0/part-0.parquet
+    ./partitioned/1/part-1.parquet
+    ./partitioned/2/part-2.parquet
+    ./partitioned/3/part-3.parquet
+    ./partitioned/4/part-4.parquet
+    ./partitioned/5/part-5.parquet
+    ./partitioned/6/part-6.parquet
+    ./partitioned/7/part-7.parquet
+    ./partitioned/8/part-8.parquet
+    ./partitioned/9/part-9.parquet
+
 Reading Partitioned data
 ========================
 
