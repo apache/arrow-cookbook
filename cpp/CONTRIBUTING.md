@@ -1,7 +1,7 @@
 # Bulding the C++ Cookbook
 
 The C++ cookbook combines output from a set of C++ test programs with
-an RST document tree rendered with sphinx.
+an RST document tree rendered with Sphinx.
 
 Running `make py` from the cookbook root directory (the one where
 the `README.rst` exists) will install all necessary dependencies,
