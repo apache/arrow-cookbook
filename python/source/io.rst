@@ -254,8 +254,8 @@ column and with file containing the data partition inside:
 
     from pyarrow import fs
 
-    s3 = fs.LocalFileSystem()
-    partitioned_dir_content = s3.get_file_info(fs.FileSelector("./partitioned", recursive=True))
+    localfs = fs.LocalFileSystem()
+    partitioned_dir_content = localfs.get_file_info(fs.FileSelector("./partitioned", recursive=True))
     files = sorted((f.path for f in partitioned_dir_content if f.type == fs.FileType.File))
 
     for file in files:
