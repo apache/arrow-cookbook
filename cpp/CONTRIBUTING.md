@@ -163,7 +163,7 @@ When the sphinx build runs the directive `recipe` (defined in `cpp/ext`) will be
 During this load the dataset of test outputs will be read. These test outputs will be used
 whenever a recipe is referenced.
 
----
+# Code of Conduct
 
 All participation in the Apache Arrow project is governed by the Apache
 Software Foundation’s
