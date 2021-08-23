@@ -1,7 +1,11 @@
 r/content/_book/**
+r/content/_main.Rmd
 r/*.Rproj
 *.Rproj
 .Rproj.user
+
+*.idea/
+*.vscode/
 
 *build/
 
@@ -10,3 +14,5 @@ r/*.Rproj
 *.arrows
 *.csv
 *.feather
+
+*.pyc

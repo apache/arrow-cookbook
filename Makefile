@@ -2,10 +2,10 @@ all: html
 
 
 html: py r
-	@echo "\n\n>>> Cookbooks Available in ./build <<<"
+	@echo "\n\n>>> Cookbooks (except C++) Available in ./build <<<"
 
 
-test:   pytest rtest
+test: pytest rtest
 
 
 help:
@@ -48,8 +48,23 @@ r: rdeps
 	mkdir -p build/r
 	cp -r r/content/_book/* build/r
 
+
 rtest: rdeps
 	@echo ">>> Testing R Cookbook <<<\n"
 	cd ./r && Rscript ./scripts/test.R
 
 
+cpptest:
+	@echo ">>> Running C++ Tests/Snippets <<<\n"
+	rm -rf cpp/recipe-test-build
+	mkdir cpp/recipe-test-build
+	cd cpp/recipe-test-build && cmake ../code -DCMAKE_BUILD_TYPE=Debug && cmake --build . && ctest -j 1
+	mkdir -p cpp/build
+	cp cpp/recipe-test-build/recipes_out.arrow cpp/build
+
+
+cpp: cpptest
+	@echo ">>> Building C++ Cookbook <<<\n"
+	cd cpp && make html
+	mkdir -p build/cpp
+	cp -r cpp/build/html/* build/cpp
