@@ -29,7 +29,7 @@ need to remember to add them to the `index.rst` file in the
 ## Referencing a C++ Snippet
 
 Most recipes will reference a snippet of C++ code. For simplicity
-a custom `recipe` directive htat can be used like so:
+a custom `recipe` directive that can be used like so:
 
 ```
 .. recipe:: ../code/creating_arrow_objects.cc CreatingArrays
