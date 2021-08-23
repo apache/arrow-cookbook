@@ -1,7 +1,7 @@
 # Bulding the C++ Cookbook
 
 The C++ cookbook combines output from a set of C++ test programs with
-an RST document tree rendered with Sphinx.
+an reStructuredText (RST) document tree rendered with Sphinx.
 
 Running `make py` from the cookbook root directory (the one where
 the `README.rst` exists) will install all necessary dependencies,
@@ -16,8 +16,8 @@ up a development environment for developing recipes.
 
 # Developing C++ Recipes
 
-Every recipe is a combination of prose written in **reStructuredText**
-format using the `Sphinx <https://www.sphinx-doc.org/>`\_ documentation
+Every recipe is a combination of prose written in RST
+format using the [Sphinx](https://www.sphinx-doc.org/) documentation
 system and a snippet of a googletest test.
 
 New recipes can be added to one of the existing `.rst` files if
