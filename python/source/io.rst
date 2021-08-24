@@ -250,7 +250,7 @@ gets saved in 10 different files:
 
 Arrow will partition datasets in subdirectories by default, which will
 result in 10 different directories named with the value of the partitioning
-column and with file containing the data partition inside:
+column each with a file containing the subset of the data for that partition:
 
 .. testcode::
 
