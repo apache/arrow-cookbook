@@ -188,6 +188,26 @@ a CSV file using the :func:`pyarrow.csv.write_csv` function
     pa.csv.write_csv(table, "table.csv",
                      write_options=pa.csv.WriteOptions(include_header=True))
 
+Writing CSV files incrementally
+===============================
+
+If you need to append to write data to a CSV file incrementally
+as you generate or retrieve the data and you don't want to keep
+in memory the whole table to write it at once, it's possible to use
+:class:`pyarrow.csv.CSVWriter` to write data incrementally
+
+.. testcode::
+
+    schema = pa.schema([("col1", pa.int32())])
+    with pa.csv.CSVWriter("table.csv", schema=schema) as writer:
+        for chunk in range(10):
+            datachunk = range(chunk*10, (chunk+1)*10)
+            table = pa.Table.from_arrays([pa.array(datachunk)], schema=schema)
+            writer.write(table)
+
+Apart tables, it's equally possible to write :class:`pyarrow.RecordBatch`
+just passing them as you would for tables.
+
 Reading CSV files
 =================
 
