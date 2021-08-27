@@ -30,7 +30,7 @@ static arrow::StringBuilder test_names_builder;
 static arrow::StringBuilder test_output_builder;
 static std::string current_recipe;
 
-void StartRecipe(const std::string& recipe_name) {
+void DoStartRecipe(const std::string& recipe_name) {
   if (!current_recipe.empty()) {
     FAIL() << "Attempt to start a recipe " << recipe_name << " but the recipe "
            << current_recipe << " has not been marked finished";
@@ -42,7 +42,7 @@ void StartRecipe(const std::string& recipe_name) {
   rout = std::stringstream();
 }
 
-void EndRecipe(const std::string& recipe_name) {
+void DoEndRecipe(const std::string& recipe_name) {
   if (current_recipe != recipe_name) {
     FAIL() << "Attempt to end a recipe " << recipe_name
            << " but the recipe was not in progress";
@@ -53,6 +53,16 @@ void EndRecipe(const std::string& recipe_name) {
   ASSERT_OK(test_output_builder.Append(recipe_output));
 
   current_recipe = "";
+}
+
+arrow::Status EndRecipe(const std::string& recipe_name) {
+  DoEndRecipe(recipe_name);
+  return arrow::Status::OK();
+}
+
+void StartRecipe(const std::string& recipe_name, std::function<arrow::Status()> recipe_func) {
+    DoStartRecipe(recipe_name);
+    ASSERT_OK(recipe_func());
 }
 
 std::shared_ptr<arrow::Schema> RecipesTableSchema() {

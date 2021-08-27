@@ -45,8 +45,8 @@
 
 inline std::stringstream rout;
 
-void StartRecipe(const std::string& recipe_name);
-void EndRecipe(const std::string& recipe_name);
+arrow::Status EndRecipe(const std::string& recipe_name);
+void StartRecipe(const std::string& recipe_name, std::function<arrow::Status()> recipe_func);
 arrow::Status DumpRecipeOutput(const std::string& output_filename);
 bool HasRecipeOutput();
 arrow::Result<std::string> FindTestDataFile(const std::string& test_data_name);
