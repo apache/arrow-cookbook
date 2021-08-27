@@ -7,15 +7,12 @@ Apache Arrow.
 
 .. contents::
 
-Write a Parquet file
-====================
-
 .. testsetup::
 
-    import numpy as np
     import pyarrow as pa
 
-    arr = pa.array(np.arange(100))
+Write a Parquet file
+====================
 
 Given an array with 100 numbers, from 0 to 99
 
@@ -180,13 +177,16 @@ Writing CSV files
 =================
 
 It is currently possible to write an Arrow :class:`pyarrow.Table` to
-CSV by going through pandas. Arrow doesn't currently provide an optimized
-code path for writing to CSV.
+a CSV file using the :func:`pyarrow.csv.write_csv` function
 
 .. testcode::
 
+    arr = pa.array(range(100))
     table = pa.Table.from_arrays([arr], names=["col1"])
-    table.to_pandas().to_csv("table.csv", index=False)
+    
+    import pyarrow.csv
+    pa.csv.write_csv(table, "table.csv",
+                     write_options=pa.csv.WriteOptions(include_header=True))
 
 Reading CSV files
 =================
