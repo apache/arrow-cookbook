@@ -1,0 +1,4 @@
+Checks: '*,-llvmlibc*,-cert-err58-cpp,-modernize-use-trailing-return-type,-fuchsia-*,-cppcoreguidelines-*,
+  -readability-magic-numbers,-clang-analyzer-cplusplus.NewDelete,-clang-analyzer-cplusplus.NewDeleteLeaks'
+WarningsAsErrors: '*'
+FormatStyle: 'file'
