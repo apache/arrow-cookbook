@@ -176,7 +176,7 @@ format can be memory mapped back directly from the disk.
 Writing CSV files
 =================
 
-It is currently possible to write an Arrow :class:`pyarrow.Table` to
+It is possible to write an Arrow :class:`pyarrow.Table` to
 a CSV file using the :func:`pyarrow.csv.write_csv` function
 
 .. testcode::
