@@ -522,9 +522,10 @@ The content of the file can be read back to a :class:`pyarrow.Table` using
 
 .. testcode::
 
-    import pyarrow.json as pj
+    import pyarrow as pa
+    import pyarrow.json
 
-    table = pj.read_json(f.name)
+    table = pa.json.read_json(f.name)
 
 .. testcode::
 
