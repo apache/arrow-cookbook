@@ -518,7 +518,7 @@ containing a row of data:
         f.write('{"a": 7, "b": 5.0, "c": 4}\n')
 
 The content of the file can be read back to a :class:`pyarrow.Table` using
-:func:`pyarrow.json.read_json`
+:func:`pyarrow.json.read_json`:
 
 .. testcode::
 
