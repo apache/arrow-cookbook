@@ -205,8 +205,8 @@ in memory the whole table to write it at once, it's possible to use
             table = pa.Table.from_arrays([pa.array(datachunk)], schema=schema)
             writer.write(table)
 
-Apart tables, it's equally possible to write :class:`pyarrow.RecordBatch`
-just passing them as you would for tables.
+It's equally possible to write :class:`pyarrow.RecordBatch`
+by passing them as you would for tables.
 
 Reading CSV files
 =================
