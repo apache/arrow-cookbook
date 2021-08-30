@@ -191,7 +191,7 @@ a CSV file using the :func:`pyarrow.csv.write_csv` function
 Writing CSV files incrementally
 ===============================
 
-If you need to append to write data to a CSV file incrementally
+If you need to write data to a CSV file incrementally
 as you generate or retrieve the data and you don't want to keep
 in memory the whole table to write it at once, it's possible to use
 :class:`pyarrow.csv.CSVWriter` to write data incrementally
