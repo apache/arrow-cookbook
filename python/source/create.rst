@@ -19,9 +19,9 @@ by pairing multiple arrays with names for their columns
     import pyarrow as pa
 
     table = pa.table([
-      pa.array([1, 2, 3, 4, 5]),
-      pa.array(["a", "b", "c", "d", "e"]),
-      pa.array([1.0, 2.0, 3.0, 4.0, 5.0])
+        pa.array([1, 2, 3, 4, 5]),
+        pa.array(["a", "b", "c", "d", "e"]),
+        pa.array([1.0, 2.0, 3.0, 4.0, 5.0])
     ], names=["col1", "col2", "col3"])
 
     print(table)
