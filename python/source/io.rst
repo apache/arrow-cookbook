@@ -179,14 +179,14 @@ format can be memory mapped back directly from the disk.
 Writing CSV files
 =================
 
-It is currently possible to write an Arrow :class:`pyarrow.Table` to
-CSV by going through pandas. Arrow doesn't currently provide an optimized
-code path for writing to CSV.
+Arrow can write an Arrow :class:`pyarrow.Table` to CSV using an optimized codepath.
 
 .. testcode::
 
+    import pyarrow.csv
+
     table = pa.Table.from_arrays([arr], names=["col1"])
-    table.to_pandas().to_csv("table.csv", index=False)
+    pa.csv.write_csv(table, "table.csv")
 
 Reading CSV files
 =================
