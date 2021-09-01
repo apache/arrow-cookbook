@@ -15,6 +15,7 @@ dependencies:
   - aws-sdk-cpp=1.8.186=hb4091e7_3
   - babel=2.9.1=pyh44b312d_0
   - binutils_impl_linux-64=2.36.1=h193b22a_2
+  - binutils_linux-64=2.36=hf3e587d_0
   - brotlipy=0.7.0=py39h3811e60_1001
   - bzip2=1.0.8=h7f98852_4
   - c-ares=1.17.1=h7f98852_1
@@ -33,9 +34,12 @@ dependencies:
   - docutils=0.17.1=py39hf3d152e_0
   - expat=2.4.1=h9c3ff4c_0
   - gcc_impl_linux-64=11.1.0=h6b5115b_8
+  - gcc_linux-64=11.1.0=h97fdae6_0
   - gflags=2.2.2=he1b5a44_1004
   - glog=0.5.0=h48cff8f_0
   - grpc-cpp=1.39.0=h36ce80c_1
+  - gxx_impl_linux-64=11.1.0=h6b5115b_8
+  - gxx_linux-64=11.1.0=h33c4e4b_0
   - idna=3.1=pyhd3deb0d_0
   - imagesize=1.2.0=py_0
   - jinja2=3.0.1=pyhd8ed1ab_0
@@ -65,6 +69,7 @@ dependencies:
   - libprotobuf=3.16.0=h780b84a_0
   - libsanitizer=11.1.0=h56837e0_8
   - libssh2=1.9.0=ha56f1ee_6
+  - libstdcxx-devel_linux-64=11.1.0=h80e7780_8
   - libstdcxx-ng=11.1.0=h56837e0_8
   - libthrift=0.14.2=he6d91bd_1
   - libutf8proc=2.6.1=h7f98852_0
@@ -113,4 +118,3 @@ dependencies:
   - xz=5.2.5=h516909a_1
   - zlib=1.2.11=h516909a_1010
   - zstd=1.5.0=ha95c52a_0
-
