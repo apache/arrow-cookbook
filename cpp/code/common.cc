@@ -15,6 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include "common.h"
+
 #include <sstream>
 #include <unordered_map>
 
@@ -22,8 +24,6 @@
 #include "arrow/filesystem/api.h"
 #include "arrow/ipc/api.h"
 #include "gtest/gtest.h"
-
-#include "common.h"
 
 static arrow::StringBuilder test_names_builder;
 static arrow::StringBuilder test_output_builder;
@@ -121,13 +121,14 @@ void PopulateMap(const arrow::Table& table,
 }
 
 arrow::Result<std::shared_ptr<arrow::Table>> MergeRecipeTables(
-    std::shared_ptr<arrow::Table> old_table, std::shared_ptr<arrow::Table> new_table) {
+    const std::shared_ptr<arrow::Table>& old_table,
+    const std::shared_ptr<arrow::Table>& new_table) {
   std::unordered_map<std::string, std::string> values;
   PopulateMap(*old_table, &values);
   PopulateMap(*new_table, &values);
   arrow::StringBuilder names_builder;
   arrow::StringBuilder outputs_builder;
-  for (auto pair : values) {
+  for (const auto& pair : values) {
     ARROW_RETURN_NOT_OK(names_builder.Append(pair.first));
     ARROW_RETURN_NOT_OK(outputs_builder.Append(pair.second));
   }

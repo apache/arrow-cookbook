@@ -6,9 +6,9 @@ set(CMAKE_CXX_STANDARD 17)
 # Add googletest
 include(FetchContent)
 FetchContent_Declare(
-  googletest
-  GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG        e2239ee6043f73722e7aa812a459f54a28552929 # release-1.11.0
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG e2239ee6043f73722e7aa812a459f54a28552929 # release-1.11.0
 )
 # For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
@@ -17,31 +17,33 @@ FetchContent_MakeAvailable(googletest)
 # Add Arrow
 find_package(Arrow REQUIRED)
 
+set(CMAKE_CXX_CLANG_TIDY "clang-tidy")
+
 # Create test targets
 enable_testing()
-include(GoogleTest)
-add_executable(
-        creating_arrow_objects
-        creating_arrow_objects.cc
-        common.cc
-        main.cc
-)
-target_link_libraries(
-        creating_arrow_objects
-        arrow_shared
-        gtest
-)
-gtest_discover_tests(creating_arrow_objects)
 
-add_executable(
-        basic_arrow
-        basic_arrow.cc
-        common.cc
-        main.cc
-)
-target_link_libraries(
-        basic_arrow
-        arrow_shared
-        gtest
-)
-gtest_discover_tests(basic_arrow)
+include(GoogleTest)
+
+function(RECIPE TARGET)
+    add_executable(
+            ${TARGET}
+            ${TARGET}.cc
+            common.cc
+            main.cc
+    )
+    target_link_libraries(
+            ${TARGET}
+            arrow_shared
+            gtest
+    )
+    if (MSVC)
+        target_compile_options(${TARGET} PRIVATE /W4 /WX)
+    else ()
+        target_compile_options(${TARGET} PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    endif ()
+
+    gtest_discover_tests(${TARGET})
+endfunction()
+
+recipe(basic_arrow)
+recipe(creating_arrow_objects)
