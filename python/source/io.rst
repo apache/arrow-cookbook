@@ -517,3 +517,40 @@ the parquet file as :class:`ChunkedArray`
     pyarrow.Table
     col1: int64
     ChunkedArray = 0 .. 99
+
+Reading Line Delimited JSON
+===========================
+
+Arrow has builtin support for line-delimited JSON.
+Each line represents a row of data as a JSON object.
+
+Given some data in a file where each line is a JSON object
+containing a row of data:
+
+.. testcode::
+
+    import tempfile
+
+    with tempfile.NamedTemporaryFile(delete=False, mode="w+") as f:
+        f.write('{"a": 1, "b": 2.0, "c": 1}\n')
+        f.write('{"a": 3, "b": 3.0, "c": 2}\n')
+        f.write('{"a": 5, "b": 4.0, "c": 3}\n')
+        f.write('{"a": 7, "b": 5.0, "c": 4}\n')
+
+The content of the file can be read back to a :class:`pyarrow.Table` using
+:func:`pyarrow.json.read_json`:
+
+.. testcode::
+
+    import pyarrow as pa
+    import pyarrow.json
+
+    table = pa.json.read_json(f.name)
+
+.. testcode::
+
+    print(table.to_pydict())
+
+.. testoutput::
+
+    {'a': [1, 3, 5, 7], 'b': [2.0, 3.0, 4.0, 5.0], 'c': [1, 2, 3, 4]}
