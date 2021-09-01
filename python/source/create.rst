@@ -11,7 +11,7 @@ Creating Tables
 ===============
 
 Arrow supports tabular data in :class:`pyarrow.Table`: each column
-is represented by a :class:`pyarrow.Array` and tables can be created
+is represented by a :class:`pyarrow.ChunkedArray` and tables can be created
 by pairing multiple arrays with names for their columns
 
 .. testcode::
