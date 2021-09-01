@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.19)
 project(arrow-cookbook)
 
-# set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
+endif()
 
 # Add googletest
 include(FetchContent)
