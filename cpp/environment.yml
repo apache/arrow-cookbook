@@ -25,6 +25,7 @@ dependencies:
   - charset-normalizer=2.0.0=pyhd8ed1ab_0
   - clang=11.1.0=ha770c72_1
   - clang-11=11.1.0=default_ha53f305_1
+  - clang-tools=11.1.0=default_ha53f305_1
   - clangxx=11.1.0=default_ha53f305_1
   - cmake=3.21.1=h8897547_0
   - colorama=0.4.4=pyh9f0ad1d_0
@@ -73,7 +74,7 @@ dependencies:
   - markupsafe=2.0.1=py39h3811e60_0
   - ncurses=6.2=h58526e2_4
   - numpy=1.21.1=py39hdbf815f_0
-  - openssl=1.1.1k=h7f98852_0
+  - openssl=1.1.1k=h7f98852_1
   - orc=1.6.9=h58a87f1_0
   - packaging=21.0=pyhd8ed1ab_0
   - parquet-cpp=1.5.1=2
@@ -112,4 +113,4 @@ dependencies:
   - xz=5.2.5=h516909a_1
   - zlib=1.2.11=h516909a_1010
   - zstd=1.5.0=ha95c52a_0
-prefix: /home/pace/anaconda3/envs/cookbook
+
