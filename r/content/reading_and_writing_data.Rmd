@@ -169,6 +169,8 @@ write_feather(mtcars, "my_table.feather", version = 1)
 test_that("write_feather1 chunk works as expected", {
   expect_true(file.exists("my_table.feather"))
 })
+
+unlink("my_table.feather")
 ```
 
 ### Read a Feather file
@@ -182,6 +184,7 @@ my_feather_tbl <- read_feather("my_table.arrow")
 test_that("read_feather chunk works as expected", {
   expect_identical(dplyr::collect(my_feather_tbl), tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99)))
 })
+unlink("my_table.arrow")
 ```
 
 ## Reading and Writing Streaming IPC Files
@@ -208,6 +211,7 @@ my_ipc_stream <- arrow::read_ipc_stream("my_table.arrows")
 test_that("read_ipc_stream chunk works as expected", {
   expect_equal(my_ipc_stream, tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99)))
 })
+unlink("my_table.arrows")
 ```
 
 ## Reading and Writing CSV files 
@@ -233,6 +237,38 @@ my_csv <- read_csv_arrow("cars.csv", as_data_frame = FALSE)
 test_that("read_csv_arrow chunk works as expected", {
   expect_equivalent(dplyr::collect(my_csv), cars)
 })
+unlink("cars.csv")
+```
+
+## Reading JSON files 
+
+You can use Arrow to read JSON files.
+
+```{r, read_json_arrow}
+# Create a file to read back in 
+tf <- tempfile()
+writeLines('
+    { "country": "United Kingdom", "code": "GB", "longitude": -3.435973, "latitude": 55.378051 }
+    { "country": "France", "code": "FR", "longitude": 2.213749, "latitude": 46.227638}
+    { "country": "Germany", "code": "DE", "longitude": 10.451526, "latitude": 51.165691}
+  ', tf, useBytes = TRUE)
+
+# Read in the data
+countries <- read_json_arrow(tf, col_select = c("country", "longitude", "latitude"))
+countries
+```
+```{r, test_read_json_arrow, opts.label = "test"}
+test_that("read_json_arrow chunk works as expected", {
+  expect_equivalent(
+    countries,
+    tibble::tibble(
+      country = c("United Kingdom", "France", "Germany"),
+      longitude = c(-3.435973, 2.213749, 10.451526),
+      latitude = c(55.378051, 46.227638, 51.165691)
+    )
+  )
+})
+unlink(tf)
 ```
 
 ## Reading and Writing Partitioned Data 
@@ -283,5 +319,6 @@ test_that("open_dataset chunk works as expected", {
   expect_equal(nrow(air_data), 153)
   expect_equal(arrange(collect(air_data), Month, Day), arrange(airquality, Month, Day), ignore_attr = TRUE)
 })
+unlink("airquality_partitioned", recursive = TRUE)
 ```
 
