@@ -1,5 +1,26 @@
 # Creating Arrow Objects
 
+## Manually create an Array from an R object
+
+You may want to convert an existing vector in R to an Arrow Array object.
+
+```{r, array_create}
+# Create an example vector
+score = c(99, 97, 99)
+
+# Convert to Arrow Array
+score_array <- Array$create(score)
+
+# View Array
+score_array
+```
+```{r, test_array_create, opts.label = "test"}
+test_that("array_create works as expected", {
+  expect_s3_class(score_array, "Array")
+  expect_identical(as.vector(score_array), score)
+})
+```
+
 ## Build an Arrow Table from native language types
 
 ### Manually create a Table from an R object
