@@ -7,6 +7,68 @@ Tensors and all other Arrow entities.
 
 .. contents::
 
+Creating Arrays
+===============
+
+Arrow keeps data in continuous arrays optimised for memory footprint
+and SIMD analyses. In Python it's possible to build :class:`pyarrow.Array`
+starting from Python ``lists`` (or sequence types in general),
+``numpy`` arrays and ``pandas`` Series.
+
+.. testcode::
+
+    import pyarrow as pa
+
+    array = pa.array([1, 2, 3, 4, 5])
+
+.. testcode::
+
+    print(array)
+
+.. testoutput::
+
+    [
+      1,
+      2,
+      3,
+      4,
+      5
+    ]
+
+Arrays can also provide a ``mask`` to specify which values should
+be considered nulls
+
+.. testcode::
+
+    import numpy as np
+
+    array = pa.array([1, 2, 3, 4, 5], 
+                     mask=np.array([True, False, True, False, True]))
+
+    print(array)
+
+.. testoutput::
+
+    [
+      null,
+      2,
+      null,
+      4,
+      null
+    ]
+
+When building arrays from ``numpy`` or ``pandas``, Arrow will leverage
+optimized code paths that rely on the internal in-memory representation
+of the data by ``numpy`` and ``pandas``
+
+.. testcode::
+
+    import numpy as np
+    import pandas
+
+    array_from_numpy = pa.array(np.arange(5))
+    array_from_pandas = pa.array(pandas.Series([1, 2, 3, 4, 5]))
+
 Creating Tables
 ===============
 
