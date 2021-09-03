@@ -343,8 +343,21 @@ test_that("open_dataset chunk works as expected", {
   expect_equal(arrange(collect(air_data), Month, Day), arrange(airquality, Month, Day), ignore_attr = TRUE)
 })
 ```
+<<<<<<< HEAD
 
 ```{r}
 unlink("airquality_partitioned", recursive = TRUE)
 ```
 
+=======
+```{r, include = FALSE}
+# cleanup
+unlink("my_table.arrow")
+unlink("my_table.arrows")
+unlink("cars.csv")
+unlink("my_table.feather")
+unlink("my_table.parquet")
+unlink("dist_time.parquet")
+unlink("airquality_partitioned", recursive = TRUE)
+```
+>>>>>>> Delete unncecessary files, and stop showing test chunks

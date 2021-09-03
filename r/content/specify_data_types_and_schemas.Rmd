@@ -53,7 +53,7 @@ You want to manually specify Arrow data types when reading in files.
 share_data <- tibble::tibble(
   company = c("AMZN", "GOOG", "BKNG", "TSLA"),
   price = c(3463.12, 2884.38, 2300.46, 732.39),
-  date = rep(as.Date("2021-09-03"), 4)
+  date = rep(as.Date("2021-09-02"), 4)
 )
 
 # write dataset to disk
@@ -78,6 +78,9 @@ test_that("use_schema_dataset works as expected", {
     schema(company = utf8(),  price = float32(), date = date64())
   )
 })
+```
+```{r, include=FALSE}
+unlink("shares", recursive = TRUE)
 ```
 
 ### Discussion
