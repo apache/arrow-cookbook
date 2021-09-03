@@ -4,8 +4,8 @@ new_session: FALSE
 clean: ["_book/*"]
 output_dir: _book
 edit: https://github.com/apache/arrow-cookbook/edit/main/r/content/%s
-rmd_files: ["index.Rmd", "reading_and_writing_data.Rmd", "creating_arrow_objects.Rmd", "manipulating_data.Rmd"]
+rmd_files: ["index.Rmd", "reading_and_writing_data.Rmd", "creating_arrow_objects.Rmd", "specify_data_types_and_schemas.Rmd", "manipulating_data.Rmd"]
 
 # This is the full list
 # rmd_files: ["index.Rmd", "configure_arrow.Rmd", "work_with_data_in_different_formats.Rmd",
-# "work_with_compressed_or_partitioned_data.Rmd", "create_arrow_objects_from_r.Rmd", "specify_data_types_and_schemas.Rmd", "manipulate_data.Rmd", "work_with_arrow_in_both_python_and_r.Rmd"]
+# "work_with_compressed_or_partitioned_data.Rmd", "create_arrow_objects_from_r.Rmd",  "manipulate_data.Rmd", "work_with_arrow_in_both_python_and_r.Rmd"]
