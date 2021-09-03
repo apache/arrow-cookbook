@@ -64,10 +64,10 @@ of the data by ``numpy`` and ``pandas``
 .. testcode::
 
     import numpy as np
-    import pandas
+    import pandas as pd
 
     array_from_numpy = pa.array(np.arange(5))
-    array_from_pandas = pa.array(pandas.Series([1, 2, 3, 4, 5]))
+    array_from_pandas = pa.array(pd.Series([1, 2, 3, 4, 5]))
 
 Creating Tables
 ===============
