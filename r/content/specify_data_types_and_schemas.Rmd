@@ -65,7 +65,7 @@ share_schema <- schema(
   date = date64()
 )
 
-# read the dataset in, using the schema
+# read the dataset in, using the schema instead of inferring the type automatically
 share_dataset_arrow <- open_dataset("shares", schema = share_schema)
 
 share_dataset_arrow
