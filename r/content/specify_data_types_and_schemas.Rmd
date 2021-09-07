@@ -113,7 +113,7 @@ mapping between R type and Arrow types, as shown in the table below.
 to Arrow list type (which is a "list of" some type).
 
 The data types created via default mapping from R to Arrow are not the only ones
-which exist, and alternative Arrow data types may compatible with each R data 
+which exist, and alternative Arrow data types may be compatible with each R data 
 type.  The compatible data types are shown in the table below.
 
 #### Arrow data type to R data type mapping
