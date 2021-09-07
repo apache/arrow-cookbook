@@ -1,6 +1,6 @@
 # Defining Data Types
 
-As discussed in previous chapters, Arrow automatically infers the most appropriate data type when converting R objects to Arrow objects.  However, you might want to manually define tell Arrow which data types to use, for example, to ensure interoperability with databases and data warehouse systems.
+As discussed in previous chapters, Arrow automatically infers the most appropriate data type when converting R objects to Arrow objects.  However, you might want to manually tell Arrow which data types to use, for example, to ensure interoperability with databases and data warehouse systems.
 
 ## Specify data types when creating an Arrow table from an R object
 
