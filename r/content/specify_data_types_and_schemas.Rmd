@@ -181,7 +181,7 @@ test_that("use_schema_dataset works as expected", {
 unlink("oscars_data", recursive = TRUE)
 ```
 
-## Combine mulitple schemas
+## Combine and unify schemas
 
 You have a dataset split across multiple sources for which you have separate 
 schemas that you want to combine.
