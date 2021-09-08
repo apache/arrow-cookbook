@@ -53,7 +53,9 @@ This table shows Arrow data types and their R equivalents.
 | float32           | double                       |
 | float64           | double                       |
 | utf8              | character                    |
+| large_utf8        | character                    |
 | binary            | arrow_binary ^3^             |
+| large_binary      | arrow_large_binary ^3^       |
 | fixed_size_binary | arrow_fixed_size_binary ^3^  |
 | date32            | Date                         |
 | date64            | POSIXct                      |
@@ -64,14 +66,12 @@ This table shows Arrow data types and their R equivalents.
 | decimal           | double                       |
 | dictionary        | factor^4^                    |
 | list              | arrow_list ^5^               |
+| large_list        | arrow_large_list ^5^         |
 | fixed_size_list   | arrow_fixed_size_list ^5^    |
 | struct            | data.frame                   |
 | null              | vctrs::vctrs_unspecified     |
 | map               | -^2^                         |
 | union             | -^2^                         |
-| large_utf8        | character                    |
-| large_binary      | arrow_large_binary ^3^       |
-| large_list        | arrow_large_list ^5^         |
 
 ^1^: These integer types may contain values that exceed the range of R's 
 `integer` type (32-bit signed integer). When they do, `uint32` and `uint64` are 
