@@ -13,7 +13,7 @@ A table containing Arrow data types, and their R equivalents can be found in
 
 ## Update the data type of an existing Arrow Array
 
-You want to change the type of data in an existing Arrow Array.
+You want to change the data type of an existing Arrow Array.
 
 ### Solution
 
@@ -195,10 +195,10 @@ You can use `unify_schemas()` to combine multiple schemas into a single schemas.
 country_code_schema <- schema(country = utf8(), code = utf8())
 
 # create second schema to combine
-country_phone_schema <- schema(country = utf8(), phone_prefix = int8())
+country_location_schema <- schema(longitude = float32(), latitude = float32())
 
 # combine schemas
-combined_schemas <- unify_schemas(country_code_schema, country_phone_schema)
+combined_schemas <- unify_schemas(country_code_schema, country_location_schema)
 combined_schemas
 ```
 
@@ -206,11 +206,37 @@ combined_schemas
 test_that("combine_schemas works as expected", {
   expect_s3_class(combined_schemas, "Schema")
   expect_equal(combined_schemas,
+    schema(country = utf8(), code = utf8(), longitude = float32(), latitude = float32())
+  )
+})
+```
+
+
+### Discussion
+
+If you have two schemas containing fields with the same names and types, you can
+ combine them into a single field.
+ 
+```{r, combine_schemas_merge}
+# create first schema to combine
+country_code_schema <- schema(country = utf8(), code = utf8())
+
+# create second schema to combine
+country_phone_schema <- schema(country = utf8(), phone_prefix = int8())
+
+# combine schemas
+combined_schemas <- unify_schemas(country_code_schema, country_phone_schema)
+combined_schemas
+```
+
+```{r, test_combine_schemas_merge, opts.label = "test"}
+test_that("combine_schemas_merge works as expected", {
+  expect_s3_class(combined_schemas, "Schema")
+  expect_equal(combined_schemas,
     schema(country = utf8(), code = utf8(), phone_prefix = int8())
   )
 })
 ```
-### Discussion
 
 If you have schemas with the same names but different types, you will not be 
 able to merge the schemas and will get an error.
