@@ -12,7 +12,3 @@ rmd_files: [
   "manipulating_data.Rmd",
   "appendix.Rmd"  
 ]
-
-# This is the full list
-# rmd_files: ["index.Rmd", "configure_arrow.Rmd", "work_with_data_in_different_formats.Rmd",
-# "work_with_compressed_or_partitioned_data.Rmd", "create_arrow_objects_from_r.Rmd",  "manipulate_data.Rmd", "work_with_arrow_in_both_python_and_r.Rmd"]
