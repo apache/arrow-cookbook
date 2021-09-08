@@ -1,9 +1,13 @@
 # Defining Data Types
 
-As discussed in previous chapters, Arrow automatically infers the most appropriate data type when reading in data or converting R objects to Arrow objects.  However, you might want to manually tell Arrow which data types to use, for example, to ensure interoperability with databases and data warehouse systems.  In this chapter, we will discuss 2 different ways of changing Arrow object type:
+As discussed in previous chapters, Arrow automatically infers the most 
+appropriate data type when reading in data or converting R objects to Arrow 
+objects.  However, you might want to manually tell Arrow which data types to 
+use, for example, to ensure interoperability with databases and data warehouse 
+systems.  This chapter includes recipes for:
 
-1. Changing the type of existing Arrow objects
-2. Defining data types during the process of creating Arrow objects
+* changing the data types of existing Arrow objects
+* defining data types during the process of creating Arrow objects
 
 A table showing the default mappings between R and Arrow data types can be found 
 in [R data type to Arrow data type mappings](#r2arrow).
