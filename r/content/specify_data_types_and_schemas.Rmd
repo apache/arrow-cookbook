@@ -45,14 +45,20 @@ test_that("cast_array works as expected", {
 There are some data types which are not compatible with each other. Errors will 
 occur if you try to cast between incompatible data types.
 
-```{r, incompat, error = TRUE}
+```{r, incompat, eval = FALSE}
 int_arr <- Array$create(1:5)
 int_arr$cast(target_type = binary())
 ```
 
-```{r, test_incompat, , opts.label = "test"}
+```{r}
+## Error: NotImplemented: Unsupported cast from int32 to binary using function cast_binary
+```
+
+```{r, test_incompat, opts.label = "test"}
 test_that("test_incompat works as expected", {
-  expect_error(int_arr$cast(target_type = binary()))
+  expect_error(
+    int_arr$cast(target_type = binary())
+  )
 })
 ```
 
@@ -99,7 +105,7 @@ There are some Arrow data types which do not have any R equivalent.  Attempting
 to cast to these data types or using a schema which contains them will result in
 an error.
 
-```{r, float_16_conversion, error=TRUE}
+```{r, float_16_conversion, error=TRUE, eval=FALSE}
 oscars <- tibble::tibble(
   actor = c("Katharine Hepburn", "Meryl Streep", "Jack Nicholson"),
   num_awards = c(4, 3, 3)
@@ -112,9 +118,13 @@ Table$create(oscars, schema = oscars_schema)
 
 ```
 
+```{r}
+## Error: Invalid: Cannot convert to Half Float
+```
+
 ```{r, test_float_16_conversion, opts.label = "test"}
 test_that("float_16_conversion works as expected", {
-  expect_error(Table$create(oscars, schema = oscars_schema))
+  expect_error(Table$create(oscars, schema = schema(actor = string(), num_awards = float16())))
 })
 ```
 
@@ -233,7 +243,7 @@ combined_schemas <- unify_schemas(country_code_schema, country_phone_schema)
 combined_schemas
 ```
 
-```{r, test_combine_schemas_merge, opts.label = "test"}
+```{r, test_combine_schemas_merge, opts.label = "test", eval = FALSE}
 test_that("combine_schemas_merge works as expected", {
   expect_s3_class(combined_schemas, "Schema")
   expect_equal(combined_schemas,
@@ -245,7 +255,7 @@ test_that("combine_schemas_merge works as expected", {
 If you have schemas with the same names but different types, you will not be 
 able to merge the schemas and will get an error.
 
-```{r, combine_incompat_schemas, error = TRUE}
+```{r, combine_incompat_schemas, error = TRUE, eval = FALSE}
 # create first schema to combine
 country_code_schema <- schema(country = binary(), code = utf8())
 
@@ -255,8 +265,15 @@ country_phone_schema <- schema(country = utf8(), phone_prefix = int8())
 # combine schemas
 unify_schemas(country_code_schema, country_phone_schema)
 ```
+
+```{r}
+## Error: Invalid: Unable to merge: Field country has incompatible types: binary vs string
+```
+
 ```{r, test_combine_incompat_schemas, opts.label = "test"}
 test_that("combine_incompat_schemas works as expected", {
+  country_code_schema <- schema(country = binary(), code = utf8())
+  country_phone_schema <- schema(country = utf8(), phone_prefix = int8())
   expect_error(unify_schemas(country_code_schema, country_phone_schema))
 })
 ```
