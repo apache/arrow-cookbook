@@ -45,7 +45,7 @@ to Arrow list type (which is a "list of" some type).
 | uint16            | integer                      |
 | uint32            | integer^1^                   |
 | uint64            | integer^1^                   |
-| float16           | -                            |
+| float16           | -^2^                         |
 | float32           | double                       |
 | float64           | double                       |
 | utf8              | character                    |
@@ -56,18 +56,18 @@ to Arrow list type (which is a "list of" some type).
 | time32            | hms::difftime                |
 | time64            | hms::difftime                |
 | timestamp         | POSIXct                      |
-| duration          | -                            |
+| duration          | -^2^                         |
 | decimal           | double                       |
-| dictionary        | factor^2^                    |
-| list              | arrow_list ^4^               |
-| fixed_size_list   | arrow_fixed_size_list ^4^    |
+| dictionary        | factor^4^                    |
+| list              | arrow_list ^5^               |
+| fixed_size_list   | arrow_fixed_size_list ^5^    |
 | struct            | data.frame                   |
 | null              | vctrs::vctrs_unspecified     |
-| map               | -                            |
-| union             | -                            |
+| map               | -^2^                         |
+| union             | -^2^                         |
 | large_utf8        | character                    |
 | large_binary      | arrow_large_binary ^3^       |
-| large_list        | arrow_large_list ^4^         |
+| large_list        | arrow_large_list ^5^         |
 
 ^1^: These integer types may contain values that exceed the range of R's 
 `integer` type (32-bit signed integer). When they do, `uint32` and `uint64` are 
@@ -75,10 +75,15 @@ converted to `double` ("numeric") and `int64` is converted to
 `bit64::integer64`. This conversion can be disabled (so that `int64` always
 yields a `bit64::integer64` vector) by setting `options(arrow.int64_downcast = FALSE)`.
 
-^2^: Due to the limitation of R factors, Arrow `dictionary` values are coerced
-to string when translated to R if they are not already strings.
+^2^: Some Arrow data types do not have an R equivalent and will raise an error
+if cast to or mapped to via a schema.  See 
+[this discussion section](#no-compat-type) for an example of this.
 
 ^3^: `arrow*_binary` classes are implemented as lists of raw vectors. 
 
-^4^: `arrow*_list` classes are implemented as subclasses of `vctrs_list_of` 
+^4^: Due to the limitation of R factors, Arrow `dictionary` values are coerced
+to string when translated to R if they are not already strings.
+
+
+^5^: `arrow*_list` classes are implemented as subclasses of `vctrs_list_of` 
 with a `ptype` attribute set to what an empty Array of the value type converts to. 

@@ -134,7 +134,7 @@ test_that("use_schema_dataset works as expected", {
 unlink("oscars_data", recursive = TRUE)
 ```
 
-### Discussion
+### Discussion {#no-compat-type}
 
 There are some Arrow data types which do not have compatible R equivalents.  
 Attempting to cast to these data types will results in an error.
