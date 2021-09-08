@@ -1,179 +1,172 @@
 # Defining Data Types
 
-As discussed in previous chapters, Arrow automatically infers the most appropriate data type when reading in data or converting R objects to Arrow objects.  However, you might want to manually tell Arrow which data types to use, for example, to ensure interoperability with databases and data warehouse systems.
+As discussed in previous chapters, Arrow automatically infers the most appropriate data type when reading in data or converting R objects to Arrow objects.  However, you might want to manually tell Arrow which data types to use, for example, to ensure interoperability with databases and data warehouse systems.  In this chapter, we will discuss 2 different ways of changing Arrow object type:
+
+1. Changing the type of existing Arrow objects
+2. Defining data types during the process of creating Arrow objects
+
+## Update the data type of an existing Arrow Array
+
+You want to change the type of an existing Arrow Array.
+
+### Solution
+
+```{r, cast_array}
+# Create an Array to cast
+integer_arr <- Array$create(1:5)
+
+# Cast to an unsigned int8 type
+uint_arr <- integer_arr$cast(target_type = uint8())
+
+uint_arr
+```
+
+```{r, test_cast_array, opts.label = "test"}
+test_that("cast_array works as expected", {
+  expect_equal(
+   uint_arr$type,
+   uint8()
+  )
+})
+```
+
+## Update the data type of an existing Arrow Table
+
+You want to change the type of a field in an existing Arrow Table.
+
+### Solution
+
+```{r, cast_table}
+# Set up a tibble to use in this example
+oscars <- tibble::tibble(
+  actor = c("Katharine Hepburn", "Meryl Streep", "Jack Nicholson"),
+  num_awards = c(4, 3, 3)
+)
+
+# Convert tibble to an Arrow table
+oscars_arrow <- Table$create(oscars)
+
+# The default mapping from numeric column "num_awards" is to a double
+oscars_arrow
+
+# Set up schema with "num_awards" as integer
+oscars_schema <- schema(actor = string(), num_awards = int16())
+
+# Cast to an int16
+oscars_arrow_int <- oscars_arrow$cast(target_schema = oscars_schema)
+
+oscars_arrow_int
+```
+
+```{r, test_cast_table, opts.label = "test"}
+test_that("cast_table works as expected", {
+  expect_equal(
+    oscars_arrow_int$schema,
+    schema(actor = string(), num_awards = int16())
+  )
+})
+```
 
 ## Specify data types when creating an Arrow table from an R object
-
-### Problem
 
 You want to manually specify Arrow data types when converting an object from a data frame to an Arrow object.
 
 ### Solution
 
 ```{r, use_schema}
-# create a data frame 
-share_data <- tibble::tibble(
-  company = c("AMZN", "GOOG", "BKNG", "TSLA"),
-  price = c(3463.12, 2884.38, 2300.46, 732.39),
-  date = rep(as.Date("2021-09-02"), 4)
+# Set up a tibble to use in this example
+oscars <- tibble::tibble(
+  actor = c("Katharine Hepburn", "Meryl Streep", "Jack Nicholson"),
+  num_awards = c(4, 3, 3)
 )
 
-# define field names and types
-share_schema <- schema(
-  company = utf8(),
-  price = float32(),
-  date = date64()
-)
+# Set up schema with "num_awards" as integer
+oscars_schema <- schema(actor = string(), num_awards = int16())
 
 # create arrow Table containing data and schema
-share_data_arrow <- Table$create(share_data, schema = share_schema)
+oscars_data_arrow <- Table$create(oscars, schema = oscars_schema)
 
-share_data_arrow
+oscars_data_arrow
 ```
 ```{r, test_use_schema, opts.label = "test"}
 test_that("use_schema works as expected", {
-  expect_s3_class(share_data_arrow, "Table")
-  expect_equal(share_data_arrow$schema,
-    schema(company = utf8(),  price = float32(), date = date64())
+  expect_s3_class(oscars_data_arrow, "Table")
+  expect_equal(
+    oscars_data_arrow$schema,
+    oscars_schema
   )
 })
 ```
 
 ## Specify data types when reading in files
 
-### Problem
-
 You want to manually specify Arrow data types when reading in files.
 
 ### Solution
 
 ```{r, use_schema_dataset}
-# create a data frame 
-share_data <- tibble::tibble(
-  company = c("AMZN", "GOOG", "BKNG", "TSLA"),
-  price = c(3463.12, 2884.38, 2300.46, 732.39),
-  date = rep(as.Date("2021-09-02"), 4)
+# Set up a tibble to use in this example
+oscars <- tibble::tibble(
+  actor = c("Katharine Hepburn", "Meryl Streep", "Jack Nicholson"),
+  num_awards = c(4, 3, 3)
 )
 
 # write dataset to disk
-write_dataset(share_data, path = "shares")
+write_dataset(oscars, path = "oscars_data")
 
-# define field names and types
-share_schema <- schema(
-  company = utf8(),
-  price = float32(),
-  date = date64()
-)
+# Set up schema with "num_awards" as integer
+oscars_schema <- schema(actor = string(), num_awards = int16())
 
 # read the dataset in, using the schema instead of inferring the type automatically
-share_dataset_arrow <- open_dataset("shares", schema = share_schema)
+oscars_dataset_arrow <- open_dataset("oscars_data", schema = oscars_schema)
 
-share_dataset_arrow
+oscars_dataset_arrow
 ```
 ```{r, test_use_schema_dataset, opts.label = "test"}
 test_that("use_schema_dataset works as expected", {
-  expect_s3_class(share_dataset_arrow, "Dataset")
-  expect_equal(share_dataset_arrow$schema,
-    schema(company = utf8(),  price = float32(), date = date64())
+  expect_s3_class(oscars_dataset_arrow, "Dataset")
+  expect_equal(oscars_dataset_arrow$schema,
+    oscars_schema
   )
 })
 ```
 ```{r, include=FALSE}
-unlink("shares", recursive = TRUE)
+unlink("oscars_data", recursive = TRUE)
 ```
 
 ### Discussion
 
-When native R data types are converted to Arrow data types, there is a default 
-mapping between R type and Arrow types, as shown in the table below.
+There are some Arrow data types which do not have compatible R equivalents.  
+Attempting to cast to these data types will results in an error.
 
-#### R data type to Arrow data type mapping
+```{r, float_16_conversion, error=TRUE}
+oscars <- tibble::tibble(
+  actor = c("Katharine Hepburn", "Meryl Streep", "Jack Nicholson"),
+  num_awards = c(4, 3, 3)
+)
 
-| R type                   | Arrow type |
-|--------------------------|------------|
-| logical                  | boolean    |
-| integer                  | int32      |
-| double ("numeric")       | float64^7^ |
-| character                | utf8^1^    |
-| factor                   | dictionary |
-| raw                      | uint8      |
-| Date                     | date32     |
-| POSIXct                  | timestamp  |
-| POSIXlt                  | struct     |
-| data.frame               | struct     |
-| list^2^                  | list       |
-| bit64::integer64         | int64      |
-| difftime                 | time32     |
-| vctrs::vctrs_unspecified | null       |
+# Set up schema with "num_awards" as float16 which doesn't have an R equivalent
+oscars_schema <- schema(actor = string(), num_awards = float16())
 
-^1^: If the character vector exceeds 2GB of strings, it will be converted to a 
-`large_utf8` Arrow type
+Table$create(oscars, schema = oscars_schema)
 
-^2^: Only lists where all elements are the same type are able to be translated 
-to Arrow list type (which is a "list of" some type).
+```
 
-The data types created via default mapping from R to Arrow are not the only ones
-which exist, and alternative Arrow data types may be compatible with each R data 
-type.  The compatible data types are shown in the table below.
+```{r, test_float_16_conversion, opts.label = "test"}
+test_that("float_16_conversion works as expected", {
+  expect_error(Table$create(oscars, schema = oscars_schema))
+})
+```
 
-#### Arrow data type to R data type mapping
+### See also
 
-| Arrow type        | R type                       |
-|-------------------|------------------------------|
-| boolean           | logical                      |
-| int8              | integer                      |
-| int16             | integer                      |
-| int32             | integer                      |
-| int64             | integer^3^                   |
-| uint8             | integer                      |
-| uint16            | integer                      |
-| uint32            | integer^3^                   |
-| uint64            | integer^3^                   |
-| float16           | -                            |
-| float32           | double                       |
-| float64 ^7^       | double                       |
-| utf8              | character                    |
-| binary            | arrow_binary ^5^             |
-| fixed_size_binary | arrow_fixed_size_binary ^5^  |
-| date32            | Date                         |
-| date64            | POSIXct                      |
-| time32            | hms::difftime                |
-| time64            | hms::difftime                |
-| timestamp         | POSIXct                      |
-| duration          | -                            |
-| decimal           | double                       |
-| dictionary        | factor^4^                    |
-| list              | arrow_list ^6^               |
-| fixed_size_list   | arrow_fixed_size_list ^6^    |
-| struct            | data.frame                   |
-| null              | vctrs::vctrs_unspecified     |
-| map               | -                            |
-| union             | -                            |
-| large_utf8        | character                    |
-| large_binary      | arrow_large_binary ^5^       |
-| large_list        | arrow_large_list ^6^         |
+A table showing the default mapping between R and Arrow data types can be found 
+in [R data type to Arrow data type mappings](#r2arrow).
 
-^3^: These integer types may contain values that exceed the range of R's 
-`integer` type (32-bit signed integer). When they do, `uint32` and `uint64` are 
-converted to `double` ("numeric") and `int64` is converted to 
-`bit64::integer64`. This conversion can be disabled (so that `int64` always
-yields a `bit64::integer64` vector) by setting `options(arrow.int64_downcast = FALSE)`.
-
-^4^: Due to the limitation of R `factor`s, Arrow `dictionary` values are coerced
-to string when translated to R if they are not already strings.
-
-^5^: `arrow*_binary` classes are implemented as lists of raw vectors. 
-
-^6^: `arrow*_list` classes are implemented as subclasses of `vctrs_list_of` 
-with a `ptype` attribute set to what an empty Array of the value type converts to. 
-
-^7^: `float64` and `double` are the same concept and data type in Arrow C++; 
-however, only `float64()` is used in arrow as the function `double()` already exists in base R
-
+A table containing compatible R/Arrow data types can be found in 
+[Arrow data type to R data type mapping](#arrow2r).
 
 ## Combine and harmonize schemas
-
-### Problem
 
 You have a dataset split across multiple sources for which you have separate 
 schemas that you want to combine.
@@ -202,3 +195,4 @@ test_that("combine_schemas works as expected", {
   )
 })
 ```
+### Discussion
