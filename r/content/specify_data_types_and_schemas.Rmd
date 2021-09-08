@@ -212,6 +212,9 @@ test_that("combine_schemas works as expected", {
 ```
 ### Discussion
 
+If you have schemas with the same names but different types, you will not be 
+able to merge the schemas and will get an error.
+
 ```{r, combine_incompat_schemas, error = TRUE}
 # create first schema to combine
 country_code_schema <- schema(country = binary(), code = utf8())
