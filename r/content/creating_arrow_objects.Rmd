@@ -82,7 +82,7 @@ test_that("record_batch_create works as expected", {
 
 ## Storing Categorical Data in Arrow
 
-<!-- Note: this entire section should be moved to the "working with data types" section once that PR has been merged -->
+<!-- Note: this entire section should be refactored and moved to the "working with data types" section once that PR has been merged -->
 
 You want to store categorical data in Arrow.
 
