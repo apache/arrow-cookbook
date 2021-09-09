@@ -1,6 +1,6 @@
 # Creating Arrow Objects
 
-## Manually create an Array from an R object
+## Create an Arrow Array from an R object
 
 You to convert an existing vector in R to an Arrow Array object.
 
@@ -23,7 +23,7 @@ test_that("array_create works as expected", {
 })
 ```
 
-## Manually create a Table from an R object
+## Create a Arrow Table from an R object
 
 You want to convert an existing data frame in R to an Arrow Table object.
 
@@ -79,34 +79,3 @@ test_that("record_batch_create works as expected", {
   expect_identical(dplyr::collect(my_record_batch), my_tibble)
 })
 ```
-
-## Storing Categorical Data in Arrow
-
-<!-- Note: this entire section should be refactored and moved to the "working with data types" section once that PR has been merged -->
-
-You want to store categorical data in Arrow.
-
-### Solution
-
-```{r}
-class(iris$Species)
-```
-
-```{r, dictionary}
-iris_rb <- record_batch(iris)
-iris_rb
-```
-```{r, test_dictionary, opts.label = "test"}
-test_that("dictionary works as expected", {
-  expect_s3_class(iris_rb$Species, "DictionaryArray")
-})
-```
-
-### Discussion
-
-An Arrow Dictionary object is similar to a factor in R, in that it allows for 
-efficient storage of categorical data by allowing you to map between indices 
-and values, reducing the amount of storage.  If you have an R data frame 
-containing factors, converting it to an Arrow object will automatically encode 
-that column as a dictionary.
-
