@@ -394,7 +394,10 @@ partitioned data coming from remote sources like S3 or HDFS.
     from pyarrow import fs
 
     # List content of s3://ursa-labs-taxi-data/2011
-    s3 = fs.SubTreeFileSystem("ursa-labs-taxi-data", fs.S3FileSystem(region="us-east-2"))
+    s3 = fs.SubTreeFileSystem(
+        "ursa-labs-taxi-data", 
+        fs.S3FileSystem(region="us-east-2", anonymous=True)
+    )
     for entry in s3.get_file_info(fs.FileSelector("2011", recursive=True)):
         if entry.type == fs.FileType.File:
             print(entry.path)
@@ -419,7 +422,8 @@ by ``month`` using
 
 .. testcode::
 
-    dataset = ds.dataset("s3://ursa-labs-taxi-data/2011", 
+    dataset = ds.dataset("2011", 
+                         filesystem=s3
                          partitioning=["month"])
     for f in dataset.files[:10]:
         print(f)
