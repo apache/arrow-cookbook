@@ -2,44 +2,44 @@
 
 This chapter contains recipes related to reading and writing data using Apache 
 Arrow.  When reading files into R using Apache Arrow, you can choose to read in 
-your file as either a `tibble` or as an Arrow Table object.
+your file as either a data frame or as an Arrow Table object.
 
 There are a number of circumstances in which you may want to read in the data as an Arrow Table:
 * your dataset is large and if you load it into memory, it may lead to performance issues
 * you want faster performance from your `dplyr` queries
 * you want to be able to take advantage of Arrow's compute functions
 
-## Converting from a tibble to an Arrow Table
+## Converting from a data frame to an Arrow Table
 
-You want to convert an existing `tibble` or `data.frame` into an Arrow Table.
+You want to convert an existing `data.frame` or `tibble` object into an Arrow Table.
 
 ### Solution
 
-```{r, table_create_from_tibble}
+```{r, table_create_from_df}
 air_table <- Table$create(airquality)
 air_table
 ```
-```{r, test_table_create_from_tibble, opts.label = "test"}
-test_that("table_create_from_tibble chunk works as expected", {
+```{r, test_table_create_from_df, opts.label = "test"}
+test_that("table_create_from_df chunk works as expected", {
   expect_s3_class(air_table, "Table")
 })
 ```
 
-## Converting data from an Arrow Table to a tibble
+## Converting data from an Arrow Table to a dtaa frame
 
-You want to convert an Arrow Table to a tibble to view the data or work with it
-in your usual analytics pipeline.  You can use either `dplyr::collect()` or 
-`as.data.frame()` to do this.
+You want to convert an Arrow Table to a data frame to view the data or work with it
+in your usual analytics pipeline.  You can use either `as.data.frame()` or 
+`dplyr::collect()` to do this.
 
 ### Solution
 
-```{r, collect_table}
-air_tibble <- dplyr::collect(air_table)
-air_tibble
+```{r, asdf_table}
+air_df <- as.data.frame(air_table)
+air_df
 ```
-```{r, test_collect_table, opts.label = "test"}
-test_that("collect_table chunk works as expected", {
-  expect_identical(air_tibble, airquality) 
+```{r, test_asdft_table, opts.label = "test"}
+test_that("asdf_table chunk works as expected", {
+  expect_identical(air_df, airquality) 
 })
 ```
 
@@ -51,7 +51,7 @@ You want to write Parquet files to disk.
 
 ```{r, write_parquet}
 # Create table
-my_table <- Table$create(tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99)))
+my_table <- Table$create(data.frame(group = c("A", "B", "C"), score = c(99, 97, 99)))
 # Write to Parquet
 write_parquet(my_table, "my_table.parquet")
 ```
@@ -73,7 +73,7 @@ parquet_tbl
 ```
 ```{r, test_read_parquet, opts.label = "test"}
 test_that("read_parquet works as expected", {
-  expect_identical(parquet_tbl, tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99)))
+  expect_identical(parquet_tbl, data.frame(group = c("A", "B", "C"), score = c(99, 97, 99)))
 })
 ```
 
@@ -128,7 +128,7 @@ You want to specify which columns to include when reading in a Parquet file.
 
 ```{r, read_parquet_filter}
 # Create table to read back in 
-dist_time <- Table$create(tibble::tibble(distance = c(12.2, 15.7, 14.2), time = c(43, 44, 40)))
+dist_time <- Table$create(data.frame(distance = c(12.2, 15.7, 14.2), time = c(43, 44, 40)))
 # Write to Parquet
 write_parquet(dist_time, "dist_time.parquet")
 
@@ -138,7 +138,7 @@ time_only
 ```
 ```{r, test_read_parquet_filter, opts.label = "test"}
 test_that("read_parquet_filter works as expected", {
-  expect_identical(time_only, tibble::tibble(time = c(43, 44, 40)))
+  expect_identical(time_only, data.frame(time = c(43, 44, 40)))
 })
 ```
 
@@ -149,7 +149,7 @@ You want to read in a Feather file.
 ### Solution
 
 ```{r, write_feather}
-my_table <- Table$create(tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99)))
+my_table <- Table$create(data.frame(group = c("A", "B", "C"), score = c(99, 97, 99)))
 write_feather(my_table, "my_table.arrow")
 ```
 ```{r, test_write_feather, opts.label = "test"}
@@ -163,7 +163,7 @@ For legacy support, you can write data in the original Feather format by setting
 
 ```{r, write_feather1}
 # Create table
-my_table <- Table$create(tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99)))
+my_table <- Table$create(data.frame(group = c("A", "B", "C"), score = c(99, 97, 99)))
 # Write to Feather format V1
 write_feather(mtcars, "my_table.feather", version = 1)
 ```
@@ -186,7 +186,7 @@ my_feather_tbl <- read_feather("my_table.arrow")
 ```
 ```{r, test_read_feather, opts.label = "test"}
 test_that("read_feather chunk works as expected", {
-  expect_identical(dplyr::collect(my_feather_tbl), tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99)))
+  expect_identical(as.data.frame(my_feather_tbl), data.frame(group = c("A", "B", "C"), score = c(99, 97, 99)))
 })
 unlink("my_table.arrow")
 ```
@@ -200,7 +200,7 @@ You want to write to the IPC stream format.
 ```{r, write_ipc_stream}
 # Create table
 my_table <- Table$create(
-  tibble::tibble(
+  data.frame(
     group = c("A", "B", "C"),
     score = c(99, 97, 99)
     )
@@ -226,7 +226,7 @@ my_ipc_stream <- arrow::read_ipc_stream("my_table.arrows")
 test_that("read_ipc_stream chunk works as expected", {
   expect_equal(
     my_ipc_stream,
-    tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99))
+    data.frame(group = c("A", "B", "C"), score = c(99, 97, 99))
   )
 })
 unlink("my_table.arrows")
@@ -253,7 +253,7 @@ my_csv <- read_csv_arrow("cars.csv", as_data_frame = FALSE)
 
 ```{r, test_read_csv_arrow, opts.label = "test"}
 test_that("read_csv_arrow chunk works as expected", {
-  expect_equivalent(dplyr::collect(my_csv), cars)
+  expect_equivalent(as.data.frame(my_csv), cars)
 })
 unlink("cars.csv")
 ```
@@ -281,7 +281,7 @@ countries
 test_that("read_json_arrow chunk works as expected", {
   expect_equivalent(
     countries,
-    tibble::tibble(
+    data.frame(
       country = c("United Kingdom", "France", "Germany"),
       long = c(-3.44, 2.21, 10.45),
       lat = c(55.38, 46.23, 51.17)
