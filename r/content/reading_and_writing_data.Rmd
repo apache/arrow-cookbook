@@ -25,7 +25,7 @@ test_that("table_create_from_df chunk works as expected", {
 })
 ```
 
-## Converting data from an Arrow Table to a dtaa frame
+## Converting data from an Arrow Table to a data frame
 
 You want to convert an Arrow Table to a data frame to view the data or work with it
 in your usual analytics pipeline.  You can use either `as.data.frame()` or 
