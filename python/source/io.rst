@@ -423,7 +423,7 @@ by ``month`` using
 .. testcode::
 
     dataset = ds.dataset("2011", 
-                         filesystem=s3
+                         filesystem=s3,
                          partitioning=["month"])
     for f in dataset.files[:10]:
         print(f)
