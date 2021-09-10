@@ -422,8 +422,7 @@ by ``month`` using
 
 .. testcode::
 
-    dataset = ds.dataset("2011", 
-                         filesystem=s3,
+    dataset = ds.dataset("s3://ursa-labs-taxi-data/2011",
                          partitioning=["month"])
     for f in dataset.files[:10]:
         print(f)
@@ -450,6 +449,27 @@ or :meth:`pyarrow.dataset.Dataset.to_batches` like you would for a local one.
 
     It is possible to load partitioned data also in the ipc arrow
     format or in feather format.
+
+.. warning::
+
+    If the above code throws an error most likely the reason is your
+    AWS credentials are not set. Follow these instructions to get
+    ``AWS Access Key Id`` and ``AWS Secret Access Key``: 
+    `AWS Credentials <https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html>`_.
+
+    The credentials are normally stored in ``~/.aws/credentials`` (on Mac or Linux)
+    or in ``C:\Users\<USERNAME>\.aws\credentials`` (on Windows) file. 
+    You will need to either create or update this file in the appropriate location.
+
+    The contents of the file should look like this:
+
+    .. code-block:: bash 
+
+        [default]
+        aws_access_key_id=<YOUR_AWS_ACCESS_KEY_ID>
+        aws_secret_access_key=<YOUR_AWS_SECRET_ACCESS_KEY>
+
+
 
 Write a Feather file
 ====================
