@@ -67,11 +67,11 @@ from a variety of inputs, including plain python objects
     :func:`pyarrow.array` for conversion to Arrow arrays,
     and will benefit from zero copy behaviour when possible.
 
-Creating RecordBatches
+Creating Record Batches
 ======================
 
-Most IO operations in Arrow happen shipping batches of data
-to the destination, :class:`pyarrow.RecordBatch` are the way
+Most I/O operations in Arrow happen when shipping batches of data
+to the destination.  :class:`pyarrow.RecordBatch` is the way
 Arrow represents batches of data, they can be seen as a slice
 of a table.
 
@@ -84,7 +84,7 @@ of a table.
         pa.array([10, 20, 30, 40, 50])
     ], names=["first", "second"])
 
-multiple batches can be combined into a table using 
+Multiple batches can be combined into a table using 
 :meth:`pyarrow.Table.from_batches`
 
 .. testcode::
@@ -106,7 +106,7 @@ multiple batches can be combined into a table using
     first: int64
     second: int64
 
-Equally, :class:`pyarrow.Table` can be converted to a set of 
+Equally, :class:`pyarrow.Table` can be converted to a list of 
 :class:`pyarrow.RecordBatch` using the :meth:`pyarrow.Table.to_batches`
 method
 
