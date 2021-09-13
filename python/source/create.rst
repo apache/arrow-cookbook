@@ -80,9 +80,9 @@ of a table.
     import pyarrow as pa
 
     batch = pa.RecordBatch.from_arrays([
-        pa.array([1, 2, 3, 4, 5]),
-        pa.array([10, 20, 30, 40, 50])
-    ], names=["first", "second"])
+        pa.array([1, 3, 5, 7, 9]),
+        pa.array([2, 4, 6, 8, 10])
+    ], names=["odd", "even"])
 
 Multiple batches can be combined into a table using 
 :meth:`pyarrow.Table.from_batches`
@@ -90,9 +90,9 @@ Multiple batches can be combined into a table using
 .. testcode::
 
     second_batch = pa.RecordBatch.from_arrays([
-        pa.array([6, 7, 8, 9, 10]),
-        pa.array([60, 70, 80, 90, 100])
-    ], names=["first", "second"])
+        pa.array([11, 13, 15, 17, 19]),
+        pa.array([12, 14, 16, 18, 20])
+    ], names=["odd", "even"])
 
     table = pa.Table.from_batches([batch, second_batch])
 
@@ -103,8 +103,8 @@ Multiple batches can be combined into a table using
 .. testoutput::
 
     pyarrow.Table
-    first: int64
-    second: int64
+    odd: int64
+    even: int64
 
 Equally, :class:`pyarrow.Table` can be converted to a list of 
 :class:`pyarrow.RecordBatch` using the :meth:`pyarrow.Table.to_batches`
