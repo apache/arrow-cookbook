@@ -17,6 +17,7 @@ serve as robust and well performing solutions to those tasks.
 
    io
    create
+   schema
    data
 
 Indices and tables
