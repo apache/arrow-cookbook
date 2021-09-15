@@ -71,8 +71,8 @@ Creating Record Batches
 ======================
 
 Most I/O operations in Arrow happen when shipping batches of data
-to the destination.  :class:`pyarrow.RecordBatch` is the way
-Arrow represents batches of data, they can be seen as a slice
+to their destination.  :class:`pyarrow.RecordBatch` is the way
+Arrow represents batches of data.  A RecordBatch can be seen as a slice
 of a table.
 
 .. testcode::
