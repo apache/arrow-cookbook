@@ -37,7 +37,7 @@ in your usual analytics pipeline.  You can use either `as.data.frame()` or
 air_df <- as.data.frame(air_table)
 air_df
 ```
-```{r, test_asdft_table, opts.label = "test"}
+```{r, test_asdf_table, opts.label = "test"}
 test_that("asdf_table chunk works as expected", {
   expect_identical(air_df, airquality) 
 })
