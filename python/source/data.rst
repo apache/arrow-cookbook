@@ -137,3 +137,48 @@ function
 .. testoutput::
 
   0 .. 198
+
+Appending tables to an existing table
+=====================================
+
+If you have data split in two different tables, it's possible
+to combine them into a single table that is the concatenation
+of the original tables.
+
+If we have the list of oscar nominations divided in two different tables:
+
+.. testcode::
+
+  import pyarrow as pa
+
+  oscar_nominations_1 = pa.table([
+    ["Meryl Streep", "Katharine Hepburn"],
+    [21, 12]
+  ], names=["actor", "nominations"])
+
+  oscar_nominations_2 = pa.table([
+    ["Jack Nicholson", "Bette Davis"],
+    [12, 10]
+  ], names=["actor", "nominations"])
+
+We can join them into a single one using :func:`pyarrow.concat_tables`:
+
+.. testcode::
+
+  oscar_nominations = pa.concat_tables([oscar_nominations_1, 
+                                        oscar_nominations_2])
+
+  print(oscar_nominations.to_pydict())
+
+.. testoutput::
+
+  {'actor': ['Meryl Streep', 'Katharine Hepburn', 'Jack Nicholson', 'Bette Davis'], 'nominations': [21, 12, 12, 10]}
+
+.. note::
+
+  By default appending two tables is a zero-copy operation, that doesn't need to
+  copy or rewrite data. As tables are made of :class:`pyarrow.ChunkedArray`
+  the result will be a table with multiple chunks, each pointing to the original
+  data that has been appended. Under some conditions, Arrow might have to
+  do casts (if `promote=True`) and in such cases the data will need to be copied
+  and an extra cost will occurr.
