@@ -2,7 +2,9 @@
 
 ## Computing Mean/Min/Max, etc value of an Array
 
-Many base R generic functions such as `mean()`, `min()`, and `max()` have been mapped to their Arrow equivalents, and so can be called on Arrow Array objects in the same way. They will return Arrow objects themselves.
+You want to calculate the mean, minimum, or maximum of values in an array.
+
+### Solution
 
 ```{r, array_mean_na}
 my_values <- Array$create(c(1:5, NA))
@@ -13,7 +15,15 @@ test_that("array_mean_na works as expected", {
   expect_equal(mean(my_values, na.rm = TRUE), Scalar$create(3))
 })
 ```
-If you want to use an R function which does not have an Arrow mapping, you can use `as.vector()` to convert Arrow objects to base R vectors.
+
+### Discussion
+
+Many base R generic functions such as `mean()`, `min()`, and `max()` have been
+mapped to their Arrow equivalents, and so can be called on Arrow Array objects 
+in the same way. They will return Arrow objects themselves.
+
+If you want to use an R function which does not have an Arrow mapping, you can 
+use `as.vector()` to convert Arrow objects to base R vectors.
 
 ```{r, fivenum}
 fivenum(as.vector(my_values))
@@ -26,9 +36,9 @@ test_that("fivenum works as expected", {
 
 ## Counting occurrences of elements in an Array
 
-Some functions in the Arrow R package do not have base R equivalents. In other cases, the base R equivalents are not generic functions so they cannot be called directly on Arrow Array objects.
+You want to count repeated values in an Array.
 
-For example, the `value_count()` function in the Arrow R package is loosely equivalent to the base R function `table()`, which is not a generic function. To count the elements in an R vector, you can use `table()`; to count the elements in an Arrow Array, you can use `value_count()`.
+### Solution
 
 ```{r, value_counts}
 repeated_vals <- Array$create(c(1, 1, 2, 3, 3, 3, 3, 3))
@@ -47,9 +57,20 @@ test_that("value_counts works as expected", {
 })
 ```
 
+### Discussion
+
+Some functions in the Arrow R package do not have base R equivalents. In other 
+cases, the base R equivalents are not generic functions so they cannot be called
+directly on Arrow Array objects.
+
+For example, the `value_count()` function in the Arrow R package is loosely 
+equivalent to the base R function `table()`, which is not a generic function. 
+
 ## Applying arithmetic functions to Arrays.
 
-You can use the various arithmetic operators on Array objects.
+You want to use the various arithmetic operators on Array objects.
+
+### Solution
 
 ```{r, add_array}
 num_array <- Array$create(1:10)
@@ -62,6 +83,8 @@ test_that("add_array works as expected", {
 })
 ```
 
+### Discussion
+
 You will get the same result if you pass in the value you're adding as an Arrow object.
 
 ```{r, add_array_scalar}
@@ -73,3 +96,4 @@ test_that("add_array_scalar works as expected", {
   expect_equal(num_array + Scalar$create(10), Array$create(1:10 + 10))
 })
 ```
+
