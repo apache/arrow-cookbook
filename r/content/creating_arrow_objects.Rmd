@@ -2,7 +2,7 @@
 
 ## Create an Arrow Array from an R object
 
-You to convert an existing vector in R to an Arrow Array object.
+You want to convert an existing vector in R to an Arrow Array object.
 
 ### Solution
 
