@@ -197,7 +197,8 @@ unlink("oscars_data", recursive = TRUE)
 
 ### Discussion
 
-If your dataset contains files with different schemas, they will be combined by
+If your dataset contains files with different schemas with some overlapping 
+fields which have the same names and types, they will be combined by
 `open_dataset()` automatically.  The code below demonstrates how this works 
 via the `unify_schemas()` function.
 
