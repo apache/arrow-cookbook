@@ -9,6 +9,5 @@ rmd_files: [
   "reading_and_writing_data.Rmd",
   "creating_arrow_objects.Rmd",
   "specify_data_types_and_schemas.Rmd",
-  "manipulating_data.Rmd",
-  "appendix.Rmd"  
+  "manipulating_data.Rmd"
 ]

@@ -10,10 +10,10 @@ systems.  This chapter includes recipes for:
 * defining data types during the process of creating Arrow objects
 
 A table showing the default mappings between R and Arrow data types can be found 
-in [R data type to Arrow data type mappings](#r2arrow).
+in [R data type to Arrow data type mappings](https://arrow.apache.org/docs/r/articles/arrow.html#r-to-arrow).
 
 A table containing Arrow data types, and their R equivalents can be found in 
-[Arrow data type to R data type mapping](#arrow2r).
+[Arrow data type to R data type mapping](https://arrow.apache.org/docs/r/articles/arrow.html#arrow-to-r).
 
 ## Update the data type of an existing Arrow Array
 
