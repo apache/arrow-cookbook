@@ -195,42 +195,12 @@ test_that("use_schema_dataset works as expected", {
 unlink("oscars_data", recursive = TRUE)
 ```
 
-## Combine and unify schemas
-
-You have a dataset split across multiple sources for which you have separate 
-schemas that you want to combine.
-
-### Solution
-
-You can use `unify_schemas()` to combine multiple schemas into a single schemas.
-
-```{r, combine_schemas}
-# create first schema to combine
-country_code_schema <- schema(country = utf8(), code = utf8())
-
-# create second schema to combine
-country_location_schema <- schema(longitude = float32(), latitude = float32())
-
-# combine schemas
-combined_schemas <- unify_schemas(country_code_schema, country_location_schema)
-combined_schemas
-```
-
-```{r, test_combine_schemas, opts.label = "test"}
-test_that("combine_schemas works as expected", {
-  expect_s3_class(combined_schemas, "Schema")
-  expect_equal(combined_schemas,
-    schema(country = utf8(), code = utf8(), longitude = float32(), latitude = float32())
-  )
-})
-```
-
-
 ### Discussion
 
-If you have two schemas containing fields with the same names and types, you can
- combine them into a single field.
- 
+If your dataset contains files with different schemas, they will be combined by
+`open_dataset()` automatically.  The code below demonstrates how this works 
+via the `unify_schemas()` function.
+
 ```{r, combine_schemas_merge}
 # create first schema to combine
 country_code_schema <- schema(country = utf8(), code = utf8())
