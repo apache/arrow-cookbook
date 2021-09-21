@@ -1,6 +1,7 @@
 # Manipulating Data - Tables
 
-In this chapter, we discuss recipes for manipulating data in tables.  We'll use this small dataset of popular movies in our examples.
+In this chapter, we discuss recipes for manipulating data in tables.  We'll use 
+this small dataset of popular movies in our examples.
 
 ```{r}
 popular_movies <- data.frame(
