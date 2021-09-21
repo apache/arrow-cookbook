@@ -59,10 +59,11 @@ You want to choose columns to keep or remove
 ### Solution
 
 ```{r}
-names_and_dates <- popular_movies_arrow %>%
-  select(name, release_date)
+# just keep `name` and `release_date` columns and drop the rest
+popular_movies_arrow %>%
+  select(name, release_date) %>%
+  collect()
 
-collect(names_and_dates)
 ```
 
 ## Filter data
@@ -72,10 +73,10 @@ You want to filter values in a table based on some condition.
 ### Solution
 
 ```{r}
-under_two_hours <- popular_movies_arrow %>%
-  filter(run_time_mins < 120)
-
-collect(under_two_hours)
+# which movies are less than 2 hours long?
+popular_movies_arrow %>%
+  filter(run_time_mins < 120) %>%
+  collect()
 ```
 
 ## Create new values in columns
@@ -85,10 +86,10 @@ You want to create a new column or update values in an existing column.
 ### Solution
 
 ```{r}
-budget_values <- popular_movies_arrow %>%
-  mutate(budget = budget_millions * 1000000)
-
-collect(budget_values)
+# add a column converting from the budget in millions to the actual number
+popular_movies_arrow %>%
+  mutate(budget = budget_millions * 1000000) %>%
+  collect()
 ```
 
 ## Create a data summary
@@ -98,10 +99,10 @@ You want to create a summary of your data
 ### Solution
 
 ```{r}
-run_time_summary <- popular_movies_arrow %>%
-  summarise(mean_run_time = mean(run_time_mins))
-
-collect(run_time_summary)
+# work out the mean run time
+popular_movies_arrow %>%
+  summarise(mean_run_time = mean(run_time_mins)) %>%
+  collect()
 ```
 
 ## Create a data summary based on groups
@@ -111,11 +112,11 @@ You want to create a new column based on groups in the data
 ### Solution
 
 ```{r}
-run_time_source_summary <- popular_movies_arrow %>%
+# work out the mean run time depending on if a move is based on a novel or not
+popular_movies_arrow %>%
   group_by(based_on_novel) %>%
-  summarise(mean_run_time = mean(run_time_mins))
-
-collect(run_time_source_summary)
+  summarise(mean_run_time = mean(run_time_mins)) %>%
+  collect()
 ```
 
 
@@ -126,11 +127,11 @@ You want to create a new column based on groups in the data.
 ### Solution
 
 ```{r}
-with_run_time_source_summary <- popular_movies_arrow %>%
+# append the source-dependent mean runtime to the original data
+popular_movies_arrow %>%
   group_by(based_on_novel) %>%
-  mutate(mean_source_run_time = mean(run_time_mins))
-
-collect(with_run_time_source_summary)
+  mutate(mean_source_run_time = mean(run_time_mins)) %>%
+  collect()
 ```
 ### Discussion
 
