@@ -1,0 +1,158 @@
+# Manipulating Data - Tables
+
+In this chapter, we discuss recipes for manipulating data in tables.  We'll use this small dataset of popular movies in our examples.
+
+```{r}
+popular_movies <- data.frame(
+  name = c(
+    "The Shawshank Redemption", "The Godfather", "The Godfather: Part II",
+    "The Dark Knight", "12 Angry Men", "Schindler's List",
+    "The Lord of the Rings: The Return of the King", "Pulp Fiction",
+    "The Good, the Bad and the Ugly",
+    "The Lord of the Rings: The Fellowship of the Ring"
+  ),
+  release_date = c(
+    "1994-09-10", "1972-03-14", "1974-12-12", "2008-07-14", "1957-04-10",
+    "1993-11-30", "2003-12-01", "1994-05-21", "1966-12-23", "2001-12-10"
+  ),
+  oscar_nominations = c(7, 11, 11, 8, 3, 12, 11, 7, 0, 13),
+  oscar_wins = c(0, 3, 6, 2, 0, 7, 11, 1, 0, 4),
+  budget_millions = c(25, 6, 13, 185, 0.35, 22, 94, 8, 1.2, 93),
+  run_time_mins = c(142, 175, 202, 152, 96, 195, 201, 154, 148, 178),
+  based_on_novel = c("yes", "yes", "yes", "no", "no", "yes", "yes", "no", 
+                     "no", "yes")
+) 
+
+popular_movies
+```
+
+```{r}
+popular_movies_arrow <- Table$create(popular_movies)
+popular_movies_arrow
+```
+
+The data manipulation syntax in arrow is based on dplyr, so you'll need to load
+both packages before running these recipes.
+
+```{r}
+library(dplyr)
+```
+
+
+## Sort data
+
+You want to reorder values based on the values in 1 or more columns.
+
+### Solution
+
+```{r}
+shortest_to_longest <- popular_movies_arrow %>%
+  arrange(run_time_mins)
+          
+collect(shortest_to_longest)
+```
+
+## Keep or drop columns
+
+You want to choose columns to keep or remove
+
+### Solution
+
+```{r}
+names_and_dates <- popular_movies_arrow %>%
+  select(name, release_date)
+
+collect(names_and_dates)
+```
+
+## Filter data
+
+You want to filter values in a table based on some condition.
+
+### Solution
+
+```{r}
+under_two_hours <- popular_movies_arrow %>%
+  filter(run_time_mins < 120)
+
+collect(under_two_hours)
+```
+
+## Create new values in columns
+
+You want to create a new column or update values in an existing column.
+
+### Solution
+
+```{r}
+budget_values <- popular_movies_arrow %>%
+  mutate(budget = budget_millions * 1000000)
+
+collect(budget_values)
+```
+
+## Create a data summary
+
+You want to create a summary of your data
+
+### Solution
+
+```{r}
+run_time_summary <- popular_movies_arrow %>%
+  summarise(mean_run_time = mean(run_time_mins))
+
+collect(run_time_summary)
+```
+
+## Create a data summary based on groups
+
+You want to create a new column based on groups in the data
+
+### Solution
+
+```{r}
+run_time_source_summary <- popular_movies_arrow %>%
+  group_by(based_on_novel) %>%
+  summarise(mean_run_time = mean(run_time_mins))
+
+collect(run_time_source_summary)
+```
+
+
+## Create new values based on groups - append to existing rows
+
+You want to create a new column based on groups in the data.
+
+### Solution
+
+```{r}
+with_run_time_source_summary <- popular_movies_arrow %>%
+  group_by(based_on_novel) %>%
+  mutate(mean_source_run_time = mean(run_time_mins))
+
+collect(with_run_time_source_summary)
+```
+### Discussion
+
+It isn't possible in version 5.0.0.2 of Arrow to call `mutate()` on grouped 
+data, and so in the example above, the data is pulled into R and the calculation
+is handled by dplyr and not arrow.
+
+## Count unique values in your data
+
+You want to count how many unique values there are in 1 or more columns of your 
+data.
+
+### Solution
+
+(n_distinct)
+
+## Count unique values in your data based on groups
+
+You want to count how many unique values there are in 1 or more columns of your 
+data, based on grouping in another column of your data.
+
+### Solution
+
+(group_by, n_distinct)
+

@@ -1,4 +1,4 @@
-# Manipulating Data
+# Manipulating Data - Arrays
 
 ## Computing Mean/Min/Max, etc value of an Array
 
