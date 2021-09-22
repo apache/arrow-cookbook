@@ -97,3 +97,4 @@ test_that("add_array_scalar works as expected", {
 })
 ```
 
+## Using base R or tidyverse functions with arrow Arrays
