@@ -1,51 +1,55 @@
 # Manipulating Data - Tables
 
-In this chapter, we discuss recipes for manipulating data in tables.  We'll use 
-this small dataset of popular movies in our examples.
+## Using dplyr verbs in arrow
 
-```{r}
-popular_movies <- data.frame(
-  name = c(
-    "The Shawshank Redemption", "The Godfather", "The Godfather: Part II",
-    "The Dark Knight", "12 Angry Men", "Schindler's List",
-    "The Lord of the Rings: The Return of the King", "Pulp Fiction",
-    "The Good, the Bad and the Ugly",
-    "The Lord of the Rings: The Fellowship of the Ring"
-  ),
-  release_date = c(
-    "1994-09-10", "1972-03-14", "1974-12-12", "2008-07-14", "1957-04-10",
-    "1993-11-30", "2003-12-01", "1994-05-21", "1966-12-23", "2001-12-10"
-  ),
-  oscar_nominations = c(7, 11, 11, 8, 3, 12, 11, 7, 0, 13),
-  oscar_wins = c(0, 3, 6, 2, 0, 7, 11, 1, 0, 4),
-  budget_millions = c(25, 6, 13, 185, 0.35, 22, 94, 8, 1.2, 93),
-  run_time_mins = c(142, 175, 202, 152, 96, 195, 201, 154, 148, 178),
-  based_on_novel = c("yes", "yes", "yes", "no", "no", "yes", "yes", "no", 
-                     "no", "yes")
-) 
+You want to use a dplyr verb in arrow.
 
-popular_movies
-```
-
-```{r}
-popular_movies_arrow <- Table$create(popular_movies)
-popular_movies_arrow
-```
-
-The data manipulation syntax in arrow is based on dplyr, so you'll need to load
-both packages before running these recipes.
+### Solution
 
 ```{r}
 library(dplyr)
+starwars %>%
+  filter(species == "Human", homeworld == "Tatooine")
 ```
+### Discussion
 
-## Using dplyr verbs in arrow
+You can use most of the dplyr verbs directly from arrow.  
+
+### See also
+
+Introduction to dplyr - run `vignette("dplyr", package = "dplyr")` or view on the [pkgdown site](https://dplyr.tidyverse.org/articles/dplyr.html).
 
 ## Using base R or tidyverse functions in dplyr verbs in arrow
 
 You want to use a tidyverse function or base R function in arrow.
 
 ### Solution
+
+```{r}
+starwars %>%
+  Table$create() %>%
+  filter(str_detect(name, "Darth")) %>%
+  collect()
+```
+
+### Discussion
+
+The arrow package's functionality has been written with the intention of 
+enabling users to use dplyr verbs containing expressions which include base R 
+and tidyverse functions.  If you find any base R or tidyverse functions which 
+you would like to see a mapping of in arrow, please [open an issue
+on the project JIRA](https://issues.apache.org/jira/projects/ARROW/issues).
+
+If you try to call a function which does not have arrow mapping, the data will 
+be pulled back into R, and you will see a warning message.
+
+
+```{r}
+starwars %>%
+  Table$create() %>%
+  mutate(name_split = str_split_fixed(name, " ", 2)) %>%
+  collect()
+```
 
 ## Using arrow functions in dplyr verbs in arrow
 
@@ -64,9 +68,7 @@ starwars %>%
 
 ### Discussion
 
-The arrow package's functionality has been written with the intention of 
-enabling users to use dplyr verbs containing expressions which include base R 
-and tidyverse functions.  Arrow C++ compute functions have been mapped to their 
+Arrow C++ compute functions have been mapped to their 
 base R or tidyverse equivalents where possible, and we strongly recommend that you use 
 these mappings where possible, as the original functions are well documented
 and the mapped versions have been tested to ensure the results returned are as 
