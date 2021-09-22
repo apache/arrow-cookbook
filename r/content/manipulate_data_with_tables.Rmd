@@ -18,7 +18,9 @@ You want to use a dplyr verb in arrow.
 ```{r}
 library(dplyr)
 starwars %>%
-  filter(species == "Human", homeworld == "Tatooine")
+  Table$create() %>%
+  filter(species == "Human", homeworld == "Tatooine") %>%
+  collect()
 ```
 ### Discussion
 
