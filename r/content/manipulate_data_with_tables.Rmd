@@ -1,5 +1,14 @@
 # Manipulating Data - Tables
 
+<!-- 
+
+Add some content here on:
+
+* lazy evaluation and a really high level overview of how combining dplyr verbs in arrow generate a load of expressions etc to be evaluated later
+* something about datasets - i.e. running dplyr chains against multi-file datasets <3
+
+-->
+
 ## Using dplyr verbs in arrow
 
 You want to use a dplyr verb in arrow.
