@@ -41,15 +41,16 @@ library(dplyr)
 
 ## Using dplyr verbs in arrow
 
-## Using tidyverse functions in dplyr verbs in arrow
+## Using base R or tidyverse functions in dplyr verbs in arrow
 
-You want to use a tidyverse function in arrow
+You want to use a tidyverse function or base R function in arrow.
 
 ### Solution
 
-## Using non-tidyverse arrow functions in dplyr verbs in arrow
+## Using arrow functions in dplyr verbs in arrow
 
-You want to use a function which is implemented in arrow but not in tidyverse packages.
+You want to use a function which is implemented in Arrow's C++ library but 
+doesn't have a mapping to a base R or tidyverse equivalent.
 
 ### Solution
 
