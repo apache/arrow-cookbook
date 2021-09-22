@@ -39,122 +39,69 @@ both packages before running these recipes.
 library(dplyr)
 ```
 
+## Using dplyr verbs in arrow
 
-## Sort data
+## Using tidyverse functions in dplyr verbs in arrow
 
-You want to reorder values based on the values in 1 or more columns.
+You want to use a tidyverse function in arrow
+
+### Solution
+
+## Using non-tidyverse arrow functions in dplyr verbs in arrow
+
+You want to use a function which is implemented in arrow but not in tidyverse packages.
 
 ### Solution
 
 ```{r}
-shortest_to_longest <- popular_movies_arrow %>%
-  arrange(run_time_mins)
-          
-collect(shortest_to_longest)
-```
-
-## Keep or drop columns
-
-You want to choose columns to keep or remove
-
-### Solution
-
-```{r}
-# just keep `name` and `release_date` columns and drop the rest
-popular_movies_arrow %>%
-  select(name, release_date) %>%
-  collect()
-
-```
-
-## Filter data
-
-You want to filter values in a table based on some condition.
-
-### Solution
-
-```{r}
-# which movies are less than 2 hours long?
-popular_movies_arrow %>%
-  filter(run_time_mins < 120) %>%
+starwars %>%
+  Table$create() %>%
+  select(name) %>%
+  mutate(padded_name = arrow_ascii_lpad(name, options = list(width = 10, padding = "*"))) %>%
   collect()
 ```
 
-## Create new values in columns
-
-You want to create a new column or update values in an existing column.
-
-### Solution
-
-```{r}
-# add a column converting from the budget in millions to the actual number
-popular_movies_arrow %>%
-  mutate(budget = budget_millions * 1000000) %>%
-  collect()
-```
-
-## Create a data summary
-
-You want to create a summary of your data
-
-### Solution
-
-```{r}
-# work out the mean run time
-popular_movies_arrow %>%
-  summarise(mean_run_time = mean(run_time_mins)) %>%
-  collect()
-```
-
-## Create a data summary based on groups
-
-You want to create a new column based on groups in the data
-
-### Solution
-
-```{r}
-# work out the mean run time depending on if a move is based on a novel or not
-popular_movies_arrow %>%
-  group_by(based_on_novel) %>%
-  summarise(mean_run_time = mean(run_time_mins)) %>%
-  collect()
-```
-
-
-## Create new values based on groups - append to existing rows
-
-You want to create a new column based on groups in the data.
-
-### Solution
-
-```{r}
-# append the source-dependent mean runtime to the original data
-popular_movies_arrow %>%
-  group_by(based_on_novel) %>%
-  mutate(mean_source_run_time = mean(run_time_mins)) %>%
-  collect()
-```
 ### Discussion
 
-It isn't possible in version 5.0.0.2 of Arrow to call `mutate()` on grouped 
-data, and so in the example above, the data is pulled into R and the calculation
-is handled by dplyr and not arrow.
+The arrow package's functionality has been written with the intention of 
+enabling users to use dplyr verbs containing expressions which include base R 
+and tidyverse functions.  Arrow C++ compute functions have been mapped to their 
+base R or tidyverse equivalents where possible, and we strongly recommend that you use 
+these mappings where possible, as the original functions are well documented
+and the mapped versions have been tested to ensure the results returned are as 
+expected.
 
-## Count unique values in your data
+However, there may be circumstances in which you might want to use a compute 
+function from the Arrow C++ library which does not have a base R or tidyverse 
+equivalent.  
 
-You want to count how many unique values there are in 1 or more columns of your 
-data.
+You can find documentation of Arrow C++ compute functions in 
+[the C++ documention](https://arrow.apache.org/docs/cpp/compute.html#available-functions).
+This documentation lists all available compute functions, any associated options classes 
+they need, and the valid data type that they can be used with.
 
-### Solution
+You can list all available Arrow compute functions from R by calling 
+`list_compute_functions()`.
 
-(n_distinct)
+```{r}
+list_compute_functions()
+```
 
-## Count unique values in your data based on groups
+The majority of functions here have been mapped to
+their base R or tidyverse equivalent and can be called within a dplyr query by
+prefixing their name with "arrow_".  
 
-You want to count how many unique values there are in 1 or more columns of your 
-data, based on grouping in another column of your data.
+#### Compute functions with options
 
-### Solution
+If the Arrow compute function that you want to call requires the use of an options
+class to control its behavior, you must pass a list to the `options` parameter 
+containing the options values.
 
-(group_by, n_distinct)
-
+For an Arrow C++ compute function which requires options to be specified to work
+in R, the function must be associated with the appropriate class in the R 
+package's C++ code.  At the time of writing, all compute functions available in
+the development version of the arrow R package had been associated with their options
+classes.  However, as the Arrow C++ library's functionality extends, compute 
+functions may be added which do not yet have an R binding.  If you find a C++ 
+compute function which you wish to use from the R package, please [open an issue
+on the project JIRA](https://issues.apache.org/jira/projects/ARROW/issues).
