@@ -142,17 +142,25 @@ You want to call an Arrow compute function directly on an Array.
 
 ### Solution
 
-```{r}
+```{r, call_function}
 first_100_numbers <- Array$create(1:100)
 
 # Calculate the variance of 1 to 100, setting the delta degrees of freedom to 0.
 call_function("variance", first_100_numbers, options = list(ddof = 0))
 
 ```
+```{r, test_call_function, opts.label = "test"}
+test_that("call_function works as expected", {
+  expect_equal(
+    call_function("variance", first_100_numbers, options = list(ddof = 0)),
+    Scalar$create(833.25)
+  )
+})
+```
 ### Discussion
 
 You can use `call_function()` to call Arrow compute functions directly on 
-Scalar, Array, and ChunkedArray objects.
+Scalar, Array, and ChunkedArray objects.  The returned object will be an Arrow object.
 
 ### See also
 
