@@ -1,13 +1,23 @@
 # Manipulating Data - Tables
 
-<!-- 
+__What you should know before you begin__
 
-Add some content here on:
+When you call dplyr verbs from Arrow, behind the scenes this generates 
+instructions which tell Arrow how to manipulate the data in the way you've 
+specified.  These instructions are called _expressions_.  Until you pull the 
+data back into R, expressions don't do any work to actually retrieve or 
+manipulate any data. This is known as _lazy evaluation_ and means that you can 
+build up complex expressions that perform multiple actions, and are efficiently 
+evaluated all at once when you retrieve the data.  It also means that you are 
+able to manipulate data that is larger than
+you can fit into memory on the machine you're running your code on, if you only 
+pull data into R when you have selected the desired subset. 
 
-* lazy evaluation and a really high level overview of how combining dplyr verbs in arrow generate a load of expressions etc to be evaluated later
-* something about datasets - i.e. running dplyr chains against multi-file datasets <3
-
--->
+You can also have data which is split across multiple files.  For example, you
+might have files which are stored in multiple Parquet or Feather files, 
+partitioned across different directories.  You can open multi-file datasets 
+using `open_dataset()` as discussed in a previous chapter, and then manipulate 
+this data using arrow before even reading any of it into R.
 
 ## Using dplyr verbs in arrow
 
@@ -28,7 +38,9 @@ You can use most of the dplyr verbs directly from arrow.
 
 ### See also
 
-Introduction to dplyr - run `vignette("dplyr", package = "dplyr")` or view on the [pkgdown site](https://dplyr.tidyverse.org/articles/dplyr.html).
+You can find examples of the various dplyr verbs in "Introduction to dplyr" - 
+run `vignette("dplyr", package = "dplyr")` or view on
+the [pkgdown site](https://dplyr.tidyverse.org/articles/dplyr.html).
 
 ## Using base R or tidyverse functions in dplyr verbs in arrow
 
@@ -45,17 +57,18 @@ starwars %>%
 
 ### Discussion
 
-The arrow package's functionality has been written with the intention of 
-enabling users to use dplyr verbs containing expressions which include base R 
-and tidyverse functions.  If you find any base R or tidyverse functions which 
-you would like to see a mapping of in arrow, please [open an issue
-on the project JIRA](https://issues.apache.org/jira/projects/ARROW/issues).
+The arrow package allows you to use dplyr verbs containing expressions which 
+include base R and tidyverse functions, but call Arrow functions under the hood.
+If you find any base R or tidyverse functions which you would like to see a 
+mapping of in arrow, please 
+[open an issue on the project JIRA](https://issues.apache.org/jira/projects/ARROW/issues).
 
 If you try to call a function which does not have arrow mapping, the data will 
 be pulled back into R, and you will see a warning message.
 
 
 ```{r}
+library(stringr)
 starwars %>%
   Table$create() %>%
   mutate(name_split = str_split_fixed(name, " ", 2)) %>%
@@ -64,8 +77,9 @@ starwars %>%
 
 ## Using arrow functions in dplyr verbs in arrow
 
-You want to use a function which is implemented in Arrow's C++ library but 
-doesn't have a mapping to a base R or tidyverse equivalent.
+You want to use a function which is implemented in Arrow's C++ library but either:
+* it doesn't have a mapping to a base R or tidyverse equivalent, or 
+* it has a mapping but nevertheless you want to call the C++ function directly
 
 ### Solution
 
@@ -87,12 +101,12 @@ expected.
 
 However, there may be circumstances in which you might want to use a compute 
 function from the Arrow C++ library which does not have a base R or tidyverse 
-equivalent.  
+equivalent.
 
 You can find documentation of Arrow C++ compute functions in 
 [the C++ documention](https://arrow.apache.org/docs/cpp/compute.html#available-functions).
 This documentation lists all available compute functions, any associated options classes 
-they need, and the valid data type that they can be used with.
+they need, and the valid data types that they can be used with.
 
 You can list all available Arrow compute functions from R by calling 
 `list_compute_functions()`.
@@ -101,18 +115,42 @@ You can list all available Arrow compute functions from R by calling
 list_compute_functions()
 ```
 
-The majority of functions here have been mapped to
-their base R or tidyverse equivalent and can be called within a dplyr query by
-prefixing their name with "arrow_".  
+The majority of functions here have been mapped to their base R or tidyverse 
+equivalent and can be called within a dplyr query as usual.  For functions which
+don't have a base R or tidyverse equivalent, or you want to supply custom 
+options, you can call them by prefixing their name with "arrow_".  
+
+For example, base R's `is.na()` function is the equivalent of the Arrow C++ 
+compute function `is_null()` with the option `nan_is_null` set to `TRUE`.  
+A mapping between these functions (with `nan_is_null` set to `TRUE`) has been
+created in arrow.
+
+```{r}
+demo_df <- data.frame(x = c(1, 2, 3, NA, NaN))
+
+demo_df %>%
+  Table$create() %>%
+  mutate(y = is.na(x)) %>% 
+  collect()
+```
+
+If you want to call Arrow's `is_null()` function but with `nan_is_null` set to 
+`FALSE` (so it returns `TRUE` when a value being examined is `NA` but `FALSE` 
+when the value being examined is `NaN`), you must call `is_null()` directly and 
+specify the option `nan_is_null = FALSE`.
+
+```{r}
+demo_df %>%
+  Table$create() %>%
+  mutate(y = arrow_is_null(x, options  = list(nan_is_null = FALSE))) %>% 
+  collect()
+```
 
 #### Compute functions with options
 
-If the Arrow compute function that you want to call requires the use of an options
-class to control its behavior, you must pass a list to the `options` parameter 
-containing the options values.
-
-For an Arrow C++ compute function which requires options to be specified to work
-in R, the function must be associated with the appropriate class in the R 
+Although not all Arrow C++ compute functions require options to be specified, 
+most do, and for these functions to work in R, the function must be associated 
+with the appropriate options C++ class in the R 
 package's C++ code.  At the time of writing, all compute functions available in
 the development version of the arrow R package had been associated with their options
 classes.  However, as the Arrow C++ library's functionality extends, compute 
