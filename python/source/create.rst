@@ -130,7 +130,7 @@ from a variety of inputs, including plain python objects
     and will benefit from zero copy behaviour when possible.
 
 Creating Record Batches
-======================
+=======================
 
 Most I/O operations in Arrow happen when shipping batches of data
 to their destination.  :class:`pyarrow.RecordBatch` is the way
