@@ -141,11 +141,10 @@ function
 Appending tables to an existing table
 =====================================
 
-If you have data split in two different tables, it's possible
-to combine them into a single table that is the concatenation
-of the original tables.
+If you have data split across two different tables, it is possible
+to concatenate their rows into a single table.
 
-If we have the list of oscar nominations divided in two different tables:
+If we have the list of Oscar nominations divided between two different tables:
 
 .. testcode::
 
@@ -161,7 +160,7 @@ If we have the list of oscar nominations divided in two different tables:
     [12, 10]
   ], names=["actor", "nominations"])
 
-We can join them into a single one using :func:`pyarrow.concat_tables`:
+We can combine them into a single table using :func:`pyarrow.concat_tables`:
 
 .. testcode::
 
@@ -176,9 +175,9 @@ We can join them into a single one using :func:`pyarrow.concat_tables`:
 
 .. note::
 
-  By default appending two tables is a zero-copy operation, that doesn't need to
-  copy or rewrite data. As tables are made of :class:`pyarrow.ChunkedArray`
-  the result will be a table with multiple chunks, each pointing to the original
-  data that has been appended. Under some conditions, Arrow might have to
-  do casts (if `promote=True`) and in such cases the data will need to be copied
-  and an extra cost will occurr.
+  By default, appending two tables is a zero-copy operation that doesn't need to
+  copy or rewrite data. As tables are made of :class:`pyarrow.ChunkedArray`,
+  the result will be a table with multiple chunks, each pointing to the original 
+  data that has been appended. Under some conditions, Arrow might have to 
+  cast data from one type to another (if `promote=True`).  In such cases the data 
+  will need to be copied and an extra cost will occur.
