@@ -181,3 +181,57 @@ We can combine them into a single table using :func:`pyarrow.concat_tables`:
   data that has been appended. Under some conditions, Arrow might have to 
   cast data from one type to another (if `promote=True`).  In such cases the data 
   will need to be copied and an extra cost will occur.
+
+Searching for values matching a predicate in Arrays
+---------------------------------------------------
+
+If you have to look for values matching a predicate in Arrow arrays
+the :mod:`arrow.compute` module provides a bunch of predicates that
+can be used to find the values you are looking for.
+
+For example, given and array with numbers from 0 to 9, if we
+want to look only for those greater than 5 we could use the
+func:`arrow.compute.greater` predicate and get back the elements
+that fit our predicate
+
+.. testcode::
+
+  import pyarrow as pa
+  import pyarrow.compute as pc
+
+  arr = pa.array(range(10))
+  gtfive = pc.greater(arr, 5)
+
+  print(gtfive.to_string())
+
+.. testoutput::
+
+  [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    true,
+    true,
+    true
+  ]
+
+Further more we can filter the array to get only the entries
+that match our predicate
+
+.. testcode::
+
+  filtered_array = pc.filter(arr, gtfive)
+  print(filtered_array)
+
+.. testoutput::
+
+  [
+    6,
+    7,
+    8,
+    9
+  ]
