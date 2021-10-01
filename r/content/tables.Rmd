@@ -60,7 +60,7 @@ run `vignette("dplyr", package = "dplyr")` or view on
 the [pkgdown site](https://dplyr.tidyverse.org/articles/dplyr.html).
 
 You can see more information about using `Table$create()` to create Arrow Tables
-and `collect()` to view them as R data frames in [the chapter on working with Arrow objects](Creating Arrow Objects)
+and `collect()` to view them as R data frames in [Creating Arrow Objects](creating-arrow-objects.html#creating-arrow-objects).
 
 ## Using base R or tidyverse functions in dplyr verbs in arrow
 
