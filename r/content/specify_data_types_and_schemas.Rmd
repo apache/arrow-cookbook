@@ -128,6 +128,9 @@ oscars_arrow$cast(target_schema = oscars_schema_invalid)
 
 ```{r, test_float_16_conversion, opts.label = "test"}
 test_that("float_16_conversion works as expected", {
+  
+  oscars_schema_invalid <- schema(actor = string(), num_awards = float16())
+  
   expect_error(
     oscars_arrow$cast(target_schema = oscars_schema_invalid),
     "NotImplemented: Unsupported cast from double to halffloat using function cast_half_float"
