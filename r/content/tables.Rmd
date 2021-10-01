@@ -25,13 +25,30 @@ You want to use a dplyr verb in arrow.
 
 ### Solution
 
-```{r}
+```{r, dplyr_verb}
 library(dplyr)
 starwars %>%
   Table$create() %>%
   filter(species == "Human", homeworld == "Tatooine") %>%
   collect()
 ```
+
+```{r, test_dplyr_verb, opts.label = "test"}
+
+test_that("dplyr_verb works as expected", {
+  out <- starwars %>%
+  Table$create() %>%
+  filter(species == "Human", homeworld == "Tatooine") %>%
+  collect()
+
+  expect_equal(nrow(out), 8)
+  expect_s3_class(out, "data.frame")
+  expect_identical(unique(out$species), "Human")
+  expect_identical(unique(out$homeworld), "Tatooine")
+})
+
+```
+
 ### Discussion
 
 You can use most of the dplyr verbs directly from arrow.  
@@ -48,11 +65,26 @@ You want to use a tidyverse function or base R function in arrow.
 
 ### Solution
 
-```{r}
+```{r, dplyr_str_detect}
 starwars %>%
   Table$create() %>%
   filter(str_detect(name, "Darth")) %>%
   collect()
+```
+
+```{r, test_dplyr_str_detect, opts.label = "test"}
+
+test_that("dplyr_str_detect", {
+  out <- starwars %>%
+    Table$create() %>%
+    filter(str_detect(name, "Darth")) %>%
+    collect()
+  
+  expect_equal(nrow(out), 2)
+  expect_equal(sort(out$name), c("Darth Maul", "Darth Vader"))
+  
+})
+
 ```
 
 ### Discussion
@@ -67,7 +99,7 @@ If you try to call a function which does not have arrow mapping, the data will
 be pulled back into R, and you will see a warning message.
 
 
-```{r}
+```{r, dplyr_func_warning}
 library(stringr)
 starwars %>%
   Table$create() %>%
@@ -75,6 +107,21 @@ starwars %>%
   collect()
 ```
 
+```{r, test_dplyr_func_warning, opts.label = "test"}
+
+test_that("dplyr_func_warning", {
+  
+  expect_warning(
+     starwars %>%
+      Table$create() %>%
+      mutate(name_split = str_split_fixed(name, " ", 2)) %>%
+      collect(),
+    'Expression str_split_fixed(name, " ", 2) not supported in Arrow; pulling data into R',
+    fixed = TRUE
+  )
+
+})
+```
 ## Using arrow functions in dplyr verbs in arrow
 
 You want to use a function which is implemented in Arrow's C++ library but either:
@@ -83,14 +130,27 @@ You want to use a function which is implemented in Arrow's C++ library but eithe
 
 ### Solution
 
-```{r}
+```{r, dplyr_arrow_func}
 starwars %>%
   Table$create() %>%
   select(name) %>%
   mutate(padded_name = arrow_ascii_lpad(name, options = list(width = 10, padding = "*"))) %>%
   collect()
 ```
+```{r, test_dplyr_arrow_func, opts.label = "test"}
 
+test_that("dplyr_arrow_func", {
+  out <- starwars %>%
+    Table$create() %>%
+    select(name) %>%
+    mutate(padded_name = arrow_ascii_lpad(name, options = list(width = 10, padding = "*"))) %>%
+    collect()
+  
+  expect_match(out$padded_name, "*****C-3PO", fixed = TRUE, all = FALSE)
+  
+})
+
+```
 ### Discussion
 
 Arrow C++ compute functions have been mapped to their 
@@ -111,8 +171,13 @@ they need, and the valid data types that they can be used with.
 You can list all available Arrow compute functions from R by calling 
 `list_compute_functions()`.
 
-```{r}
+```{r, list_compute_funcs}
 list_compute_functions()
+```
+```{r, test_list_compute_funcs, opts.label = "test"}
+test_that("list_compute_funcs", {
+  expect_gt(length(list_compute_functions()), 0)
+})
 ```
 
 The majority of functions here have been mapped to their base R or tidyverse 
@@ -125,7 +190,7 @@ compute function `is_null()` with the option `nan_is_null` set to `TRUE`.
 A mapping between these functions (with `nan_is_null` set to `TRUE`) has been
 created in arrow.
 
-```{r}
+```{r, dplyr_is_na}
 demo_df <- data.frame(x = c(1, 2, 3, NA, NaN))
 
 demo_df %>%
@@ -134,16 +199,40 @@ demo_df %>%
   collect()
 ```
 
+```{r, test_dplyr_is_na, opts.label = "test"}
+test_that("dplyr_is_na", {
+  out <- demo_df %>%
+  Table$create() %>%
+  mutate(y = is.na(x)) %>% 
+  collect()
+  
+  expect_equal(out$y, c(FALSE, FALSE, FALSE, TRUE, TRUE))
+  
+})
+```
+
 If you want to call Arrow's `is_null()` function but with `nan_is_null` set to 
 `FALSE` (so it returns `TRUE` when a value being examined is `NA` but `FALSE` 
 when the value being examined is `NaN`), you must call `is_null()` directly and 
 specify the option `nan_is_null = FALSE`.
 
-```{r}
+```{r, dplyr_arrow_is_null}
 demo_df %>%
   Table$create() %>%
   mutate(y = arrow_is_null(x, options  = list(nan_is_null = FALSE))) %>% 
   collect()
+```
+
+```{r, test_dplyr_arrow_is_null, opts.label = "test"}
+test_that("dplyr_arrow_is_null", {
+  out <- demo_df %>%
+    Table$create() %>%
+    mutate(y = arrow_is_null(x, options  = list(nan_is_null = FALSE))) %>% 
+    collect()
+  
+  expect_equal(out$y, c(FALSE, FALSE, FALSE, TRUE, FALSE))
+  
+})
 ```
 
 #### Compute functions with options
