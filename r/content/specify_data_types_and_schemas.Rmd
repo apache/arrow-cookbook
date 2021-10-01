@@ -106,31 +106,39 @@ to cast to these data types or using a schema which contains them will result in
 an error.
 
 ```{r, float_16_conversion, error=TRUE, eval=FALSE}
+# Set up a tibble to use in this example
 oscars <- tibble::tibble(
   actor = c("Katharine Hepburn", "Meryl Streep", "Jack Nicholson"),
   num_awards = c(4, 3, 3)
 )
 
+# Convert tibble to an Arrow table
+oscars_arrow <- Table$create(oscars)
+
 # Set up schema with "num_awards" as float16 which doesn't have an R equivalent
-oscars_schema <- schema(actor = string(), num_awards = float16())
+oscars_schema_invalid <- schema(actor = string(), num_awards = float16())
 
-Table$create(oscars, schema = oscars_schema)
-
+# The default mapping from numeric column "num_awards" is to a double
+oscars_arrow$cast(target_schema = oscars_schema_invalid)
 ```
 
 ```{r}
-## Error: Invalid: Cannot convert to Half Float
+## Error: NotImplemented: Unsupported cast from double to halffloat using function cast_half_float
 ```
 
 ```{r, test_float_16_conversion, opts.label = "test"}
 test_that("float_16_conversion works as expected", {
-  expect_error(Table$create(oscars, schema = schema(actor = string(), num_awards = float16())))
+  expect_error(
+    oscars_arrow$cast(target_schema = oscars_schema_invalid),
+    "NotImplemented: Unsupported cast from double to halffloat using function cast_half_float"
+  )
 })
 ```
 
 ## Specify data types when creating an Arrow table from an R object
 
-You want to manually specify Arrow data types when converting an object from a data frame to an Arrow object.
+You want to manually specify Arrow data types when converting an object from a 
+data frame to an Arrow object.
 
 ### Solution
 
@@ -195,56 +203,3 @@ test_that("use_schema_dataset works as expected", {
 unlink("oscars_data", recursive = TRUE)
 ```
 
-### Discussion
-
-If your dataset contains files with different schemas with some overlapping 
-fields which have the same names and types, they will be combined by
-`open_dataset()` automatically.  The code below demonstrates how this works 
-via the `unify_schemas()` function.
-
-```{r, combine_schemas_merge}
-# create first schema to combine
-country_code_schema <- schema(country = utf8(), code = utf8())
-
-# create second schema to combine
-country_phone_schema <- schema(country = utf8(), phone_prefix = int8())
-
-# combine schemas
-combined_schemas <- unify_schemas(country_code_schema, country_phone_schema)
-combined_schemas
-```
-
-```{r, test_combine_schemas_merge, opts.label = "test", eval = FALSE}
-test_that("combine_schemas_merge works as expected", {
-  expect_s3_class(combined_schemas, "Schema")
-  expect_equal(combined_schemas,
-    schema(country = utf8(), code = utf8(), phone_prefix = int8())
-  )
-})
-```
-
-If you have schemas with the same names but different types, you will not be 
-able to merge the schemas and will get an error.
-
-```{r, combine_incompat_schemas, error = TRUE, eval = FALSE}
-# create first schema to combine
-country_code_schema <- schema(country = binary(), code = utf8())
-
-# create second schema to combine
-country_phone_schema <- schema(country = utf8(), phone_prefix = int8())
-
-# combine schemas
-unify_schemas(country_code_schema, country_phone_schema)
-```
-
-```{r}
-## Error: Invalid: Unable to merge: Field country has incompatible types: binary vs string
-```
-
-```{r, test_combine_incompat_schemas, opts.label = "test"}
-test_that("combine_incompat_schemas works as expected", {
-  country_code_schema <- schema(country = binary(), code = utf8())
-  country_phone_schema <- schema(country = utf8(), phone_prefix = int8())
-  expect_error(unify_schemas(country_code_schema, country_phone_schema))
-})
-```
