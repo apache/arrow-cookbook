@@ -156,8 +156,8 @@ test_that("dplyr_arrow_func", {
 ```
 ### Discussion
 
-Arrow C++ compute functions have been mapped to their 
-base R or tidyverse equivalents where possible, and we strongly recommend that you use 
+The vast majority of Arrow C++ compute functions have been mapped to their 
+base R or tidyverse equivalents, and we strongly recommend that you use 
 these mappings where possible, as the original functions are well documented
 and the mapped versions have been tested to ensure the results returned are as 
 expected.
