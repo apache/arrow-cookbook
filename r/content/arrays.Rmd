@@ -63,7 +63,7 @@ to determine the appropriate version of that function to use for the object.
 mean
 ```
 
-You can use `isS3stdGeneric()` to determine if a function is an S3 generic.
+You can also use `isS3stdGeneric()` to determine if a function is an S3 generic.
 
 ```{r}
 isS3stdGeneric("mean")
