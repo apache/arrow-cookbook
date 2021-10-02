@@ -102,7 +102,7 @@ Some functions in the Arrow R package do not have base R equivalents. In other
 cases, the base R equivalents are not generic functions so they cannot be called
 directly on Arrow Array objects.
 
-For example, the `value_count()` function in the Arrow R package is loosely 
+For example, the `value_counts()` function in the Arrow R package is loosely 
 equivalent to the base R function `table()`, which is not a generic function. 
 
 ## Applying arithmetic functions to Arrays.
