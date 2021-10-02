@@ -55,7 +55,7 @@ test_that("array_fivenum works as expected", {
 
 ```
 
-You can tell if a functions is a standard S3 generic function by looking 
+You can tell if a function is a standard S3 generic function by looking 
 at the body of the function - S3 generic functions call `UseMethod()`
 to determine the appropriate version of that function to use for the object.
 
