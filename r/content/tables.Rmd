@@ -242,7 +242,7 @@ test_that("dplyr_arrow_is_null", {
 
 Although not all Arrow C++ compute functions require options to be specified, 
 most do.  For these functions to work in R, they must be linked up 
-with the appropriate options C++ class in the R 
+with the appropriate libarrow options C++ class via the R 
 package's C++ code.  At the time of writing, all compute functions available in
 the development version of the arrow R package had been associated with their options
 classes.  However, as the Arrow C++ library's functionality extends, compute 
