@@ -235,3 +235,56 @@ that match our predicate
     8,
     9
   ]
+
+Filtering Arrays for values matching a mask filter
+--------------------------------------------------
+
+In many cases, when you are searching for something in an array
+you will end up with a mask that tells you the positions at which
+your search matched the values.
+
+For example in an array of four items, we might have a mask that
+matches the first and the last items only:
+
+.. testcode::
+
+  import pyarrow as pa
+
+  array = pa.array([1, 2, 3, 4])
+  mask = pa.array([True, False, False, True])
+
+We can then filter the array according to the mask using
+:meth:`pyarrow.Array.filter` to get back a new arrays with
+only the values matching the mask:
+
+.. testcode::
+
+  filtered_array = array.filter(mask)
+  print(filtered_array)
+
+.. testoutput::
+
+  [
+    1,
+    4
+  ]
+
+Most search functions in :mod:`pyarrow.compute` will produce
+a mask as the output, so you can use them to filter your arrays
+for the values that have been found by the function.
+
+For example we might filter our arrays for the values equal to ``2``
+using :func:`pyarrow.compute.equal`:
+
+.. testcode::
+
+  import pyarrow.compute as pc
+
+  filtered_array = array.filter(pc.equal(array, 2))
+  print(filtered_array)
+
+.. testoutput::
+
+  [
+    2
+  ]
