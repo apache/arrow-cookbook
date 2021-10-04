@@ -183,7 +183,7 @@ We can combine them into a single table using :func:`pyarrow.concat_tables`:
   will need to be copied and an extra cost will occur.
 
 Searching for values matching a predicate in Arrays
----------------------------------------------------
+===================================================
 
 If you have to look for values matching a predicate in Arrow arrays
 the :mod:`arrow.compute` module provides several methods that
