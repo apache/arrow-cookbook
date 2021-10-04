@@ -237,7 +237,7 @@ that match our predicate
   ]
 
 Filtering Arrays for values matching a mask filter
---------------------------------------------------
+==================================================
 
 In many cases, when you are searching for something in an array
 you will end up with a mask that tells you the positions at which
