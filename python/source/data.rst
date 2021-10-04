@@ -186,12 +186,12 @@ Searching for values matching a predicate in Arrays
 ---------------------------------------------------
 
 If you have to look for values matching a predicate in Arrow arrays
-the :mod:`arrow.compute` module provides a bunch of predicates that
+the :mod:`arrow.compute` module provides several methods that
 can be used to find the values you are looking for.
 
-For example, given and array with numbers from 0 to 9, if we
+For example, given an array with numbers from 0 to 9, if we
 want to look only for those greater than 5 we could use the
-func:`arrow.compute.greater` predicate and get back the elements
+func:`arrow.compute.greater` method and get back the elements
 that fit our predicate
 
 .. testcode::
@@ -219,7 +219,7 @@ that fit our predicate
     true
   ]
 
-Further more we can filter the array to get only the entries
+Furthermore we can filter the array to get only the entries
 that match our predicate
 
 .. testcode::
