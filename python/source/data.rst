@@ -236,8 +236,8 @@ that match our predicate
     9
   ]
 
-Filtering Arrays for values matching a mask filter
-==================================================
+Filtering Arrays using a mask
+=============================
 
 In many cases, when you are searching for something in an array
 you will end up with a mask that tells you the positions at which
@@ -254,7 +254,7 @@ matches the first and the last items only:
   mask = pa.array([True, False, False, True])
 
 We can then filter the array according to the mask using
-:meth:`pyarrow.Array.filter` to get back a new arrays with
+:meth:`pyarrow.Array.filter` to get back a new array with
 only the values matching the mask:
 
 .. testcode::
