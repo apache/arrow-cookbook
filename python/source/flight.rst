@@ -121,6 +121,7 @@ Our server can then be started with
     # and wait for it to be available.
     # Previous code block is just to show to user how to start it.
     server = FlightServer()
+    server._repo.mkdir(exist_ok=True)
     t = threading.Thread(target=server.serve)
     t.start()
 
