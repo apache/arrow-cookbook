@@ -19,6 +19,7 @@ serve as robust and well performing solutions to those tasks.
    create
    schema
    data
+   flight
 
 Indices and tables
 ==================
