@@ -117,6 +117,9 @@ Our server can then be started with
 .. testcode::
     :hide:
 
+    # Code block to start for real a server in background
+    # and wait for it to be available.
+    # Previous code block is just to show to user how to start it.
     server = FlightServer()
     t = threading.Thread(target=server.serve)
     t.start()
