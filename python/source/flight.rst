@@ -167,7 +167,7 @@ newly uploaded table:
 
 .. testoutput::
 
-    Path: uploaded.parquet Rows: 3 Size: 371
+    Path: uploaded.parquet Rows: 3 Size: ...
     === Schema ===
     Character: string
     ==============
