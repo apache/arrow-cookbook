@@ -17,6 +17,7 @@
 
 #include "common.h"
 
+#include <filesystem>
 #include <sstream>
 #include <unordered_map>
 
@@ -159,4 +160,18 @@ arrow::Status DumpRecipeOutput(const std::string& output_filename) {
       arrow::ipc::MakeStreamWriter(out_stream.get(), merged_table->schema()));
   RETURN_NOT_OK(writer->WriteTable(*merged_table));
   return writer->Close();
+}
+
+arrow::Result<std::string> FindTestDataFile(const std::string& test_data_name) {
+  auto path_iter = std::filesystem::current_path();
+  while (path_iter.has_parent_path()) {
+    auto test_data_dir_path = path_iter / "testdata";
+    if (std::filesystem::exists(test_data_dir_path)) {
+      return (test_data_dir_path / test_data_name).string();
+    }
+    path_iter = path_iter.parent_path();
+  }
+  return arrow::Status::Invalid(
+      "Could not locate testdata directory.  Tests must be "
+      "run inside of the cookbook repo");
 }
