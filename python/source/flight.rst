@@ -110,7 +110,9 @@ Our server can then be started with
 .. code-block::
 
     if __name__ == '__main__':
-        FlightServer().serve()
+        server = FlightServer()
+        server._repo.mkdir(exist_ok=True)
+        server.serve()
 
 .. testcode::
     :hide:
