@@ -19,11 +19,6 @@ FetchContent_MakeAvailable(googletest)
 
 # Add Arrow
 find_package(Arrow REQUIRED COMPONENTS dataset parquet)
-get_cmake_property(_variableNames VARIABLES)
-list (SORT _variableNames)
-foreach (_variableName ${_variableNames})
-    message(STATUS "${_variableName}=${${_variableName}}")
-endforeach()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_CLANG_TIDY "clang-tidy")
