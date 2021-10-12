@@ -6,8 +6,8 @@ Recipes related to leveraging Arrow Flight protocol
 
 .. contents::
 
-Using an Arrow Flight RPC server
-================================
+Simple Parquet storage service with Arrow Flight
+================================================
 
 Suppose you want to implement a service that can store, send and receive
 Parquet files using the Arrow Flight protocol, 
@@ -17,7 +17,6 @@ and particularly through the :class:`pyarrow.flight.FlightServerBase` class.
 .. testcode::
 
     import pathlib
-    import threading
 
     import pyarrow as pa
     import pyarrow.flight
@@ -120,6 +119,7 @@ Our server can then be started with
     # Code block to start for real a server in background
     # and wait for it to be available.
     # Previous code block is just to show to user how to start it.
+    import threading
     server = FlightServer()
     server._repo.mkdir(exist_ok=True)
     t = threading.Thread(target=server.serve)
