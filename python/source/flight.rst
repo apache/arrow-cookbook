@@ -10,7 +10,7 @@ Using an Arrow Flight RPC server
 ================================
 
 Suppose you want to implement a service that can store, send and receive
-parquet files using the Arrow Flight protocol, 
+Parquet files using the Arrow Flight protocol, 
 ``pyarrow`` provides an implementation framework in :mod:`pyarrow.flight` 
 and particularly through the :class:`pyarrow.flight.FlightServerBase` class.
 
@@ -98,7 +98,7 @@ into a parquet file)
 This are the most common Arrow Flight requests, if we need to add more
 functionalities, we can do so using custom actions.
 
-In the previous example a `drop_dataset` custom action is added. 
+In the previous example a ``drop_dataset`` custom action is added. 
 All custom actions are executed through the 
 :meth:`pyarrow.flight.FlightServerBase.do_action` method, thus it's up to
 the server subclass to dispatch them properly. In this case we invoke
