@@ -578,3 +578,120 @@ The content of the file can be read back to a :class:`pyarrow.Table` using
 .. testoutput::
 
     {'a': [1, 3, 5, 7], 'b': [2.0, 3.0, 4.0, 5.0], 'c': [1, 2, 3, 4]}
+
+Writing Compressed Data
+=======================
+
+Arrow provides support for writing files in compressed format,
+both for formats that provide it natively like Parquet or Feather,
+and for formats that don't support it out of the box like CSV.
+
+Given a table:
+
+.. testcode::
+
+    table = pa.table([
+        pa.array([1, 2, 3, 4, 5])
+    ], names=["numbers"])
+
+Writing it compressed to parquet or feather requires passing the
+``compression`` argument to the :func:`pyarrow.feather.write_feather` and
+:func:`pyarrow.parquet.write_table` functions:
+
+.. testcode::
+
+    pa.feather.write_feather(table, "compressed.feather",
+                             compression="lz4")
+    pa.parquet.write_table(table, "compressed.parquet",
+                           compression="lz4")
+
+You can refer to the two functions documentation for a complete
+list of supported compression formats.
+
+.. note::
+
+    Arrow actually uses compression by default when writing
+    parquet or feather files. Feather is compressed using ``lz4``
+    by default and Parquet uses ``snappy`` by default.
+
+For formats that don't support compression natively, like CSV,
+it's possible to save compressed data using
+:class:`pyarrow.CompressedOutputStream`:
+
+.. testcode::
+
+    with pa.CompressedOutputStream("compressed.csv.gz", "gzip") as out:
+        pa.csv.write_csv(table, out)
+
+This requires decompressing the file when reading it back,
+which can be done using :class:`pyarrow.CompressedInputStream`
+as explained in the next recipe.
+
+Reading Compressed Data
+=======================
+
+Arrow provides support for reading compressed files,
+both for formats that provide it natively like Parquet or Feather,
+and for formats that don't support it out of the box like CSV.
+
+Reading compressed formats that have native support for compression
+doesn't require any special handling. We can for example read back
+the Parquet and Feather files we wrote in the previous recipe
+simply invoking :meth:`pyarrow.feather.read_table` and
+:meth:`pyarrow.parquet.read_table`:
+
+.. testcode::
+
+    table_feather = pa.feather.read_table("compressed.feather")
+    print(table_feather)
+
+.. testoutput::
+
+    pyarrow.Table
+    numbers: int64
+
+.. testcode::
+
+    table_parquet = pa.parquet.read_table("compressed.parquet")
+    print(table_parquet)
+
+.. testoutput::
+
+    pyarrow.Table
+    numbers: int64
+
+Reading data from formats that don't have native support for
+compression instead involves decompressing them before decoding them.
+This can be done using the :class:`pyarrow.CompressedInputStream` class
+which wraps files with a decompress operation before the result is
+provided to the actual read function.
+
+For example to read a compressed CSV file:
+
+.. testcode::
+
+    with pa.CompressedInputStream(pa.OSFile("compressed.csv.gz"), "gzip") as input:
+        table_csv = pa.csv.read_csv(input)
+        print(table_csv)
+
+.. testoutput::
+
+    pyarrow.Table
+    numbers: int64
+
+.. note::
+
+    In the case of CSV, arrow is actually smart enough to try detecting
+    compressed files using the file extension. So if your file is named
+    ``*.gz`` or ``*.bz2`` the :meth:`pyarrow.csv.read_csv` function will
+    try to decompress it accordingly
+
+.. testcode::
+
+    table_csv2 = pa.csv.read_csv("compressed.csv.gz")
+    print(table_csv2)
+
+.. testoutput::
+
+    pyarrow.Table
+    numbers: int64
