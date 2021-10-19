@@ -1,17 +1,48 @@
 # Manipulating Data - Tables
 
-__What you should know before you begin__
+## Introduction
 
-When you call dplyr verbs from Arrow, behind the scenes this generates 
-instructions which tell Arrow how to manipulate the data in the way you've 
-specified.  These instructions are called _expressions_.  Until you pull the 
-data back into R, expressions don't do any work to actually retrieve or 
-manipulate any data. This is known as _lazy evaluation_ and means that you can 
-build up complex expressions that perform multiple actions, and are efficiently 
-evaluated all at once when you retrieve the data.  It also means that you are 
-able to manipulate data that is larger than
-you can fit into memory on the machine you're running your code on, if you only 
-pull data into R when you have selected the desired subset. 
+One of the aims of the Arrow project is to reduce duplication between different 
+data frame implementations.  The underlying implementation of a data frame is a 
+conceptually different thing to the code that you run to work with it - the API.
+
+You may have seen this before in packages like `dbplyr` which allow you to use 
+the dplyr API to interact with SQL databases.
+
+The `arrow` package has been written so that the underlying Arrow table-like 
+objects can be manipulated via use of the dplyr API via the dplyr verbs.
+
+For example, here's a short pipeline of data manipulation which uses dplyr exclusively:
+  
+
+```{r}
+library(dplyr)
+starwars %>%
+  filter(species == "Human") %>%
+  mutate(height_ft = height/30.48) %>%
+  select(name, height_ft)
+```
+
+gives the same results as using the Arrow implementation via dplyr syntax:
+  
+```{r}
+Table$create(starwars) %>%
+  filter(species == "Human") %>%
+  mutate(height_ft = height/30.48) %>%
+  select(name, height_ft) %>%
+  collect()
+```
+
+You'll notice we've used `collect()` in the Arrow pipeline above.  That's because 
+one of the ways in which `arrow` is efficient is that it works out the instructions
+for the calculations it needs to perform (_expressions_) and only runs them once 
+you actually pull the data into your R session.  This means instead of doing 
+lots of separate operations, it does them all at once in a more optimised way, 
+_lazy evaluation_.
+
+It also means that you are able to manipulate data that is larger than you can 
+fit into memory on the machine you're running your code on, if you only pull 
+data into R when you have selected the desired subset. 
 
 You can also have data which is split across multiple files.  For example, you
 might have files which are stored in multiple Parquet or Feather files, 
