@@ -15,7 +15,7 @@ objects can be manipulated via use of the dplyr API via the dplyr verbs.
 For example, here's a short pipeline of data manipulation which uses dplyr exclusively:
   
 
-```{r}
+```{r, dplyr_raw}
 library(dplyr)
 starwars %>%
   filter(species == "Human") %>%
@@ -23,15 +23,36 @@ starwars %>%
   select(name, height_ft)
 ```
 
-gives the same results as using the Arrow implementation via dplyr syntax:
+And the same results as using arrow with dplyr syntax:
   
-```{r}
+```{r, dplyr_arrow}
 Table$create(starwars) %>%
   filter(species == "Human") %>%
   mutate(height_ft = height/30.48) %>%
   select(name, height_ft) %>%
   collect()
 ```
+
+```{r, test_dplyr_raw_and_arrow, opts.label = "test"}
+
+test_that("dplyr_raw and dplyr_arrow chunk provide the same results", {
+  
+  expect_equal(
+    starwars %>%
+      filter(species == "Human") %>%
+      mutate(height_ft = height/30.48) %>%
+      select(name, height_ft),
+    Table$create(starwars) %>%
+      filter(species == "Human") %>%
+      mutate(height_ft = height/30.48) %>%
+      select(name, height_ft) %>%
+      collect()
+  )
+  
+})
+
+```
+
 
 You'll notice we've used `collect()` in the Arrow pipeline above.  That's because 
 one of the ways in which `arrow` is efficient is that it works out the instructions
@@ -50,7 +71,7 @@ partitioned across different directories.  You can open multi-file datasets
 using `open_dataset()` as discussed in a previous chapter, and then manipulate 
 this data using arrow before even reading any of it into R.
 
-## Using dplyr verbs in arrow
+## Use dplyr verbs in arrow
 
 You want to use a dplyr verb in arrow.
 
@@ -93,9 +114,9 @@ the [pkgdown site](https://dplyr.tidyverse.org/articles/dplyr.html).
 You can see more information about using `Table$create()` to create Arrow Tables
 and `collect()` to view them as R data frames in [Creating Arrow Objects](creating-arrow-objects.html#creating-arrow-objects).
 
-## Using base R or tidyverse functions in dplyr verbs in arrow
+## Use R functions in dplyr verbs in arrow
 
-You want to use a tidyverse function or base R function in arrow.
+You want to use an R function inside a dplyr verb in arrow.
 
 ### Solution
 
@@ -124,14 +145,13 @@ test_that("dplyr_str_detect", {
 ### Discussion
 
 The arrow package allows you to use dplyr verbs containing expressions which 
-include base R and tidyverse functions, but call Arrow functions under the hood.
+include base R and many tidyverse functions, but call Arrow functions under the hood.
 If you find any base R or tidyverse functions which you would like to see a 
 mapping of in arrow, please 
 [open an issue on the project JIRA](https://issues.apache.org/jira/projects/ARROW/issues).
 
 If you try to call a function which does not have arrow mapping, the data will 
 be pulled back into R, and you will see a warning message.
-
 
 ```{r, dplyr_func_warning}
 library(stringr)
@@ -156,7 +176,7 @@ test_that("dplyr_func_warning", {
 
 })
 ```
-## Using arrow functions in dplyr verbs in arrow
+## Use arrow functions in dplyr verbs in arrow
 
 You want to use a function which is implemented in Arrow's C++ library but either:
 * it doesn't have a mapping to a base R or tidyverse equivalent, or 
