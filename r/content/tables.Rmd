@@ -79,8 +79,7 @@ You want to use a dplyr verb in arrow.
 
 ```{r, dplyr_verb}
 library(dplyr)
-starwars %>%
-  Table$create() %>%
+Table$create(starwars) %>%
   filter(species == "Human", homeworld == "Tatooine") %>%
   collect()
 ```
@@ -88,10 +87,9 @@ starwars %>%
 ```{r, test_dplyr_verb, opts.label = "test"}
 
 test_that("dplyr_verb works as expected", {
-  out <- starwars %>%
-  Table$create() %>%
-  filter(species == "Human", homeworld == "Tatooine") %>%
-  collect()
+  out <- Table$create(starwars) %>%
+    filter(species == "Human", homeworld == "Tatooine") %>%
+    collect()
 
   expect_equal(nrow(out), 8)
   expect_s3_class(out, "data.frame")
@@ -121,8 +119,7 @@ You want to use an R function inside a dplyr verb in arrow.
 ### Solution
 
 ```{r, dplyr_str_detect}
-starwars %>%
-  Table$create() %>%
+Table$create(starwars) %>%
   filter(str_detect(name, "Darth")) %>%
   collect()
 ```
@@ -130,8 +127,7 @@ starwars %>%
 ```{r, test_dplyr_str_detect, opts.label = "test"}
 
 test_that("dplyr_str_detect", {
-  out <- starwars %>%
-    Table$create() %>%
+  out <- Table$create(starwars) %>%
     filter(str_detect(name, "Darth")) %>%
     collect()
   
@@ -155,8 +151,8 @@ be pulled back into R, and you will see a warning message.
 
 ```{r, dplyr_func_warning}
 library(stringr)
-starwars %>%
-  Table$create() %>%
+
+Table$create(starwars) %>%
   mutate(name_split = str_split_fixed(name, " ", 2)) %>%
   collect()
 ```
@@ -166,8 +162,7 @@ starwars %>%
 test_that("dplyr_func_warning", {
   
   expect_warning(
-     starwars %>%
-      Table$create() %>%
+     Table$create(starwars) %>%
       mutate(name_split = str_split_fixed(name, " ", 2)) %>%
       collect(),
     'Expression str_split_fixed(name, " ", 2) not supported in Arrow; pulling data into R',
@@ -185,8 +180,7 @@ You want to use a function which is implemented in Arrow's C++ library but eithe
 ### Solution
 
 ```{r, dplyr_arrow_func}
-starwars %>%
-  Table$create() %>%
+Table$create(starwars) %>%
   select(name) %>%
   mutate(padded_name = arrow_ascii_lpad(name, options = list(width = 10, padding = "*"))) %>%
   collect()
@@ -194,8 +188,7 @@ starwars %>%
 ```{r, test_dplyr_arrow_func, opts.label = "test"}
 
 test_that("dplyr_arrow_func", {
-  out <- starwars %>%
-    Table$create() %>%
+  out <- Table$create(starwars) %>%
     select(name) %>%
     mutate(padded_name = arrow_ascii_lpad(name, options = list(width = 10, padding = "*"))) %>%
     collect()
@@ -247,18 +240,16 @@ created in arrow.
 ```{r, dplyr_is_na}
 demo_df <- data.frame(x = c(1, 2, 3, NA, NaN))
 
-demo_df %>%
-  Table$create() %>%
+Table$create(demo_df) %>%
   mutate(y = is.na(x)) %>% 
   collect()
 ```
 
 ```{r, test_dplyr_is_na, opts.label = "test"}
 test_that("dplyr_is_na", {
-  out <- demo_df %>%
-  Table$create() %>%
-  mutate(y = is.na(x)) %>% 
-  collect()
+  out <- Table$create(demo_df) %>%
+    mutate(y = is.na(x)) %>% 
+    collect()
   
   expect_equal(out$y, c(FALSE, FALSE, FALSE, TRUE, TRUE))
   
@@ -271,16 +262,14 @@ when the value being examined is `NaN`), you must call `is_null()` directly and
 specify the option `nan_is_null = FALSE`.
 
 ```{r, dplyr_arrow_is_null}
-demo_df %>%
-  Table$create() %>%
+Table$create(demo_df) %>%
   mutate(y = arrow_is_null(x, options  = list(nan_is_null = FALSE))) %>% 
   collect()
 ```
 
 ```{r, test_dplyr_arrow_is_null, opts.label = "test"}
 test_that("dplyr_arrow_is_null", {
-  out <- demo_df %>%
-    Table$create() %>%
+  out <- Table$create(demo_df) %>%
     mutate(y = arrow_is_null(x, options  = list(nan_is_null = FALSE))) %>% 
     collect()
   
