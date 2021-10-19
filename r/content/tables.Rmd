@@ -14,7 +14,6 @@ objects can be manipulated via use of the dplyr API via the dplyr verbs.
 
 For example, here's a short pipeline of data manipulation which uses dplyr exclusively:
   
-
 ```{r, dplyr_raw}
 library(dplyr)
 starwars %>%
