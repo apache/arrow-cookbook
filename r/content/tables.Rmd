@@ -25,7 +25,7 @@ starwars %>%
 And the same results as using arrow with dplyr syntax:
   
 ```{r, dplyr_arrow}
-Table$create(starwars) %>%
+arrow_table(starwars) %>%
   filter(species == "Human") %>%
   mutate(height_ft = height/30.48) %>%
   select(name, height_ft) %>%
@@ -41,7 +41,7 @@ test_that("dplyr_raw and dplyr_arrow chunk provide the same results", {
       filter(species == "Human") %>%
       mutate(height_ft = height/30.48) %>%
       select(name, height_ft),
-    Table$create(starwars) %>%
+    arrow_table(starwars) %>%
       filter(species == "Human") %>%
       mutate(height_ft = height/30.48) %>%
       select(name, height_ft) %>%
@@ -78,7 +78,7 @@ You want to use a dplyr verb in arrow.
 
 ```{r, dplyr_verb}
 library(dplyr)
-Table$create(starwars) %>%
+arrow_table(starwars) %>%
   filter(species == "Human", homeworld == "Tatooine") %>%
   collect()
 ```
@@ -86,7 +86,7 @@ Table$create(starwars) %>%
 ```{r, test_dplyr_verb, opts.label = "test"}
 
 test_that("dplyr_verb works as expected", {
-  out <- Table$create(starwars) %>%
+  out <- arrow_table(starwars) %>%
     filter(species == "Human", homeworld == "Tatooine") %>%
     collect()
 
@@ -108,7 +108,7 @@ You can find examples of the various dplyr verbs in "Introduction to dplyr" -
 run `vignette("dplyr", package = "dplyr")` or view on
 the [pkgdown site](https://dplyr.tidyverse.org/articles/dplyr.html).
 
-You can see more information about using `Table$create()` to create Arrow Tables
+You can see more information about using `arrow_table()` to create Arrow Tables
 and `collect()` to view them as R data frames in [Creating Arrow Objects](creating-arrow-objects.html#creating-arrow-objects).
 
 ## Use R functions in dplyr verbs in arrow
@@ -118,7 +118,7 @@ You want to use an R function inside a dplyr verb in arrow.
 ### Solution
 
 ```{r, dplyr_str_detect}
-Table$create(starwars) %>%
+arrow_table(starwars) %>%
   filter(str_detect(name, "Darth")) %>%
   collect()
 ```
@@ -126,7 +126,7 @@ Table$create(starwars) %>%
 ```{r, test_dplyr_str_detect, opts.label = "test"}
 
 test_that("dplyr_str_detect", {
-  out <- Table$create(starwars) %>%
+  out <- arrow_table(starwars) %>%
     filter(str_detect(name, "Darth")) %>%
     collect()
   
@@ -151,7 +151,7 @@ be pulled back into R, and you will see a warning message.
 ```{r, dplyr_func_warning}
 library(stringr)
 
-Table$create(starwars) %>%
+arrow_table(starwars) %>%
   mutate(name_split = str_split_fixed(name, " ", 2)) %>%
   collect()
 ```
@@ -161,7 +161,7 @@ Table$create(starwars) %>%
 test_that("dplyr_func_warning", {
   
   expect_warning(
-     Table$create(starwars) %>%
+     arrow_table(starwars) %>%
       mutate(name_split = str_split_fixed(name, " ", 2)) %>%
       collect(),
     'Expression str_split_fixed(name, " ", 2) not supported in Arrow; pulling data into R',
@@ -179,7 +179,7 @@ You want to use a function which is implemented in Arrow's C++ library but eithe
 ### Solution
 
 ```{r, dplyr_arrow_func}
-Table$create(starwars) %>%
+arrow_table(starwars) %>%
   select(name) %>%
   mutate(padded_name = arrow_ascii_lpad(name, options = list(width = 10, padding = "*"))) %>%
   collect()
@@ -187,7 +187,7 @@ Table$create(starwars) %>%
 ```{r, test_dplyr_arrow_func, opts.label = "test"}
 
 test_that("dplyr_arrow_func", {
-  out <- Table$create(starwars) %>%
+  out <- arrow_table(starwars) %>%
     select(name) %>%
     mutate(padded_name = arrow_ascii_lpad(name, options = list(width = 10, padding = "*"))) %>%
     collect()
@@ -239,14 +239,14 @@ created in arrow.
 ```{r, dplyr_is_na}
 demo_df <- data.frame(x = c(1, 2, 3, NA, NaN))
 
-Table$create(demo_df) %>%
+arrow_table(demo_df) %>%
   mutate(y = is.na(x)) %>% 
   collect()
 ```
 
 ```{r, test_dplyr_is_na, opts.label = "test"}
 test_that("dplyr_is_na", {
-  out <- Table$create(demo_df) %>%
+  out <- arrow_table(demo_df) %>%
     mutate(y = is.na(x)) %>% 
     collect()
   
@@ -261,14 +261,14 @@ when the value being examined is `NaN`), you must call `is_null()` directly and
 specify the option `nan_is_null = FALSE`.
 
 ```{r, dplyr_arrow_is_null}
-Table$create(demo_df) %>%
+arrow_table(demo_df) %>%
   mutate(y = arrow_is_null(x, options  = list(nan_is_null = FALSE))) %>% 
   collect()
 ```
 
 ```{r, test_dplyr_arrow_is_null, opts.label = "test"}
 test_that("dplyr_arrow_is_null", {
-  out <- Table$create(demo_df) %>%
+  out <- arrow_table(demo_df) %>%
     mutate(y = arrow_is_null(x, options  = list(nan_is_null = FALSE))) %>% 
     collect()
   
