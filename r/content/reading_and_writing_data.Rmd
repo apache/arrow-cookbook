@@ -94,16 +94,16 @@ test_that("read_parquet_2 works as expected", {
 If you set `as_data_frame` to `FALSE`, the file will be read in as an Arrow Table.
 
 ```{r, read_parquet_table}
-my_table_Table$create <- read_parquet("my_table.parquet", as_data_frame = FALSE)
-my_table_Table$create
+my_table_arrow <- read_parquet("my_table.parquet", as_data_frame = FALSE)
+my_table_arrow
 ```
 
 ```{r, read_parquet_table_class}
-class(my_table_Table$create)
+class(my_table_arrow)
 ```
 ```{r, test_read_parquet_table_class, opts.label = "test"}
 test_that("read_parquet_table_class works as expected", {
-  expect_s3_class(my_table_Table$create, "Table")
+  expect_s3_class(my_table_arrow, "Table")
 })
 ```
 
