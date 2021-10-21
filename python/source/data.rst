@@ -182,6 +182,54 @@ We can combine them into a single table using :func:`pyarrow.concat_tables`:
   cast data from one type to another (if `promote=True`).  In such cases the data 
   will need to be copied and an extra cost will occur.
 
+Adding a column to an existing Table
+====================================
+
+If you have a table it is possible to extend its columns using
+:meth:`pyarrow.Table.append_column`
+
+Suppose we have a table with oscar nominations for each actress
+
+.. testcode::
+
+  import pyarrow as pa
+
+  oscar_nominations = pa.table([
+    ["Meryl Streep", "Katharine Hepburn"],
+    [21, 12]
+  ], names=["actor", "nominations"])
+
+  print(oscar_nominations)
+
+.. testoutput::
+
+  pyarrow.Table
+  actor: string
+  nominations: int64
+
+it's possible to append an additional column to track the years the
+nomination was won using :meth:`pyarrow.Table.append_column`
+
+.. testcode::
+
+  oscar_nominations = oscar_nominations.append_column(
+    "wonyears", 
+    pa.array([
+      [1980, 1983, 2012],
+      [1934, 1968, 1969, 1982]
+    ])
+  )
+
+  print(oscar_nominations)
+
+.. testoutput::
+
+  pyarrow.Table
+  actor: string
+  nominations: int64
+  wonyears: list<item: int64>
+    child 0, item: int64
+
 Searching for values matching a predicate in Arrays
 ===================================================
 
