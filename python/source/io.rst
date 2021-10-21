@@ -594,7 +594,7 @@ Given a table:
         pa.array([1, 2, 3, 4, 5])
     ], names=["numbers"])
 
-Writing it compressed to Parquet or Feather requires passing the
+Writing compressed Parquet or Feather data is driven by the
 ``compression`` argument to the :func:`pyarrow.feather.write_feather` and
 :func:`pyarrow.parquet.write_table` functions:
 
