@@ -632,7 +632,8 @@ Reading Compressed Data
 
 Arrow provides support for reading compressed files,
 both for formats that provide it natively like Parquet or Feather,
-and for formats that don't support it out of the box like CSV.
+and for files in formats that don't support compression natively,
+like CSV, but have been compressed by an application.
 
 Reading compressed formats that have native support for compression
 doesn't require any special handling. We can for example read back
