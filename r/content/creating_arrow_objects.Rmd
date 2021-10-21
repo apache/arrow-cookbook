@@ -33,7 +33,7 @@ You want to convert an existing data frame in R to an Arrow Table object.
 # Create an example data frame
 my_tibble <- tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99))
 # Convert to Arrow Table
-my_table <- arrow_table(my_tibble)
+my_table <- Table$create(my_tibble)
 # View table
 my_table
 ```

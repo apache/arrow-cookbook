@@ -17,7 +17,7 @@ You want to convert an existing `data.frame` or `tibble` object into an Arrow Ta
 ### Solution
 
 ```{r, table_create_from_df}
-air_table <- arrow_table(airquality)
+air_table <- Table$create(airquality)
 air_table
 ```
 ```{r, test_table_create_from_df, opts.label = "test"}
@@ -52,7 +52,7 @@ You want to write Parquet files to disk.
 
 ```{r, write_parquet}
 # Create table
-my_table <- arrow_table(data.frame(group = c("A", "B", "C"), score = c(99, 97, 99)))
+my_table <- Table$create(data.frame(group = c("A", "B", "C"), score = c(99, 97, 99)))
 # Write to Parquet
 write_parquet(my_table, "my_table.parquet")
 ```
@@ -94,16 +94,16 @@ test_that("read_parquet_2 works as expected", {
 If you set `as_data_frame` to `FALSE`, the file will be read in as an Arrow Table.
 
 ```{r, read_parquet_table}
-my_table_arrow_table <- read_parquet("my_table.parquet", as_data_frame = FALSE)
-my_table_arrow_table
+my_table_Table$create <- read_parquet("my_table.parquet", as_data_frame = FALSE)
+my_table_Table$create
 ```
 
 ```{r, read_parquet_table_class}
-class(my_table_arrow_table)
+class(my_table_Table$create)
 ```
 ```{r, test_read_parquet_table_class, opts.label = "test"}
 test_that("read_parquet_table_class works as expected", {
-  expect_s3_class(my_table_arrow_table, "Table")
+  expect_s3_class(my_table_Table$create, "Table")
 })
 ```
 
@@ -129,7 +129,7 @@ You want to specify which columns to include when reading in a Parquet file.
 
 ```{r, read_parquet_filter}
 # Create table to read back in 
-dist_time <- arrow_table(data.frame(distance = c(12.2, 15.7, 14.2), time = c(43, 44, 40)))
+dist_time <- Table$create(data.frame(distance = c(12.2, 15.7, 14.2), time = c(43, 44, 40)))
 # Write to Parquet
 write_parquet(dist_time, "dist_time.parquet")
 
@@ -150,7 +150,7 @@ You want to read in a Feather file.
 ### Solution
 
 ```{r, write_feather}
-my_table <- arrow_table(data.frame(group = c("A", "B", "C"), score = c(99, 97, 99)))
+my_table <- Table$create(data.frame(group = c("A", "B", "C"), score = c(99, 97, 99)))
 write_feather(my_table, "my_table.arrow")
 ```
 ```{r, test_write_feather, opts.label = "test"}
@@ -164,7 +164,7 @@ For legacy support, you can write data in the original Feather format by setting
 
 ```{r, write_feather1}
 # Create table
-my_table <- arrow_table(data.frame(group = c("A", "B", "C"), score = c(99, 97, 99)))
+my_table <- Table$create(data.frame(group = c("A", "B", "C"), score = c(99, 97, 99)))
 # Write to Feather format V1
 write_feather(mtcars, "my_table.feather", version = 1)
 ```
@@ -200,7 +200,7 @@ You want to write to the IPC stream format.
 
 ```{r, write_ipc_stream}
 # Create table
-my_table <- arrow_table(
+my_table <- Table$create(
   data.frame(
     group = c("A", "B", "C"),
     score = c(99, 97, 99)

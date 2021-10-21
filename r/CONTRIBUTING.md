@@ -17,7 +17,7 @@ Here's an example of a recipe and a test:
 ~~~
 ```{r, write_parquet}
 # Create table
-my_table <- arrow_table(tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99)))
+my_table <- Table$create(tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99)))
 
 # Write to Parquet
 write_parquet(my_table, "my_table.parquet")
