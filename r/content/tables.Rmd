@@ -1,0 +1,290 @@
+# Manipulating Data - Tables
+
+## Introduction
+
+One of the aims of the Arrow project is to reduce duplication between different 
+data frame implementations.  The underlying implementation of a data frame is a 
+conceptually different thing to the code that you run to work with it - the API.
+
+You may have seen this before in packages like `dbplyr` which allow you to use 
+the dplyr API to interact with SQL databases.
+
+The `arrow` package has been written so that the underlying Arrow table-like 
+objects can be manipulated via use of the dplyr API via the dplyr verbs.
+
+For example, here's a short pipeline of data manipulation which uses dplyr exclusively:
+  
+```{r, dplyr_raw}
+library(dplyr)
+starwars %>%
+  filter(species == "Human") %>%
+  mutate(height_ft = height/30.48) %>%
+  select(name, height_ft)
+```
+
+And the same results as using arrow with dplyr syntax:
+  
+```{r, dplyr_arrow}
+Table$create(starwars) %>%
+  filter(species == "Human") %>%
+  mutate(height_ft = height/30.48) %>%
+  select(name, height_ft) %>%
+  collect()
+```
+
+```{r, test_dplyr_raw_and_arrow, opts.label = "test"}
+
+test_that("dplyr_raw and dplyr_arrow chunk provide the same results", {
+  
+  expect_equal(
+    starwars %>%
+      filter(species == "Human") %>%
+      mutate(height_ft = height/30.48) %>%
+      select(name, height_ft),
+    Table$create(starwars) %>%
+      filter(species == "Human") %>%
+      mutate(height_ft = height/30.48) %>%
+      select(name, height_ft) %>%
+      collect()
+  )
+  
+})
+
+```
+
+
+You'll notice we've used `collect()` in the Arrow pipeline above.  That's because 
+one of the ways in which `arrow` is efficient is that it works out the instructions
+for the calculations it needs to perform (_expressions_) and only runs them once 
+you actually pull the data into your R session.  This means instead of doing 
+lots of separate operations, it does them all at once in a more optimised way, 
+_lazy evaluation_.
+
+It also means that you are able to manipulate data that is larger than you can 
+fit into memory on the machine you're running your code on, if you only pull 
+data into R when you have selected the desired subset. 
+
+You can also have data which is split across multiple files.  For example, you
+might have files which are stored in multiple Parquet or Feather files, 
+partitioned across different directories.  You can open multi-file datasets 
+using `open_dataset()` as discussed in a previous chapter, and then manipulate 
+this data using arrow before even reading any of it into R.
+
+## Use dplyr verbs in arrow
+
+You want to use a dplyr verb in arrow.
+
+### Solution
+
+```{r, dplyr_verb}
+library(dplyr)
+Table$create(starwars) %>%
+  filter(species == "Human", homeworld == "Tatooine") %>%
+  collect()
+```
+
+```{r, test_dplyr_verb, opts.label = "test"}
+
+test_that("dplyr_verb works as expected", {
+  out <- Table$create(starwars) %>%
+    filter(species == "Human", homeworld == "Tatooine") %>%
+    collect()
+
+  expect_equal(nrow(out), 8)
+  expect_s3_class(out, "data.frame")
+  expect_identical(unique(out$species), "Human")
+  expect_identical(unique(out$homeworld), "Tatooine")
+})
+
+```
+
+### Discussion
+
+You can use most of the dplyr verbs directly from arrow.  
+
+### See also
+
+You can find examples of the various dplyr verbs in "Introduction to dplyr" - 
+run `vignette("dplyr", package = "dplyr")` or view on
+the [pkgdown site](https://dplyr.tidyverse.org/articles/dplyr.html).
+
+You can see more information about using `Table$create()` to create Arrow Tables
+and `collect()` to view them as R data frames in [Creating Arrow Objects](creating-arrow-objects.html#creating-arrow-objects).
+
+## Use R functions in dplyr verbs in arrow
+
+You want to use an R function inside a dplyr verb in arrow.
+
+### Solution
+
+```{r, dplyr_str_detect}
+Table$create(starwars) %>%
+  filter(str_detect(name, "Darth")) %>%
+  collect()
+```
+
+```{r, test_dplyr_str_detect, opts.label = "test"}
+
+test_that("dplyr_str_detect", {
+  out <- Table$create(starwars) %>%
+    filter(str_detect(name, "Darth")) %>%
+    collect()
+  
+  expect_equal(nrow(out), 2)
+  expect_equal(sort(out$name), c("Darth Maul", "Darth Vader"))
+  
+})
+
+```
+
+### Discussion
+
+The arrow package allows you to use dplyr verbs containing expressions which 
+include base R and many tidyverse functions, but call Arrow functions under the hood.
+If you find any base R or tidyverse functions which you would like to see a 
+mapping of in arrow, please 
+[open an issue on the project JIRA](https://issues.apache.org/jira/projects/ARROW/issues).
+
+If you try to call a function which does not have arrow mapping, the data will 
+be pulled back into R, and you will see a warning message.
+
+```{r, dplyr_func_warning}
+library(stringr)
+
+Table$create(starwars) %>%
+  mutate(name_split = str_split_fixed(name, " ", 2)) %>%
+  collect()
+```
+
+```{r, test_dplyr_func_warning, opts.label = "test"}
+
+test_that("dplyr_func_warning", {
+  
+  expect_warning(
+     Table$create(starwars) %>%
+      mutate(name_split = str_split_fixed(name, " ", 2)) %>%
+      collect(),
+    'Expression str_split_fixed(name, " ", 2) not supported in Arrow; pulling data into R',
+    fixed = TRUE
+  )
+
+})
+```
+## Use arrow functions in dplyr verbs in arrow
+
+You want to use a function which is implemented in Arrow's C++ library but either:
+* it doesn't have a mapping to a base R or tidyverse equivalent, or 
+* it has a mapping but nevertheless you want to call the C++ function directly
+
+### Solution
+
+```{r, dplyr_arrow_func}
+Table$create(starwars) %>%
+  select(name) %>%
+  mutate(padded_name = arrow_ascii_lpad(name, options = list(width = 10, padding = "*"))) %>%
+  collect()
+```
+```{r, test_dplyr_arrow_func, opts.label = "test"}
+
+test_that("dplyr_arrow_func", {
+  out <- Table$create(starwars) %>%
+    select(name) %>%
+    mutate(padded_name = arrow_ascii_lpad(name, options = list(width = 10, padding = "*"))) %>%
+    collect()
+  
+  expect_match(out$padded_name, "*****C-3PO", fixed = TRUE, all = FALSE)
+  
+})
+
+```
+### Discussion
+
+The vast majority of Arrow C++ compute functions have been mapped to their 
+base R or tidyverse equivalents, and we strongly recommend that you use 
+these mappings where possible, as the original functions are well documented
+and the mapped versions have been tested to ensure the results returned are as 
+expected.
+
+However, there may be circumstances in which you might want to use a compute 
+function from the Arrow C++ library which does not have a base R or tidyverse 
+equivalent.
+
+You can find documentation of Arrow C++ compute functions in 
+[the C++ documention](https://arrow.apache.org/docs/cpp/compute.html#available-functions).
+This documentation lists all available compute functions, any associated options classes 
+they need, and the valid data types that they can be used with.
+
+You can list all available Arrow compute functions from R by calling 
+`list_compute_functions()`.
+
+```{r, list_compute_funcs}
+list_compute_functions()
+```
+```{r, test_list_compute_funcs, opts.label = "test"}
+test_that("list_compute_funcs", {
+  expect_gt(length(list_compute_functions()), 0)
+})
+```
+
+The majority of functions here have been mapped to their base R or tidyverse 
+equivalent and can be called within a dplyr query as usual.  For functions which
+don't have a base R or tidyverse equivalent, or you want to supply custom 
+options, you can call them by prefixing their name with "arrow_".  
+
+For example, base R's `is.na()` function is the equivalent of the Arrow C++ 
+compute function `is_null()` with the option `nan_is_null` set to `TRUE`.  
+A mapping between these functions (with `nan_is_null` set to `TRUE`) has been
+created in arrow.
+
+```{r, dplyr_is_na}
+demo_df <- data.frame(x = c(1, 2, 3, NA, NaN))
+
+Table$create(demo_df) %>%
+  mutate(y = is.na(x)) %>% 
+  collect()
+```
+
+```{r, test_dplyr_is_na, opts.label = "test"}
+test_that("dplyr_is_na", {
+  out <- Table$create(demo_df) %>%
+    mutate(y = is.na(x)) %>% 
+    collect()
+  
+  expect_equal(out$y, c(FALSE, FALSE, FALSE, TRUE, TRUE))
+  
+})
+```
+
+If you want to call Arrow's `is_null()` function but with `nan_is_null` set to 
+`FALSE` (so it returns `TRUE` when a value being examined is `NA` but `FALSE` 
+when the value being examined is `NaN`), you must call `is_null()` directly and 
+specify the option `nan_is_null = FALSE`.
+
+```{r, dplyr_arrow_is_null}
+Table$create(demo_df) %>%
+  mutate(y = arrow_is_null(x, options  = list(nan_is_null = FALSE))) %>% 
+  collect()
+```
+
+```{r, test_dplyr_arrow_is_null, opts.label = "test"}
+test_that("dplyr_arrow_is_null", {
+  out <- Table$create(demo_df) %>%
+    mutate(y = arrow_is_null(x, options  = list(nan_is_null = FALSE))) %>% 
+    collect()
+  
+  expect_equal(out$y, c(FALSE, FALSE, FALSE, TRUE, FALSE))
+  
+})
+```
+
+#### Compute functions with options
+
+Although not all Arrow C++ compute functions require options to be specified, 
+most do.  For these functions to work in R, they must be linked up 
+with the appropriate libarrow options C++ class via the R 
+package's C++ code.  At the time of writing, all compute functions available in
+the development version of the arrow R package had been associated with their options
+classes.  However, as the Arrow C++ library's functionality extends, compute 
+functions may be added which do not yet have an R binding.  If you find a C++ 
+compute function which you wish to use from the R package, please [open an issue
+on the project JIRA](https://issues.apache.org/jira/projects/ARROW/issues).

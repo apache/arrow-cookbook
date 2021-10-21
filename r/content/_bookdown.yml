@@ -4,10 +4,12 @@ new_session: FALSE
 clean: ["_book/*"]
 output_dir: _book
 edit: https://github.com/apache/arrow-cookbook/edit/main/r/content/%s
+
 rmd_files: [
   "index.Rmd",
   "reading_and_writing_data.Rmd",
   "creating_arrow_objects.Rmd",
   "specify_data_types_and_schemas.Rmd",
-  "manipulating_data.Rmd"
+  "arrays.Rmd",
+  "tables.Rmd"
 ]

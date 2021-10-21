@@ -18,4 +18,10 @@ knitr::opts_template$set(test = list(
 
 # Preface
 
-This cookbook aims to provide a number of recipes showing how to perform common tasks using `arrow`.
+This cookbook aims to provide a number of recipes showing how to perform common 
+tasks using `arrow`.
+
+## Alternative resources
+
+For a complete reference guide to the functions in `arrow`, as well as vignettes, 
+see [the pkgdown site](https://arrow.apache.org/docs/r/).
