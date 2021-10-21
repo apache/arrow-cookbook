@@ -582,9 +582,9 @@ The content of the file can be read back to a :class:`pyarrow.Table` using
 Writing Compressed Data
 =======================
 
-Arrow provides support for writing files in compressed format,
-both for formats that provide it natively like Parquet or Feather,
-and for formats that don't support it out of the box like CSV.
+Arrow provides support for writing files in compressed formats,
+both for formats that provide compression natively like Parquet or Feather,
+and for formats that don't support compression out of the box like CSV.
 
 Given a table:
 
@@ -594,7 +594,7 @@ Given a table:
         pa.array([1, 2, 3, 4, 5])
     ], names=["numbers"])
 
-Writing it compressed to parquet or feather requires passing the
+Writing it compressed to Parquet or Feather requires passing the
 ``compression`` argument to the :func:`pyarrow.feather.write_feather` and
 :func:`pyarrow.parquet.write_table` functions:
 
@@ -605,13 +605,13 @@ Writing it compressed to parquet or feather requires passing the
     pa.parquet.write_table(table, "compressed.parquet",
                            compression="lz4")
 
-You can refer to the two functions documentation for a complete
+You can refer to each of those functions' documentation for a complete
 list of supported compression formats.
 
 .. note::
 
     Arrow actually uses compression by default when writing
-    parquet or feather files. Feather is compressed using ``lz4``
+    Parquet or Feather files. Feather is compressed using ``lz4``
     by default and Parquet uses ``snappy`` by default.
 
 For formats that don't support compression natively, like CSV,
