@@ -49,6 +49,10 @@ flight_put(
 You want to see what paths are available on a Flight server.
 
 ```{r, eval = FALSE}
+# Connect to the Flight server
+local_client <- flight_connect(host = "127.0.0.1", port = 8089)
+
+# Retrieve path listing
 list_flights(local_client)
 ```
 
@@ -62,6 +66,10 @@ list_flights(local_client)
 You want to retrieve data on a Flight server from a specified path.
 
 ```{r, eval = FALSE}
+# Connect to the Flight server
+local_client <- flight_connect(host = "127.0.0.1", port = 8089)
+
+# Retrieve data
 flight_get(
   local_client,
   "pollution_data"
