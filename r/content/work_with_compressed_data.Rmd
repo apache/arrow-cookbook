@@ -113,4 +113,3 @@ test_that("read_compressed_csv", {
 ```
 
 
-## Read and write partitioned data
