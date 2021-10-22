@@ -292,7 +292,6 @@ test_that("read_json_arrow chunk works as expected", {
 unlink(tf)
 ```
 
-
 ## Write Partitioned Data
 
 You want to save data to disk in partitions based on columns in the data.
@@ -359,3 +358,117 @@ unlink("my_table.parquet")
 unlink("dist_time.parquet")
 unlink("airquality_partitioned", recursive = TRUE)
 ```
+
+## Write compressed data
+
+You want to save a file, compressed with a specified compression algorithm.
+
+```{r, parquet_gzip}
+# Create a temporary directory
+td <- tempfile()
+dir.create(td)
+
+# Write data compressed with the gzip algorithm
+write_parquet(iris, file.path(td, "iris.parquet"), compression = "gzip")
+```
+
+```{r, test_parquet_gzip, opts.label = "test"}
+test_that("parquet_gzip", {
+  file.exists(file.path(td, "iris.parquet"))
+})
+```
+
+### Discussion
+
+You can also supply the `compression` argument to `write_dataset()`, as long as 
+the compression algorithm is compatible with the chosen format.
+
+```{r, dataset_gzip}
+# Create a temporary directory
+td <- tempfile()
+dir.create(td)
+
+# Write dataset to file
+write_dataset(iris, path = td, format = "feather", compression = "gzip")
+```
+
+```{r}
+# View files in the directory
+list.files(td, recursive = TRUE)
+```
+```{r, test_dataset_gzip, opts.label = "test"}
+test_that("dataset_gzip", {
+  file.exists(file.path(td, "part-0.parquet"))
+})
+```
+
+### See also
+
+For more information on the supported compression algorithms, see:
+
+* `?write_parquet()`
+* `?write_feather()`
+* `?write_dataset()`
+
+## Read compressed data
+
+You want to read in data which has been compressed.
+
+```{r, read_parquet_compressed}
+# Create a temporary directory
+td <- tempfile()
+dir.create(td)
+
+# Write dataset which is to be read back in
+write_parquet(iris, file.path(td, "iris.parquet"), compression = "gzip")
+
+# Read in data
+ds <- read_parquet(file.path(td, "iris.parquet")) %>%
+  collect()
+
+ds
+```
+
+```{r, test_read_parquet_compressed, opts.label = "test"}
+test_that("read_parquet_compressed", {
+  expect_s3_class(ds, "data.frame")
+  expect_named(
+    ds,
+    c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width", "Species")
+  )
+})
+```
+
+### Discussion
+
+Note that Arrow automatically detects the compression and you do not have to 
+supply it in the call to `open_dataset()` or the `read_*()` functions.
+
+Although the CSV format does not support compression itself, Arrow supports 
+reading in CSV data which has been compressed.
+
+```{r, read_compressed_csv}
+# Create a temporary directory
+td <- tempfile()
+dir.create(td)
+
+# Write dataset which is to be read back in
+write.csv(iris, gzfile(file.path(td, "iris.csv.gz")), row.names = FALSE, quote = FALSE)
+
+# Read in data
+ds <- open_dataset(td, format = "csv") %>%
+  collect()
+ds
+```
+
+```{r, test_read_compressed_csv, opts.label = "test"}
+test_that("read_compressed_csv", {
+  expect_s3_class(ds, "data.frame")
+  expect_named(
+    ds,
+    c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width", "Species")
+  )
+})
+```
+
+
