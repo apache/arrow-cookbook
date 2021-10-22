@@ -11,5 +11,6 @@ rmd_files: [
   "creating_arrow_objects.Rmd",
   "specify_data_types_and_schemas.Rmd",
   "arrays.Rmd",
-  "tables.Rmd"
+  "tables.Rmd",
+  "python.Rmd"
 ]
