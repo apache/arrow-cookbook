@@ -173,6 +173,7 @@ test_that("dplyr_func_warning", {
 ## Use arrow functions in dplyr verbs in arrow
 
 You want to use a function which is implemented in Arrow's C++ library but either:
+
 * it doesn't have a mapping to a base R or tidyverse equivalent, or 
 * it has a mapping but nevertheless you want to call the C++ function directly
 
