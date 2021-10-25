@@ -62,7 +62,8 @@ more optimised way, _lazy evaluation_.
 
 It also means that you are able to manipulate data that is larger than you can 
 fit into memory on the machine you're running your code on, if you only pull 
-data into R when you have selected the desired subset. 
+data into R when you have selected the desired subset, or when using functions 
+which can operate on chunks of data. 
 
 You can also have data which is split across multiple files.  For example, you
 might have files which are stored in multiple Parquet or Feather files, 
