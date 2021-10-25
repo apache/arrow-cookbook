@@ -19,6 +19,8 @@ and receive data.
 
 You want to connect to a Flight server running on a specified host and port.
 
+### Solution
+
 ```{r, eval = FALSE}
 local_client <- flight_connect(host = "127.0.0.1", port = 8089)
 ```
@@ -31,6 +33,8 @@ For an example of how to set up a Flight server from R, see
 ## Send data to a Flight server
 
 You want to send data that you have in memory to a Flight server
+
+### Solution
 
 ```{r, eval = FALSE}
 # Connect to the Flight server
@@ -48,6 +52,8 @@ flight_put(
 
 You want to see what paths are available on a Flight server.
 
+### Solution
+
 ```{r, eval = FALSE}
 # Connect to the Flight server
 local_client <- flight_connect(host = "127.0.0.1", port = 8089)
@@ -64,6 +70,8 @@ list_flights(local_client)
 ## Retrieve data from a Flight server
 
 You want to retrieve data on a Flight server from a specified path.
+
+### Solution
 
 ```{r, eval = FALSE}
 # Connect to the Flight server
