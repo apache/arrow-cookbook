@@ -15,6 +15,12 @@ Flight allows for highly efficient data transfer as it:
 The arrow package provides methods for connecting to Flight RPC servers to send 
 and receive data.
 
+It should be noted that the Flight implementation in the R package depends on 
+[PyArrow](https://arrow.apache.org/docs/python/) which is called via 
+[reticulate](https://rstudio.github.io/reticulate/). This is quite different 
+from the other capabilities in the R package, nearly all of which are all 
+implemented directly.
+
 ## Connect to a Flight server
 
 You want to connect to a Flight server running on a specified host and port.
