@@ -55,10 +55,10 @@ test_that("dplyr_raw and dplyr_arrow chunk provide the same results", {
 
 You'll notice we've used `collect()` in the Arrow pipeline above.  That's because 
 one of the ways in which `arrow` is efficient is that it works out the instructions
-for the calculations it needs to perform (_expressions_) and only runs them once 
-you actually pull the data into your R session.  This means instead of doing 
-lots of separate operations, it does them all at once in a more optimised way, 
-_lazy evaluation_.
+for the calculations it needs to perform (_expressions_) and only runs them 
+using arrow once you actually pull the data into your R session.  This means 
+instead of doing lots of separate operations, it does them all at once in a 
+more optimised way, _lazy evaluation_.
 
 It also means that you are able to manipulate data that is larger than you can 
 fit into memory on the machine you're running your code on, if you only pull 
