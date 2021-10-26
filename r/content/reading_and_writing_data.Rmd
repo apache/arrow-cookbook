@@ -363,6 +363,8 @@ unlink("airquality_partitioned", recursive = TRUE)
 
 You want to save a file, compressed with a specified compression algorithm.
 
+### Solution
+
 ```{r, parquet_gzip}
 # Create a temporary directory
 td <- tempfile()
@@ -413,6 +415,8 @@ For more information on the supported compression algorithms, see:
 ## Read compressed data
 
 You want to read in data which has been compressed.
+
+### Solution
 
 ```{r, read_parquet_compressed}
 # Create a temporary directory
