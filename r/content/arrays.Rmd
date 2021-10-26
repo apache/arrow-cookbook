@@ -8,7 +8,40 @@ represent a single column of data, with all values having the same data type.
 A number of base R functions which have S3 generic methods have been implemented 
 to work on Arrow Arrays; for example `mean`, `min`, and `max`.  
 
-## Computing Mean/Min/Max, etc value of an Array
+## Filter by values matching a predicate
+
+You want to search for values in an Array that match a predicate condition.
+
+### Solution
+
+```{r, array_predicate}
+my_values <- Array$create(c(1:5, NA))
+my_values[my_values > 3]
+```
+```{r, test_array_predicate, opts.label = "test"}
+test_that("array_predicate works as expected", {
+  expect_equal(my_values[my_values > 3], Array$create(c(4L, 5L, NA)))
+})
+```
+
+## Filter by values matching a mask filter
+
+You want to search for values in an Array via a mask filter.
+
+### Solution
+
+```{r, array_mask}
+my_values <- Array$create(c(1:5, NA))
+my_values[c(TRUE, FALSE, TRUE, FALSE, FALSE, TRUE)]
+```
+```{r, test_array_mask, opts.label = "test"}
+test_that("array_mask works as expected", {
+  expect_equal(my_values[c(TRUE, FALSE, TRUE, FALSE, FALSE, TRUE)], Array$create(c(1L, 3L, NA)))
+})
+```
+
+
+## Compute Mean/Min/Max, etc value of an Array
 
 You want to calculate the mean, minimum, or maximum of values in an array.
 
@@ -73,7 +106,7 @@ If you find an S3 generic function which isn't implemented for Arrow objects
 but you would like to be able to use, please 
 [open an issue on the project JIRA](https://issues.apache.org/jira/projects/ARROW/issues).
 
-## Counting occurrences of elements in an Array
+## Count occurrences of elements in an Array
 
 You want to count repeated values in an Array.
 
@@ -105,7 +138,7 @@ directly on Arrow Array objects.
 For example, the `value_counts()` function in the Arrow R package is loosely 
 equivalent to the base R function `table()`, which is not a generic function. 
 
-## Applying arithmetic functions to Arrays.
+## Apply arithmetic functions to Arrays.
 
 You want to use the various arithmetic operators on Array objects.
 
@@ -136,7 +169,7 @@ test_that("add_array_scalar works as expected", {
 })
 ```
 
-## Calling Arrow compute functions directly on Arrays
+## Call Arrow compute functions directly on Arrays
 
 You want to call an Arrow compute function directly on an Array.
 
