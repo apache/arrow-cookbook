@@ -34,7 +34,7 @@ kind of partitioning scheme.
 
 This simplifies management of the data and also allows for partial
 reads of the dataset by inspecting the file paths and utilizing the
-guarantess provided by the partitioning scheme.
+guarantees provided by the partitioning scheme.
 
 This recipe demonstrates the basics of reading a partitioned dataset.
 First let us inspect our data:
