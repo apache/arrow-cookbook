@@ -370,7 +370,7 @@ You want to save a file, compressed with a specified compression algorithm.
 td <- tempfile()
 dir.create(td)
 
-# Write data compressed with the gzip algorithm
+# Write data compressed with the gzip algorithm instead of the default
 write_parquet(iris, file.path(td, "iris.parquet"), compression = "gzip")
 ```
 
