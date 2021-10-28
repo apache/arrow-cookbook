@@ -449,7 +449,7 @@ Note that Arrow automatically detects the compression and you do not have to
 supply it in the call to `open_dataset()` or the `read_*()` functions.
 
 Although the CSV format does not support compression itself, Arrow supports 
-reading in CSV data which has been compressed.
+reading in CSV data which has been compressed, if the file extension is `.gz`.
 
 ```{r, read_compressed_csv}
 # Create a temporary directory
