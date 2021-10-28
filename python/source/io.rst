@@ -638,7 +638,7 @@ like CSV, but have been compressed by an application.
 Reading compressed formats that have native support for compression
 doesn't require any special handling. We can for example read back
 the Parquet and Feather files we wrote in the previous recipe
-simply invoking :meth:`pyarrow.feather.read_table` and
+by simply invoking :meth:`pyarrow.feather.read_table` and
 :meth:`pyarrow.parquet.read_table`:
 
 .. testcode::
