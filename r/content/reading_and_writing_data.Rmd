@@ -404,12 +404,11 @@ test_that("dataset_gzip", {
 })
 ```
 
-Note that by default, `write_dataset()` saves to `parquet` format with `snappy`
-compression.
 
 ### See also
 
-For more information on the supported compression algorithms, see:
+Note that some formats write compressed data by default.  For more information 
+on the supported compression algorithms and default settings, see:
 
 * `?write_parquet()`
 * `?write_feather()`
