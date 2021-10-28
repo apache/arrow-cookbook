@@ -58,7 +58,7 @@ cpptest:
 	@echo ">>> Running C++ Tests/Snippets <<<\n"
 	rm -rf cpp/recipe-test-build
 	mkdir cpp/recipe-test-build
-	cd cpp/recipe-test-build && cmake ../code -DCMAKE_BUILD_TYPE=Debug && cmake --build . && ctest -j 1
+	cd cpp/recipe-test-build && cmake ../code -DCMAKE_BUILD_TYPE=Debug && cmake --build . && ctest --output-on-failure -j 1
 	mkdir -p cpp/build
 	cp cpp/recipe-test-build/recipes_out.arrow cpp/build
 
