@@ -10,7 +10,7 @@ There are a number of circumstances in which you may want to read in the data as
 * you want faster performance from your `dplyr` queries
 * you want to be able to take advantage of Arrow's compute functions
 
-## Converting from a data frame to an Arrow Table
+## Convert from a data frame to an Arrow Table
 
 You want to convert an existing `data.frame` or `tibble` object into an Arrow Table.
 
@@ -26,7 +26,7 @@ test_that("table_create_from_df chunk works as expected", {
 })
 ```
 
-## Converting data from an Arrow Table to a data frame
+## Convert data from an Arrow Table to a data frame
 
 You want to convert an Arrow Table to a data frame to view the data or work with it
 in your usual analytics pipeline.  You can use either `as.data.frame()` or 
@@ -44,7 +44,7 @@ test_that("asdf_table chunk works as expected", {
 })
 ```
 
-## Writing a Parquet file
+## Write a Parquet file
 
 You want to write Parquet files to disk.
 
@@ -62,7 +62,7 @@ test_that("write_parquet chunk works as expected", {
 })
 ```
  
-## Reading a Parquet file
+## Read a Parquet file
 
 You want to read a Parquet file.
 
@@ -192,7 +192,7 @@ test_that("read_feather chunk works as expected", {
 unlink("my_table.arrow")
 ```
 
-## Write Streaming IPC Files
+## Write streaming IPC files
 
 You want to write to the IPC stream format.
 
@@ -215,7 +215,7 @@ test_that("write_ipc_stream chunk works as expected", {
 })
 ```
 
-## Read Streaming IPC Files
+## Read streaming IPC files
 
 You want to read from the IPC stream format.
 
@@ -233,7 +233,7 @@ test_that("read_ipc_stream chunk works as expected", {
 unlink("my_table.arrows")
 ```
 
-## Reading and Writing CSV files 
+## Read and write CSV files 
 
 You can use `write_csv_arrow()` to save an Arrow Table to disk as a CSV.
 
@@ -293,7 +293,7 @@ unlink(tf)
 ```
 
 
-## Write Partitioned Data
+## Write partitioned data
 
 You want to save data to disk in partitions based on columns in the data.
 
@@ -325,7 +325,7 @@ Each of these folders contains 1 or more Parquet files containing the relevant p
 list.files("airquality_partitioned/Month=5/Day=10")
 ```
 
-## Reading Partitioned Data
+## Read partitioned data
 
 You want to read partitioned data.
 
