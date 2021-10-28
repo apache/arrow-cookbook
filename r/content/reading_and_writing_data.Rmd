@@ -391,7 +391,7 @@ td <- tempfile()
 dir.create(td)
 
 # Write dataset to file
-write_dataset(iris, path = td, format = "feather", compression = "gzip")
+write_dataset(iris, path = td, compression = "gzip")
 ```
 
 ```{r}
