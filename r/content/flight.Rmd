@@ -8,7 +8,7 @@ Apache Arrow project.
 
 Flight allows for highly efficient data transfer as it:
 
-* removes the need for deserialization during data transfer
+* removes the need for serialization during data transfer
 * allows for parallel data streaming
 * is highly optimized to take advantage of Arrow’s columnar format.
 
