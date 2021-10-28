@@ -279,15 +279,15 @@ column each with a file containing the subset of the data for that partition:
 .. testoutput::
 
     ./partitioned/2000/part-0.parquet
-    ./partitioned/2001/part-1.parquet
-    ./partitioned/2002/part-2.parquet
-    ./partitioned/2003/part-3.parquet
-    ./partitioned/2004/part-4.parquet
-    ./partitioned/2005/part-6.parquet
-    ./partitioned/2006/part-5.parquet
-    ./partitioned/2007/part-7.parquet
-    ./partitioned/2008/part-8.parquet
-    ./partitioned/2009/part-9.parquet
+    ./partitioned/2001/part-0.parquet
+    ./partitioned/2002/part-0.parquet
+    ./partitioned/2003/part-0.parquet
+    ./partitioned/2004/part-0.parquet
+    ./partitioned/2005/part-0.parquet
+    ./partitioned/2006/part-0.parquet
+    ./partitioned/2007/part-0.parquet
+    ./partitioned/2008/part-0.parquet
+    ./partitioned/2009/part-0.parquet
 
 Reading Partitioned data
 ========================
