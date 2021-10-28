@@ -67,14 +67,12 @@ the parquet file as :class:`ChunkedArray`
 
     print(table)
 
-    col1 = table["col1"]
-    print(f"{type(col1).__name__} = {col1[0]} .. {col1[-1]}")
-
 .. testoutput::
 
     pyarrow.Table
     col1: int64
-    ChunkedArray = 0 .. 99
+    ----
+    col1: [[0,1,2,3,4,5,6,7,8,9,...,90,91,92,93,94,95,96,97,98,99]]
 
 Reading a subset of Parquet data
 ================================
@@ -102,15 +100,12 @@ documentation for details about the syntax for filters.
 
     print(table)
 
-    col1 = table["col1"]
-    print(f"{type(col1).__name__} = {col1[0]} .. {col1[-1]}")
-
 .. testoutput::
 
     pyarrow.Table
     col1: int64
-    ChunkedArray = 6 .. 9
-    
+    ----
+    col1: [[6,7,8,9]]
 
 Saving Arrow Arrays to disk
 ===========================
@@ -228,14 +223,12 @@ provided to :func:`pyarrow.csv.read_csv` to drive
 
     print(table)
 
-    col1 = table["col1"]
-    print(f"{type(col1).__name__} = {col1[0]} .. {col1[-1]}")
-
 .. testoutput::
 
     pyarrow.Table
     col1: int64
-    ChunkedArray = 0 .. 99
+    ----
+    col1: [[0,1,2,3,4,5,6,7,8,9,...,90,91,92,93,94,95,96,97,98,99]]
 
 Writing Partitioned Datasets 
 ============================
@@ -354,14 +347,12 @@ expose them as a single Table.
     table = dataset.to_table()
     print(table)
 
-    col1 = table["col1"]
-    print(f"{type(col1).__name__} = {col1[0]} .. {col1[-1]}")
-
 .. testoutput::
 
     pyarrow.Table
     col1: int64
-    ChunkedArray = 0 .. 29
+    ----
+    col1: [[0,1,2,3,4,5,6,7,8,9],[10,11,12,13,14,15,16,17,18,19],[20,21,22,23,24,25,26,27,28,29]]
 
 Notice that converting to a table will force all data to be loaded 
 in memory.  For big datasets is usually not what you want.
@@ -533,14 +524,12 @@ the parquet file as :class:`ChunkedArray`
 
     print(table)
 
-    col1 = table["col1"]
-    print(f"{type(col1).__name__} = {col1[0]} .. {col1[-1]}")
-
 .. testoutput::
 
     pyarrow.Table
     col1: int64
-    ChunkedArray = 0 .. 99
+    ----
+    col1: [[0,1,2,3,4,5,6,7,8,9,...,90,91,92,93,94,95,96,97,98,99]]
 
 Reading Line Delimited JSON
 ===========================
@@ -650,6 +639,8 @@ by simply invoking :meth:`pyarrow.feather.read_table` and
 
     pyarrow.Table
     numbers: int64
+    ----
+    numbers: [[1,2,3,4,5]]
 
 .. testcode::
 
@@ -660,6 +651,8 @@ by simply invoking :meth:`pyarrow.feather.read_table` and
 
     pyarrow.Table
     numbers: int64
+    ----
+    numbers: [[1,2,3,4,5]]
 
 Reading data from formats that don't have native support for
 compression instead involves decompressing them before decoding them.
@@ -679,6 +672,8 @@ For example to read a compressed CSV file:
 
     pyarrow.Table
     numbers: int64
+    ----
+    numbers: [[1,2,3,4,5]]
 
 .. note::
 
@@ -696,3 +691,5 @@ For example to read a compressed CSV file:
 
     pyarrow.Table
     numbers: int64
+    ----
+    numbers: [[1,2,3,4,5]]

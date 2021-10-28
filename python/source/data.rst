@@ -166,12 +166,16 @@ We can combine them into a single table using :func:`pyarrow.concat_tables`:
 
   oscar_nominations = pa.concat_tables([oscar_nominations_1, 
                                         oscar_nominations_2])
-
-  print(oscar_nominations.to_pydict())
+  print(oscar_nominations)
 
 .. testoutput::
 
-  {'actor': ['Meryl Streep', 'Katharine Hepburn', 'Jack Nicholson', 'Bette Davis'], 'nominations': [21, 12, 12, 10]}
+    pyarrow.Table
+    actor: string
+    nominations: int64
+    ----
+    actor: [["Meryl Streep","Katharine Hepburn"],["Jack Nicholson","Bette Davis"]]
+    nominations: [[21,12],[12,10]]
 
 .. note::
 
@@ -203,9 +207,12 @@ Suppose we have a table with oscar nominations for each actress
 
 .. testoutput::
 
-  pyarrow.Table
-  actor: string
-  nominations: int64
+    pyarrow.Table
+    actor: string
+    nominations: int64
+    ----
+    actor: [["Meryl Streep","Katharine Hepburn"]]
+    nominations: [[21,12]]
 
 it's possible to append an additional column to track the years the
 nomination was won using :meth:`pyarrow.Table.append_column`
@@ -224,11 +231,15 @@ nomination was won using :meth:`pyarrow.Table.append_column`
 
 .. testoutput::
 
-  pyarrow.Table
-  actor: string
-  nominations: int64
-  wonyears: list<item: int64>
-    child 0, item: int64
+    pyarrow.Table
+    actor: string
+    nominations: int64
+    wonyears: list<item: int64>
+      child 0, item: int64
+    ----
+    actor: [["Meryl Streep","Katharine Hepburn"]]
+    nominations: [[21,12]]
+    wonyears: [[[1980,1983,2012],[1934,1968,1969,1982]]]
 
 Searching for values matching a predicate in Arrays
 ===================================================

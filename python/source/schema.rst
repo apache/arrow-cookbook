@@ -87,6 +87,10 @@ The schema can then be provided to a table when created:
     col1: int8
     col2: string
     col3: double
+    ----
+    col1: [[1,2,3,4,5]]
+    col2: [["a","b","c","d","e"]]
+    col3: [[1,2,3,4,5]]
 
 Like for arrays, it's possible to cast tables to different schemas
 as far as they are compatible
@@ -109,6 +113,10 @@ as far as they are compatible
     col1: int32
     col2: string
     col3: double
+    ----
+    col1: [[1,2,3,4,5]]
+    col2: [["a","b","c","d","e"]]
+    col3: [[1,2,3,4,5]]
 
 Merging multiple schemas
 ========================

@@ -94,6 +94,10 @@ by pairing multiple arrays with names for their columns
     col1: int64
     col2: string
     col3: double
+    ----
+    col1: [[1,2,3,4,5]]
+    col2: [["a","b","c","d","e"]]
+    col3: [[1,2,3,4,5]]
 
 Create Table from Plain Types
 =============================
@@ -122,6 +126,9 @@ from a variety of inputs, including plain python objects
     pyarrow.Table
     col1: int64
     col2: string
+    ----
+    col1: [[1,2,3,4,5]]
+    col2: [["a","b","c","d","e"]]
 
 .. note::
 
@@ -167,6 +174,9 @@ Multiple batches can be combined into a table using
     pyarrow.Table
     odd: int64
     even: int64
+    ----
+    odd: [[1,3,5,7,9],[11,13,15,17,19]]
+    even: [[2,4,6,8,10],[12,14,16,18,20]]
 
 Equally, :class:`pyarrow.Table` can be converted to a list of 
 :class:`pyarrow.RecordBatch` using the :meth:`pyarrow.Table.to_batches`
