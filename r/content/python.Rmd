@@ -21,12 +21,23 @@ test_that("pyarrow_object", {
 })
 ```
 
-## Call a pyarrow function from R
+## Call a PyArrow function from R
 
-```{r}
+You want to call a PyArrow function from your R session.
+
+```{r, pyarrow_func}
 table_1 <- Table$create(mtcars[1:5,])
 table_2 <- Table$create(mtcars[11:15,])
 
-pa$concat_tables(table_1, table_2)
+pa$concat_tables(tables = list(table_1, table_2)) %>%
+  collect()
+```
+```{r, test_pyarrow_func, opts.label="test"}
+test_that("pyarrow_func", {
+  expect_equal(
+    collect(pa$concat_tables(tables = list(table_1, table_2))),
+    collect(Table$create(mtcars[c(1:5,11:15),]))
+  )
+})
 ```
 
