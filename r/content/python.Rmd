@@ -2,12 +2,12 @@
 
 ## Introduction
 
-For more information on using setting up and installing pyarrow to use in R, see 
+For more information on using setting up and installing PyArrow to use in R, see 
 [the "Apache Arrow in Python and R with reticulate" vignette](https://arrow.apache.org/docs/r/articles/python.html). 
 
 ## Create an Arrow object using pyarrow in R
 
-You want to use pyarrow to create an Arrow object in an R session.
+You want to use PyArrow to create an Arrow object in an R session.
 
 ```{r, pyarrow_object}
 library(reticulate)
