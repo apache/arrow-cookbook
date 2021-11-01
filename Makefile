@@ -40,6 +40,7 @@ ifdef arrow_r_version
 else
 	cd ./r && Rscript ./scripts/install_dependencies.R
 endif
+	pip install pyarrow
 
 
 r: rdeps
