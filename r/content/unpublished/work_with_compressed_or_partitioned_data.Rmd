@@ -1,5 +1,0 @@
-# Work with Compressed or Partitioned Data
-
-## Read and write compressed data
-
-## Read and write partitioned data
