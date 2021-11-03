@@ -1,5 +1,7 @@
 # Reading and Writing Data
 
+## Introduction
+
 This chapter contains recipes related to reading and writing data using Apache 
 Arrow.  When reading files into R using Apache Arrow, you can choose to read in 
 your file as either a data frame or as an Arrow Table object.
@@ -29,8 +31,7 @@ test_that("table_create_from_df chunk works as expected", {
 ## Convert data from an Arrow Table to a data frame
 
 You want to convert an Arrow Table to a data frame to view the data or work with it
-in your usual analytics pipeline.  You can use either `as.data.frame()` or 
-`dplyr::collect()` to do this.
+in your usual analytics pipeline. 
 
 ### Solution
 
@@ -43,6 +44,10 @@ test_that("asdf_table chunk works as expected", {
   expect_identical(air_df, airquality) 
 })
 ```
+
+### Discussion
+
+You can use either `as.data.frame()` or `dplyr::collect()` to do this.
 
 ## Write a Parquet file
 
@@ -233,9 +238,11 @@ test_that("read_ipc_stream chunk works as expected", {
 unlink("my_table.arrows")
 ```
 
-## Read and write CSV files 
+## Read CSV files 
 
-You can use `write_csv_arrow()` to save an Arrow Table to disk as a CSV.
+You want to write Arrow data to a CSV file.
+
+### Solution
 
 ```{r, write_csv_arrow}
 write_csv_arrow(cars, "cars.csv")
@@ -246,7 +253,11 @@ test_that("write_csv_arrow chunk works as expected", {
 })
 ```
 
-You can use `read_csv_arrow()` to read in a CSV file as an Arrow Table.
+## Write CSV files 
+
+You want to read a CSV file.
+
+### Solution
 
 ```{r, read_csv_arrow}
 my_csv <- read_csv_arrow("cars.csv", as_data_frame = FALSE)

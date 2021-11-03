@@ -1,5 +1,7 @@
 # Defining Data Types
 
+## Introduction
+
 As discussed in previous chapters, Arrow automatically infers the most 
 appropriate data type when reading in data or converting R objects to Arrow 
 objects.  However, you might want to manually tell Arrow which data types to 
@@ -15,7 +17,7 @@ in [R data type to Arrow data type mappings](https://arrow.apache.org/docs/r/art
 A table containing Arrow data types, and their R equivalents can be found in 
 [Arrow data type to R data type mapping](https://arrow.apache.org/docs/r/articles/arrow.html#arrow-to-r).
 
-## Update the data type of an existing Arrow Array
+## Update data type of an existing Arrow Array
 
 You want to change the data type of an existing Arrow Array.
 
@@ -62,7 +64,7 @@ test_that("test_incompat works as expected", {
 })
 ```
 
-## Update the data type of a field in an existing Arrow Table
+## Update data type of a field in an existing Arrow Table
 
 You want to change the type of one or more fields in an existing Arrow Table.
 

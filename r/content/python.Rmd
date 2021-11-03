@@ -9,6 +9,8 @@ For more information on using setting up and installing PyArrow to use in R, see
 
 You want to use PyArrow to create an Arrow object in an R session.
 
+### Solution
+
 ```{r, pyarrow_object}
 library(reticulate)
 pa <- import("pyarrow")
@@ -24,6 +26,8 @@ test_that("pyarrow_object", {
 ## Call a PyArrow function from R
 
 You want to call a PyArrow function from your R session.
+
+### Solution
 
 ```{r, pyarrow_func}
 table_1 <- Table$create(mtcars[1:5,])
