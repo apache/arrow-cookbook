@@ -1,7 +1,8 @@
 ---
-title: "Arrow Cookbook"
+title: Apache Arrow R Cookbook
 params:
   inline_test_output: FALSE
+  
 ---
 
 ```{r setup, include = FALSE}
@@ -16,7 +17,13 @@ knitr::opts_template$set(test = list(
 ))
 ```
 
+
+
 # Preface
+
+```{r, echo=FALSE}
+knitr::include_graphics("images/arrow.png")
+```
 
 This cookbook aims to provide a number of recipes showing how to perform common 
 tasks using arrow.  This version of the cookbook works with arrow >= 6.0.0, but 
@@ -27,7 +34,7 @@ in future we will maintain different versions of the cookbook.
 Apache Arrow is a cross-language development platform for in-memory analytics.  
 The arrow R package provides a low-level interface to much of the functionality 
 available in the C++ implementation, as well as a higher-level interface to the
-compute functionality via an implementation of the dplyr API.
+compute functionality via an implementation of the [dplyr](https://dplyr.tidyverse.org/) API.
 
 ## Alternative resources
 
