@@ -19,9 +19,24 @@ knitr::opts_template$set(test = list(
 # Preface
 
 This cookbook aims to provide a number of recipes showing how to perform common 
-tasks using `arrow`.
+tasks using arrow.  This version of the cookbook works with arrow >= 6.0.0, but 
+in future we will maintain different versions of the cookbook.
+
+## What is Arrow?
+
+Apache Arrow is a cross-language development platform for in-memory analytics.  
+The arrow R package provides a low-level interface to much of the functionality 
+available in the C++ implementation, as well as a higher-level interface to the
+compute functionality via an implementation of the dplyr API.
 
 ## Alternative resources
 
-For a complete reference guide to the functions in `arrow`, as well as vignettes, 
+For a complete reference guide to the functions in arrow, as well as vignettes, 
 see [the pkgdown site](https://arrow.apache.org/docs/r/).
+
+If you have any requests for new recipes, please open a ticket via 
+[the cookbook's GitHub Issues page](https://github.com/apache/arrow-cookbook/issues).
+
+If you have any Arrow feature requests to make or bugs to report, please 
+[open an issue on the project JIRA](https://issues.apache.org/jira/projects/ARROW/issues)
+
