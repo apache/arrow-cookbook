@@ -1,7 +1,8 @@
 ---
-title: "Arrow Cookbook"
+title: Apache Arrow R Cookbook
 params:
   inline_test_output: FALSE
+  
 ---
 
 ```{r setup, include = FALSE}
@@ -16,7 +17,11 @@ knitr::opts_template$set(test = list(
 ))
 ```
 
+
+
 # Preface
+
+![](images/arrow.png)
 
 This cookbook aims to provide a number of recipes showing how to perform common 
 tasks using arrow.  This version of the cookbook works with arrow >= 6.0.0, but 
