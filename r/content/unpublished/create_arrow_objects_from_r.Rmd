@@ -1,9 +1,0 @@
-## Create an Arrow table from an R object
-
-## Arrays
-
-## ChunkedArrays
-
-## Scalars
-
-## RecordBatches
