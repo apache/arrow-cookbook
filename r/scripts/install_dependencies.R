@@ -81,7 +81,8 @@ install_arrow_version <- function(version_to_install) {
   }
 }
 
-dependencies <- c("testthat", "bookdown", "knitr", "purrr", "remotes", "dplyr")
+dependencies <- c("testthat", "bookdown", "knitr", "purrr", "remotes", 
+                  "dplyr", "stringr", "reticulate")
 
 for (dependency in dependencies) {
   load_package(dependency)
