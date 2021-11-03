@@ -8,7 +8,7 @@ represent a single column of data, with all values having the same data type.
 A number of base R functions which have S3 generic methods have been implemented 
 to work on Arrow Arrays; for example `mean`, `min`, and `max`.  
 
-## Filter by values matching a predicate
+## Filter by values matching a predicate or mask
 
 You want to search for values in an Array that match a predicate condition.
 
@@ -24,22 +24,10 @@ test_that("array_predicate works as expected", {
 })
 ```
 
-## Filter by values matching a mask filter
+### Discussion
 
-You want to search for values in an Array via a mask filter.
-
-### Solution
-
-```{r, array_mask}
-my_values <- Array$create(c(1:5, NA))
-my_values[c(TRUE, FALSE, TRUE, FALSE, FALSE, TRUE)]
-```
-```{r, test_array_mask, opts.label = "test"}
-test_that("array_mask works as expected", {
-  expect_equal(my_values[c(TRUE, FALSE, TRUE, FALSE, FALSE, TRUE)], Array$create(c(1L, 3L, NA)))
-})
-```
-
+You can refer to items in an Array using the square brackets `[]` like you can
+an R vector.
 
 ## Compute Mean/Min/Max, etc value of an Array
 
