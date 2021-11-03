@@ -149,9 +149,9 @@ mapping of in arrow, please
 The following packages (amongst some from others) have had many function 
 bindings/mappings written in arrow:
 
-* lubridate
-* stringr
-* dplyr
+* [lubridate](https://lubridate.tidyverse.org/)
+* [stringr](https://stringr.tidyverse.org/)
+* [dplyr](https://dplyr.tidyverse.org/)
 
 If you try to call a function which does not have arrow mapping, the data will 
 be pulled back into R, and you will see a warning message.
