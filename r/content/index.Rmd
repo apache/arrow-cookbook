@@ -21,9 +21,7 @@ knitr::opts_template$set(test = list(
 
 # Preface
 
-```{r, echo=FALSE}
-knitr::include_graphics("images/arrow.png")
-```
+![](images/arrow.png "Apache Arrow logo")
 
 This cookbook aims to provide a number of recipes showing how to perform common 
 tasks using arrow.  This version of the cookbook works with arrow >= 6.0.0, but 
