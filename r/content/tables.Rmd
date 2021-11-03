@@ -146,6 +146,13 @@ If you find any base R or tidyverse functions which you would like to see a
 mapping of in arrow, please 
 [open an issue on the project JIRA](https://issues.apache.org/jira/projects/ARROW/issues).
 
+The following packages (amongst some from others) have had many function 
+bindings/mappings written in arrow:
+
+* [lubridate](https://lubridate.tidyverse.org/)
+* [stringr](https://stringr.tidyverse.org/)
+* [dplyr](https://dplyr.tidyverse.org/)
+
 If you try to call a function which does not have arrow mapping, the data will 
 be pulled back into R, and you will see a warning message.
 
@@ -171,6 +178,39 @@ test_that("dplyr_func_warning", {
 
 })
 ```
+
+It should be noted that to work with functions which do have mappings, you must 
+refer to them by
+their function names.  If you use the `package::function()` syntax, this will 
+result in a warning about the data being pulled back into R before the output is
+calculated.
+
+```{r, dplyr_str_to_lower_r, warning=TRUE}
+Table$create(starwars) %>%
+  select(name) %>%
+  mutate(name_lower = stringr::str_to_lower(name)) %>%
+  head() %>%
+  collect()
+```
+
+```{r, test_dplyr_str_to_lower_r, opts.label = "test"}
+
+test_that("dplyr_str_to_lower_r", {
+  
+  expect_warning(
+    Table$create(starwars) %>%
+      select(name) %>%
+      mutate(name_lower = stringr::str_to_lower(name)) %>%
+      head() %>%
+      collect(),
+    "Expression stringr::str_to_lower(name) not supported in Arrow; pulling data into R",
+    fixed = TRUE
+  )
+  
+})
+
+```
+
 ## Use arrow functions in dplyr verbs in arrow
 
 You want to use a function which is implemented in Arrow's C++ library but either:
