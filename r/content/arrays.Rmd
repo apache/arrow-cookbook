@@ -1,6 +1,6 @@
 # Manipulating Data - Arrays
 
-__What you should know before you begin__
+## Introduction
 
 An Arrow Array is roughly equivalent to an R vector - it can be used to 
 represent a single column of data, with all values having the same data type.  
