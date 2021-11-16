@@ -16,6 +16,8 @@ specific concerns and makes it possible to build/test all cookbooks
 without any platform specific knowledge (as long as dependencies
 are available on the target system).
 
+See https://arrow.apache.org/cookbook/ for the latest published version.
+
 Building All Cookbooks
 ----------------------
 
