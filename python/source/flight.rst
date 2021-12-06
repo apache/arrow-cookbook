@@ -238,7 +238,6 @@ advantage of this:
 
    import pathlib
 
-   import numpy as np
    import pyarrow as pa
    import pyarrow.flight
    import pyarrow.parquet
@@ -284,19 +283,6 @@ advantage of this:
 
        def do_get(self, context, ticket):
            dataset = ticket.ticket.decode('utf-8')
-
-           # Stream data from a generator we implement
-           if dataset == ":random:":
-               schema = pa.schema([("names", pa.int64())])
-               def _gen():
-                   rng = np.random.default_rng()
-                   for _ in range(128):
-                       yield pa.record_batch([
-                           rng.integers(42, size=1024),
-                       ], schema=schema)
-               return pa.flight.GeneratorStream(
-                   schema, _gen())
-
            # Stream data from a file
            dataset_path = self._repo / dataset
            reader = pa.parquet.ParquetFile(dataset_path)
@@ -325,15 +311,10 @@ we instead iterate through each batch as it comes and add it to a Parquet file.
 Then, we've modified :meth:`pyarrow.flight.FlightServerBase.do_get` to stream
 data to the client. This uses :class:`pyarrow.flight.GeneratorStream`, which
 takes a schema and any iterable or iterator. Flight then iterates through and
-sends each record batch to the client.
+sends each record batch to the client, allowing us to handle even large Parquet
+files that don't fit into memory.
 
-We demonstrate two generators here. One opens a Parquet file, as before, but
-creates an iterator instead of reading the entire table into memory. This way,
-we can incrementally stream even large Parquet files to the client. Another
-creates a generator that makes batches of random data on the fly to send back
-to the client.
-
-GeneratorStream has the advantage that it can stream data, but that means
+While GeneratorStream has the advantage that it can stream data, that means
 Flight must call back into Python for each record batch to send. In contrast,
 RecordBatchStream requires that all data is in-memory up front, but once
 created, all data transfer is handled purely in C++, without needing to call
@@ -400,24 +381,3 @@ stream as it arrives, instead of reading them all into a table:
 .. testoutput::
 
    Got 4194304 rows total, expected 4194304
-
-We can also read the "random" dataset that gets generated on-the-fly:
-
-.. testcode::
-
-   # Read content of the "random" dataset
-   reader = client.do_get(pyarrow.flight.Ticket(b":random:"))
-   total_rows = 0
-   for chunk in reader:
-       total_rows += chunk.data.num_rows
-   print("Got", total_rows, "rows total")
-
-.. testoutput::
-
-   Got 131072 rows total
-
-.. testcode::
-    :hide:
-
-    # Shutdown the server
-    server.shutdown()
