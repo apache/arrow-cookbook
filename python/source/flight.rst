@@ -381,3 +381,9 @@ stream as it arrives, instead of reading them all into a table:
 .. testoutput::
 
    Got 4194304 rows total, expected 4194304
+
+.. testcode::
+    :hide:
+
+    # Shutdown the server
+    server.shutdown()
