@@ -30,8 +30,8 @@ You want to call a PyArrow function from your R session.
 ### Solution
 
 ```{r, pyarrow_func}
-table_1 <- Table$create(mtcars[1:5,])
-table_2 <- Table$create(mtcars[11:15,])
+table_1 <- arrow_table(mtcars[1:5,])
+table_2 <- arrow_table(mtcars[11:15,])
 
 pa$concat_tables(tables = list(table_1, table_2)) %>%
   collect()
@@ -40,7 +40,7 @@ pa$concat_tables(tables = list(table_1, table_2)) %>%
 test_that("pyarrow_func", {
   expect_equal(
     collect(pa$concat_tables(tables = list(table_1, table_2))),
-    collect(Table$create(mtcars[c(1:5,11:15),]))
+    collect(arrow_table(mtcars[c(1:5,11:15),]))
   )
 })
 ```
