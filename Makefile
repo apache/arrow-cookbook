@@ -1,7 +1,7 @@
 all: html
 
 
-html: py r
+html: py r j
 	@echo "\n\n>>> Cookbooks (except C++) Available in ./build <<<"
 
 
@@ -13,6 +13,7 @@ help:
 	@echo "make test        Test cookbook for all platforms."
 	@echo "make py          Build the Cookbook for Python only."
 	@echo "make r           Build the Cookbook for R only."
+	@echo "make j           Build the Cookbook for Java only."
 	@echo "make pytest      Verify the cookbook for Python only."
 	@echo "make rtest       Verify the cookbook for R only."
 
@@ -69,3 +70,9 @@ cpp: cpptest
 	cd cpp && make html
 	mkdir -p build/cpp
 	cp -r cpp/build/html/* build/cpp
+
+j: 
+	@echo ">>> Building Java Cookbook <<<\n"
+	cd java && make html
+	mkdir -p build/j
+	cp -r java/build/html/* build/j
