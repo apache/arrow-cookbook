@@ -1,5 +1,5 @@
 ===================
-Working with Schema
+Working with schema
 ===================
 
 Common definition of table has an schema. Java arrow is columnar oriented and it also has an schema representation. 
@@ -118,10 +118,8 @@ Java arrow offer Schema.fromJSON() method to create an schema from json definiti
 
    Schema<name: Utf8, document: Utf8, age: Int(32, true), points: List<intCol: Int(32, true)>>
 
-Recipe
-======
-
-Code:
+Code
+====
 
 .. literalinclude:: demo/src/main/java/Definition.java
    :language: java

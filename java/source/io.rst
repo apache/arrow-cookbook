@@ -1,5 +1,5 @@
 ========================
-Reading and Writing Data
+Reading and writing data
 ========================
 
 Recipes related to reading and writing data from disk using
@@ -86,10 +86,8 @@ Streaming to buffer:
    :lines: 121-124
    :language: java
 
-Recipe
-======
-
-Code:
+Code
+====
 
 .. literalinclude:: demo/src/main/java/Io.java
    :language: java

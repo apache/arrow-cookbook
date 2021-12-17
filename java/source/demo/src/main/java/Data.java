@@ -1,12 +1,7 @@
 import org.apache.arrow.algorithm.search.VectorSearcher;
-import org.apache.arrow.algorithm.sort.DefaultVectorComparators;
-import org.apache.arrow.algorithm.sort.StableVectorComparator;
-import org.apache.arrow.algorithm.sort.VectorValueComparator;
+import org.apache.arrow.algorithm.sort.*;
 import org.apache.arrow.memory.RootAllocator;
-import org.apache.arrow.vector.BitVectorHelper;
-import org.apache.arrow.vector.IntVector;
-import org.apache.arrow.vector.VarCharVector;
-import org.apache.arrow.vector.VectorSchemaRoot;
+import org.apache.arrow.vector.*;
 import org.apache.arrow.vector.compare.TypeEqualsVisitor;
 import org.apache.arrow.vector.complex.BaseRepeatedValueVector;
 import org.apache.arrow.vector.complex.ListVector;
@@ -63,11 +58,11 @@ public class Data {
         // linear search org.apache.arrow.algorithm.search.VectorSearcher#linearSearch - O(n)
         IntVector rawVector = new IntVector("", rootAllocator);
         IntVector negVector = new IntVector("", rootAllocator);
-        rawVector.allocateNew(100);
-        rawVector.setValueCount(100);
+        rawVector.allocateNew(10);
+        rawVector.setValueCount(10);
         negVector.allocateNew(1);
         negVector.setValueCount(1);
-        for (int i = 0; i < 100; i++) { // prepare data in sorted order
+        for (int i = 0; i < 10; i++) { // prepare data in sorted order
             if (i == 0) {
                 rawVector.setNull(i);
             } else {
@@ -77,7 +72,7 @@ public class Data {
         negVector.set(0, -333);
         VectorValueComparator<IntVector> comparatorInt = DefaultVectorComparators.createDefaultComparator(rawVector); // do search
         System.out.println("Linear search:");
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 10; i++) {
             int result = VectorSearcher.linearSearch(rawVector, comparatorInt, rawVector, i);
             System.out.println(result);
         }
@@ -87,14 +82,82 @@ public class Data {
         // binary search org.apache.arrow.algorithm.search.VectorSearcher#binarySearch - O(log(n))
         // do search
         System.out.println("Binary search:");
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 10; i++) {
             int result = VectorSearcher.binarySearch(rawVector, comparatorInt, rawVector, i);
             System.out.println(result);
         }
 
         // negative case
         System.out.println(VectorSearcher.binarySearch(rawVector, comparatorInt, negVector, 0));
+        
+        // Sort the vector - In-place sorter
+        IntVector vecToSort = new IntVector("in-place-sorter", rootAllocator);
+        vecToSort.allocateNew(10);
+        vecToSort.setValueCount(10);
+        // fill data to sort
+        vecToSort.set(0, 10);
+        vecToSort.set(1, 8);
+        vecToSort.setNull(2);
+        vecToSort.set(3, 10);
+        vecToSort.set(4, 12);
+        vecToSort.set(5, 17);
+        vecToSort.setNull(6);
+        vecToSort.set(7, 23);
+        vecToSort.set(8, 35);
+        vecToSort.set(9, 2);
+        // sort the vector
+        FixedWidthInPlaceVectorSorter sorter = new FixedWidthInPlaceVectorSorter();
+        VectorValueComparator<IntVector> comparator = DefaultVectorComparators.createDefaultComparator(vecToSort);
+        sorter.sortInPlace(vecToSort, comparator);
+        // verify results
+        System.out.println(vecToSort.getValueCount()==10);
+        System.out.println("Sort the vector - In-place sorter:");
+        System.out.println(vecToSort.isNull(0));
+        System.out.println(vecToSort.isNull(1));
+        System.out.println(2==vecToSort.get(2));
+        System.out.println(8==vecToSort.get(3));
+        System.out.println(10==vecToSort.get(4));
+        System.out.println(10==vecToSort.get(5));
+        System.out.println(12==vecToSort.get(6));
+        System.out.println(17==vecToSort.get(7));
+        System.out.println(23==vecToSort.get(8));
+        System.out.println(35==vecToSort.get(9));
 
+        // Sort the vector - Out-of-place sorter:
+        IntVector vecOutOfPlaceSorter = new IntVector("out-of-place-sorter", rootAllocator);
+        vecOutOfPlaceSorter.allocateNew(10);
+        vecOutOfPlaceSorter.setValueCount(10);
+        // fill data to sort
+        vecOutOfPlaceSorter.set(0, 10);
+        vecOutOfPlaceSorter.set(1, 8);
+        vecOutOfPlaceSorter.setNull(2);
+        vecOutOfPlaceSorter.set(3, 10);
+        vecOutOfPlaceSorter.set(4, 12);
+        vecOutOfPlaceSorter.set(5, 17);
+        vecOutOfPlaceSorter.setNull(6);
+        vecOutOfPlaceSorter.set(7, 23);
+        vecOutOfPlaceSorter.set(8, 35);
+        vecOutOfPlaceSorter.set(9, 2);
+        // sort the vector
+        OutOfPlaceVectorSorter<IntVector> sorterOutOfPlaceSorter = new FixedWidthOutOfPlaceVectorSorter<>();
+        VectorValueComparator<IntVector> comparatorOutOfPlaceSorter = DefaultVectorComparators.createDefaultComparator(vecOutOfPlaceSorter);
+        IntVector sortedVec = (IntVector) vecOutOfPlaceSorter.getField().getFieldType().createNewSingleVector("new-out-of-place-sorter", rootAllocator, null);
+        sortedVec.allocateNew(vecOutOfPlaceSorter.getValueCount());
+        sortedVec.setValueCount(vecOutOfPlaceSorter.getValueCount());
+        sorterOutOfPlaceSorter.sortOutOfPlace(vecOutOfPlaceSorter, sortedVec, comparatorOutOfPlaceSorter);
+        // verify results
+        System.out.println("Sort the vector - Out-of-place sorter:");
+        System.out.println(vecOutOfPlaceSorter.getValueCount()==sortedVec.getValueCount());
+        System.out.println(sortedVec.isNull(0));
+        System.out.println(sortedVec.isNull(1));
+        System.out.println(2==sortedVec.get(2));
+        System.out.println(8==sortedVec.get(3));
+        System.out.println(10==sortedVec.get(4));
+        System.out.println(10==sortedVec.get(5));
+        System.out.println(12==sortedVec.get(6));
+        System.out.println(17==sortedVec.get(7));
+        System.out.println(23==sortedVec.get(8));
+        System.out.println(35==sortedVec.get(9));
     }
 
     public static void setVector(IntVector vector, Integer... values) {
@@ -106,45 +169,6 @@ public class Data {
             }
         }
         vector.setValueCount(length);
-    }
-
-    public static void setVector(VarCharVector vector, byte[]... values) {
-        final int length = values.length;
-        vector.allocateNewSafe();
-        for (int i = 0; i < length; i++) {
-            if (values[i] != null) {
-                vector.set(i, values[i]);
-            }
-        }
-        vector.setValueCount(length);
-    }
-
-    public static void setVector(ListVector vector, List<Integer>... values) {
-        vector.allocateNewSafe();
-        Types.MinorType type = Types.MinorType.INT;
-        vector.addOrGetVector(FieldType.nullable(type.getType()));
-
-        IntVector dataVector = (IntVector) vector.getDataVector();
-        dataVector.allocateNew();
-
-        // set underlying vectors
-        int curPos = 0;
-        vector.getOffsetBuffer().setInt(0, curPos);
-        for (int i = 0; i < values.length; i++) {
-            if (values[i] == null) {
-                BitVectorHelper.unsetBit(vector.getValidityBuffer(), i);
-            } else {
-                BitVectorHelper.setBit(vector.getValidityBuffer(), i);
-                for (int value : values[i]) {
-                    dataVector.setSafe(curPos, value);
-                    curPos += 1;
-                }
-            }
-            vector.getOffsetBuffer().setInt((i + 1) * BaseRepeatedValueVector.OFFSET_WIDTH, curPos);
-        }
-        dataVector.setValueCount(curPos);
-        vector.setLastSet(values.length - 1);
-        vector.setValueCount(values.length);
     }
 
     /**
