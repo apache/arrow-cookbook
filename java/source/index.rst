@@ -19,6 +19,9 @@ serve as robust and well performing solutions to those tasks.
    create
    schema
    data
+   flight
+   jni
+   usecase
 
 Indices and tables
 ==================
