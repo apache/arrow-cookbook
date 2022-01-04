@@ -1,24 +1,13 @@
+package data;
+
 import org.apache.arrow.algorithm.search.VectorSearcher;
 import org.apache.arrow.algorithm.sort.*;
 import org.apache.arrow.memory.RootAllocator;
-import org.apache.arrow.vector.*;
+import org.apache.arrow.vector.IntVector;
+import org.apache.arrow.vector.VarCharVector;
 import org.apache.arrow.vector.compare.TypeEqualsVisitor;
-import org.apache.arrow.vector.complex.BaseRepeatedValueVector;
-import org.apache.arrow.vector.complex.ListVector;
-import org.apache.arrow.vector.types.Types;
-import org.apache.arrow.vector.types.pojo.ArrowType;
-import org.apache.arrow.vector.types.pojo.Field;
-import org.apache.arrow.vector.types.pojo.FieldType;
-import org.apache.arrow.vector.types.pojo.Schema;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static java.util.Arrays.asList;
-
-public class Data {
+public class Cookbook {
     public static void main(String[] args) {
         // comparing vector fields org.apache.arrow.vector.compare.VectorValueEqualizer on vector module
         RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE); // deal with byte buffer allocation
@@ -26,7 +15,7 @@ public class Data {
         IntVector left1 = new IntVector("int", rootAllocator);
         IntVector left2 = new IntVector("int2", rootAllocator);
 
-        setVector(right, 10,20,30);
+        Util.setVector(right, 10,20,30);
 
         TypeEqualsVisitor visitor = new TypeEqualsVisitor(right); // equal or unequal
         System.out.println("Comparing vector fields:");
@@ -43,7 +32,7 @@ public class Data {
         vec.set(2, "aa".getBytes());
         vec.set(3, "abc".getBytes());
         vec.set(4, "a".getBytes());
-        VectorValueComparator<VarCharVector> comparatorValues = new TestVarCharSorter(); // less than, equal to, greater than
+        VectorValueComparator<VarCharVector> comparatorValues = new Util.TestVarCharSorter(); // less than, equal to, greater than
         VectorValueComparator<VarCharVector> stableComparator = new StableVectorComparator<>(comparatorValues);//Stable comparator only supports comparing values from the same vector
         stableComparator.attachVector(vec);
         System.out.println("Comparing two values at the given indices in the vectors:");
@@ -89,7 +78,7 @@ public class Data {
 
         // negative case
         System.out.println(VectorSearcher.binarySearch(rawVector, comparatorInt, negVector, 0));
-        
+
         // Sort the vector - In-place sorter
         IntVector vecToSort = new IntVector("in-place-sorter", rootAllocator);
         vecToSort.allocateNew(10);
@@ -158,33 +147,5 @@ public class Data {
         System.out.println(17==sortedVec.get(7));
         System.out.println(23==sortedVec.get(8));
         System.out.println(35==sortedVec.get(9));
-    }
-
-    public static void setVector(IntVector vector, Integer... values) {
-        final int length = values.length;
-        vector.allocateNew(length);
-        for (int i = 0; i < length; i++) {
-            if (values[i] != null) {
-                vector.set(i, values[i]);
-            }
-        }
-        vector.setValueCount(length);
-    }
-
-    /**
-     * Utility comparator that compares varchars by the first character.
-     */
-    private static class TestVarCharSorter extends VectorValueComparator<VarCharVector> {
-        @Override
-        public int compareNotNull(int index1, int index2) {
-            byte b1 = vector1.get(index1)[0];
-            byte b2 = vector2.get(index2)[0];
-            return b1 - b2;
-        }
-
-        @Override
-        public VectorValueComparator<VarCharVector> createNew() {
-            return new TestVarCharSorter();
-        }
     }
 }

@@ -1,8 +1,10 @@
+package definition;
+
 import org.apache.arrow.memory.RootAllocator;
-import org.apache.arrow.vector.*;
-import org.apache.arrow.vector.complex.BaseRepeatedValueVector;
+import org.apache.arrow.vector.IntVector;
+import org.apache.arrow.vector.VarCharVector;
+import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.complex.ListVector;
-import org.apache.arrow.vector.types.Types;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.FieldType;
@@ -16,7 +18,7 @@ import java.util.Map;
 
 import static java.util.Arrays.asList;
 
-public class Definition {
+public class Cookbook {
     public static void main(String[] args) throws IOException {
         // create a column data type
         Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
@@ -49,10 +51,10 @@ public class Definition {
         ListVector pointsVectorOption1 = (ListVector) vectorSchemaRoot.getVector("points");
 
         // add values to the field vectors
-        setVector(nameVectorOption1, "david".getBytes(), "gladis".getBytes(), "juan".getBytes());
-        setVector(documentVectorOption1, "A".getBytes(), "B".getBytes(), "C".getBytes());
-        setVector(ageVectorOption1, 10,20,30);
-        setVector(pointsVectorOption1, asList(1,3,5,7,9), asList(2,4,6,8,10), asList(1,2,3,5,8));
+        Util.setVector(nameVectorOption1, "david".getBytes(), "gladis".getBytes(), "juan".getBytes());
+        Util.setVector(documentVectorOption1, "A".getBytes(), "B".getBytes(), "C".getBytes());
+        Util.setVector(ageVectorOption1, 10,20,30);
+        Util.setVector(pointsVectorOption1, asList(1,3,5,7,9), asList(2,4,6,8,10), asList(1,2,3,5,8));
 
         vectorSchemaRoot.setRowCount(3);
 
@@ -69,55 +71,5 @@ public class Definition {
         Schema schemaPersonFromJson = Schema.fromJSON(jsonSchemaDefnition);
         System.out.println(schemaPersonFromJson);
 
-    }
-
-    public static void setVector(IntVector vector, Integer... values) {
-        final int length = values.length;
-        vector.allocateNew(length);
-        for (int i = 0; i < length; i++) {
-            if (values[i] != null) {
-                vector.set(i, values[i]);
-            }
-        }
-        vector.setValueCount(length);
-    }
-
-    public static void setVector(VarCharVector vector, byte[]... values) {
-        final int length = values.length;
-        vector.allocateNewSafe();
-        for (int i = 0; i < length; i++) {
-            if (values[i] != null) {
-                vector.set(i, values[i]);
-            }
-        }
-        vector.setValueCount(length);
-    }
-
-    public static void setVector(ListVector vector, List<Integer>... values) {
-        vector.allocateNewSafe();
-        Types.MinorType type = Types.MinorType.INT;
-        vector.addOrGetVector(FieldType.nullable(type.getType()));
-
-        IntVector dataVector = (IntVector) vector.getDataVector();
-        dataVector.allocateNew();
-
-        // set underlying vectors
-        int curPos = 0;
-        vector.getOffsetBuffer().setInt(0, curPos);
-        for (int i = 0; i < values.length; i++) {
-            if (values[i] == null) {
-                BitVectorHelper.unsetBit(vector.getValidityBuffer(), i);
-            } else {
-                BitVectorHelper.setBit(vector.getValidityBuffer(), i);
-                for (int value : values[i]) {
-                    dataVector.setSafe(curPos, value);
-                    curPos += 1;
-                }
-            }
-            vector.getOffsetBuffer().setInt((i + 1) * BaseRepeatedValueVector.OFFSET_WIDTH, curPos);
-        }
-        dataVector.setValueCount(curPos);
-        vector.setLastSet(values.length - 1);
-        vector.setValueCount(values.length);
     }
 }

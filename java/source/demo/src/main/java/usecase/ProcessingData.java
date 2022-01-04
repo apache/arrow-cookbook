@@ -124,32 +124,6 @@ public class ProcessingData {
         return ageSelectedIndexFilterPerCity;
     }
 
-    private static List<Field> createFields(){
-        // create a column data type
-        Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
-        Field topic = new Field("topic", FieldType.nullable(new ArrowType.Utf8()), null);
-        Field city = new Field("city", FieldType.nullable(new ArrowType.Utf8()), null);
-        Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
-        return asList(name, topic, city, age);
-    }
-
-    private static Schema createSchema(){
-        return new Schema(createFields());
-    }
-
-    private static void populateData(VectorSchemaRoot vectorSchemaRoot){
-        VarCharVector name = (VarCharVector) vectorSchemaRoot.getVector("name"); //interface FieldVector
-        VarCharVector city = (VarCharVector) vectorSchemaRoot.getVector("city"); //interface FieldVector
-        VarCharVector topic = (VarCharVector) vectorSchemaRoot.getVector("topic"); //interface FieldVector
-        IntVector age = (IntVector) vectorSchemaRoot.getVector("age");
-        // add values to the field vectors
-        setVector(name, "david".getBytes(), "gladis".getBytes(), "juan".getBytes(), "pedro".getBytes(), "oscar".getBytes(), "ronald".getBytes(), "francisco".getBytes());
-        setVector(city, "lima".getBytes(), "cuzco".getBytes(), "huancayo".getBytes(), "tarapoto".getBytes(), "lima".getBytes(), "lima".getBytes(), "lima".getBytes());
-        setVector(topic, "cryptocurrency".getBytes(), "fashion".getBytes(), "cryptocurrency".getBytes(), "healthcare".getBytes(), "security".getBytes(), "cryptocurrency".getBytes(), "cryptocurrency".getBytes());
-        setVector(age, 21, 22, 26, 23, 27, 44, 25);
-        vectorSchemaRoot.setRowCount(7);
-    }
-
     private static void setVector(IntVector vector, Integer... values) {
         final int length = values.length;
         vector.allocateNew(length);
@@ -171,4 +145,30 @@ public class ProcessingData {
         }
         vector.setValueCount(length);
     }
+
+    private static void populateData(VectorSchemaRoot vectorSchemaRoot){
+        VarCharVector name = (VarCharVector) vectorSchemaRoot.getVector("name"); //interface FieldVector
+        VarCharVector city = (VarCharVector) vectorSchemaRoot.getVector("city"); //interface FieldVector
+        VarCharVector topic = (VarCharVector) vectorSchemaRoot.getVector("topic"); //interface FieldVector
+        IntVector age = (IntVector) vectorSchemaRoot.getVector("age");
+        // add values to the field vectors
+        setVector(name, "david".getBytes(), "gladis".getBytes(), "juan".getBytes(), "pedro".getBytes(), "oscar".getBytes(), "ronald".getBytes(), "francisco".getBytes());
+        setVector(city, "lima".getBytes(), "cuzco".getBytes(), "huancayo".getBytes(), "tarapoto".getBytes(), "lima".getBytes(), "lima".getBytes(), "lima".getBytes());
+        setVector(topic, "cryptocurrency".getBytes(), "fashion".getBytes(), "cryptocurrency".getBytes(), "healthcare".getBytes(), "security".getBytes(), "cryptocurrency".getBytes(), "cryptocurrency".getBytes());
+        setVector(age, 21, 22, 26, 23, 27, 44, 25);
+        vectorSchemaRoot.setRowCount(7);
+    }
+
+        private static List<Field> createFields(){
+            // create a column data type
+            Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
+            Field topic = new Field("topic", FieldType.nullable(new ArrowType.Utf8()), null);
+            Field city = new Field("city", FieldType.nullable(new ArrowType.Utf8()), null);
+            Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
+            return asList(name, topic, city, age);
+        }
+
+        private static Schema createSchema(){
+            return new Schema(createFields());
+        }
 }

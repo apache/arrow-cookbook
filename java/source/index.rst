@@ -15,8 +15,8 @@ serve as robust and well performing solutions to those tasks.
    :maxdepth: 2
    :caption: Contents:
 
-   io
    create
+   io
    schema
    data
    flight
