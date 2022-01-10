@@ -17,12 +17,9 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'java-cookbook'
-copyright = '2021, apache arrow'
-author = 'apache arrow'
-
-# The full version, including alpha/beta/rc tags
-release = 'arrow cookbook'
+project = 'Apache Arrow Java Cookbook'
+copyright = '2022, Apache Software Foundation'
+author = 'The Apache Software Foundation'
 
 
 # -- General configuration ---------------------------------------------------
