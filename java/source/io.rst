@@ -8,17 +8,17 @@ Recipes related to reading and writing data from disk using Apache Arrow.
 
 Arrow defines two types of binary formats for serializing record batches `IPC <https://arrow.apache.org/docs/java/ipc.html>`_: Streaming format / File or Random Access format
 
+Arrow vectors can be serialized to disk as the Arrow IPC format. Such files can be directly memory-mapped when read.
+
 .. contents::
 
 Writing Array
 =============
 
-We are going to use this util for reading and writing data:
+Create and populate a VectorSchemaRoot:
 
 .. code-block:: java
-   :name: Util
    :emphasize-lines: 114
-
 
    import org.apache.arrow.memory.RootAllocator;
    import org.apache.arrow.vector.BitVectorHelper;
@@ -32,12 +32,10 @@ We are going to use this util for reading and writing data:
    import org.apache.arrow.vector.types.pojo.Field;
    import org.apache.arrow.vector.types.pojo.FieldType;
    import org.apache.arrow.vector.types.pojo.Schema;
-
    import java.util.ArrayList;
    import java.util.HashMap;
    import java.util.List;
    import java.util.Map;
-
    import static java.util.Arrays.asList;
 
    void setVector(IntVector vector, Integer... values) {
@@ -70,7 +68,6 @@ We are going to use this util for reading and writing data:
        IntVector dataVector = (IntVector) vector.getDataVector();
        dataVector.allocateNew();
 
-       // set underlying vectors
        int curPos = 0;
        vector.getOffsetBuffer().setInt(0, curPos);
        for (int i = 0; i < values.length; i++) {
@@ -91,7 +88,6 @@ We are going to use this util for reading and writing data:
    }
 
    VectorSchemaRoot createVectorSchemaRoot(){
-       // create a column data type
        Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
 
        Map<String, String> metadata = new HashMap<>();
@@ -109,19 +105,17 @@ We are going to use this util for reading and writing data:
        childFields.add(childField);
        Field points = new Field("points", listType, childFields);
 
-       // create a definition
        Schema schemaPerson = new Schema(asList(name, document, age, points));
 
-       RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE); // deal with byte buffer allocation
+       RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
+
        VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator);
 
-       // getting field vectors
-       VarCharVector nameVectorOption1 = (VarCharVector) vectorSchemaRoot.getVector("name"); //interface FieldVector
-       VarCharVector documentVectorOption1 = (VarCharVector) vectorSchemaRoot.getVector("document"); //interface FieldVector
+       VarCharVector nameVectorOption1 = (VarCharVector) vectorSchemaRoot.getVector("name");
+       VarCharVector documentVectorOption1 = (VarCharVector) vectorSchemaRoot.getVector("document");
        IntVector ageVectorOption1 = (IntVector) vectorSchemaRoot.getVector("age");
        ListVector pointsVectorOption1 = (ListVector) vectorSchemaRoot.getVector("points");
 
-       // add values to the field vectors
        setVector(nameVectorOption1, "david".getBytes(), "gladis".getBytes(), "juan".getBytes());
        setVector(documentVectorOption1, "A".getBytes(), "B".getBytes(), "C".getBytes());
        setVector(ageVectorOption1, 10,20,30);
@@ -131,13 +125,12 @@ We are going to use this util for reading and writing data:
        return vectorSchemaRoot;
    }
 
-   RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE); // deal with byte buffer allocation
+   RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
 
    VectorSchemaRoot vectorSchemaRoot = createVectorSchemaRoot();
 
-
 .. code-block:: java
-   :emphasize-lines: 1-6
+   :emphasize-lines: 1
 
    jshell> System.out.println(vectorSchemaRoot.contentToTSVString())
 
@@ -155,12 +148,10 @@ Write - Random Access to File
 .. code-block:: java
    :emphasize-lines: 9
 
-   import org.apache.arrow.vector.ipc.*;
+   import org.apache.arrow.vector.ipc.ArrowFileWriter;
+   import java.io.File;
+   import java.io.FileOutputStream;
 
-   import java.io.*;
-
-   // random access format
-   // write - random access to file
    File file = new File("randon_access.arrow");
    FileOutputStream fileOutputStream = new FileOutputStream(file);
    ArrowFileWriter writer = new ArrowFileWriter(vectorSchemaRoot, null, fileOutputStream.getChannel());
@@ -174,18 +165,15 @@ Write - Random Access to Buffer
 .. code-block:: java
    :emphasize-lines: 8
 
-   import org.apache.arrow.vector.ipc.*;
-
-   import java.io.*;
+   import org.apache.arrow.vector.ipc.ArrowFileWriter;
+   import java.io.ByteArrayOutputStream;
    import java.nio.channels.Channels;
 
-   // write - random access to buffer
    ByteArrayOutputStream out = new ByteArrayOutputStream();
    ArrowFileWriter writerBuffer = new ArrowFileWriter(vectorSchemaRoot, null, Channels.newChannel(out));
    writerBuffer.start();
    writerBuffer.writeBatch();
    writerBuffer.end();
-
 
 Writing Arrays with the IPC Streamed Format
 *******************************************
@@ -196,12 +184,10 @@ Write - Streaming to File
 .. code-block:: java
    :emphasize-lines: 9
 
-   import org.apache.arrow.vector.ipc.*;
+   import org.apache.arrow.vector.ipc.ArrowStreamWriter;
+   import java.io.File;
+   import java.io.FileOutputStream;
 
-   import java.io.*;
-
-   // streaming format
-   // write - streaming to file
    File fileStream = new File("streaming.arrow");
    FileOutputStream fileOutputStreamforStream = new FileOutputStream(fileStream);
    ArrowStreamWriter writerStream = new ArrowStreamWriter(vectorSchemaRoot, null, fileOutputStreamforStream);
@@ -215,11 +201,9 @@ Write - Streaming to Buffer
 .. code-block:: java
    :emphasize-lines: 8
 
-   import org.apache.arrow.vector.ipc.*;
+   import org.apache.arrow.vector.ipc.ArrowStreamWriter;
+   import java.io.ByteArrayOutputStream;
 
-   import java.io.*;
-
-   // write - streaming to buffer
    ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
    ArrowStreamWriter writerStreamBuffer = new ArrowStreamWriter(vectorSchemaRoot, null, outBuffer);
    writerStreamBuffer.start();
@@ -240,18 +224,17 @@ Consider: Before to run next code you need to write array to file with `Write - 
 .. code-block:: java
    :emphasize-lines: 7
 
-   import org.apache.arrow.vector.ipc.*;
+   import org.apache.arrow.vector.ipc.ArrowFileReader;
+   import org.apache.arrow.vector.VectorSchemaRoot;
+   import java.io.FileInputStream;
 
-   import java.io.*;
-
-   // read - random access to file
    FileInputStream fileInputStream = new FileInputStream(file);
    ArrowFileReader reader = new ArrowFileReader(fileInputStream.getChannel(), rootAllocator);
    reader.loadNextBatch();
    VectorSchemaRoot vectorSchemaRootReaded = reader.getVectorSchemaRoot();
 
 .. code-block:: java
-   :emphasize-lines: 1-6
+   :emphasize-lines: 1
 
 
    jshell> System.out.println(vectorSchemaRootReaded.contentToTSVString())
@@ -269,18 +252,17 @@ Consider: Before to run next code you need to write array to file with `Write - 
 .. code-block:: java
    :emphasize-lines: 7
 
-   import org.apache.arrow.vector.ipc.*;
+   import org.apache.arrow.vector.ipc.ArrowFileReader;
+   import org.apache.arrow.vector.ipc.SeekableReadChannel;
+   import org.apache.arrow.vector.VectorSchemaRoot;
    import org.apache.arrow.vector.util.ByteArrayReadableSeekableByteChannel;
 
-   import java.io.*;
-
-   // read - random access to buffer
    ArrowFileReader readerBuffer = new ArrowFileReader(new SeekableReadChannel(new ByteArrayReadableSeekableByteChannel(out.toByteArray())), rootAllocator);
    readerBuffer.loadNextBatch();
    VectorSchemaRoot vectorSchemaRootRandomReadedFromBuffer = readerBuffer.getVectorSchemaRoot();
 
 .. code-block:: java
-   :emphasize-lines: 1-6
+   :emphasize-lines: 1
 
    jshell> System.out.println(vectorSchemaRootRandomReadedFromBuffer.contentToTSVString())
 
@@ -300,18 +282,18 @@ Consider: Before to run next code you need to write array to file with `Write - 
 .. code-block:: java
    :emphasize-lines: 7
 
-   import org.apache.arrow.vector.ipc.*;
+   import org.apache.arrow.vector.ipc.ArrowStreamReader;
+   import java.io.FileInputStream;
+   import org.apache.arrow.vector.VectorSchemaRoot;
+   import java.io.FileInputStream;
 
-   import java.io.*;
-
-   // read -Streaming to file
    FileInputStream fileInputStreamForStream = new FileInputStream(fileStream);
    ArrowStreamReader readerStream = new ArrowStreamReader(fileInputStreamForStream, rootAllocator);
    readerStream.loadNextBatch();
    VectorSchemaRoot vectorSchemaRootReadedForStream = readerStream.getVectorSchemaRoot();
 
 .. code-block:: java
-   :emphasize-lines: 1-6
+   :emphasize-lines: 1
 
    jshell> System.out.println(vectorSchemaRootReadedForStream.contentToTSVString())
 
@@ -328,17 +310,16 @@ Consider: Before to run next code you need to write array to file with `Write - 
 .. code-block:: java
    :emphasize-lines: 6
 
-   import org.apache.arrow.vector.ipc.*;
+   import org.apache.arrow.vector.ipc.ArrowStreamReader;
+   import org.apache.arrow.vector.VectorSchemaRoot;
+   import java.io.ByteArrayInputStream;
 
-   import java.io.*;
-
-   // read - Streaming to buffer
    ArrowStreamReader readerBufferForStream = new ArrowStreamReader(new ByteArrayInputStream(outBuffer.toByteArray()), rootAllocator);
    readerBufferForStream.loadNextBatch();
    VectorSchemaRoot vectorSchemaRootStreamingReadedFromBuffer = readerBufferForStream.getVectorSchemaRoot();
 
 .. code-block:: java
-   :emphasize-lines: 1-6
+   :emphasize-lines: 1
 
    jshell> System.out.println(vectorSchemaRootStreamingReadedFromBuffer.contentToTSVString())
 

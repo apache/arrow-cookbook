@@ -17,7 +17,18 @@
 
 package flight;
 
-import org.apache.arrow.flight.*;
+import org.apache.arrow.flight.Action;
+import org.apache.arrow.flight.ActionType;
+import org.apache.arrow.flight.CallStatus;
+import org.apache.arrow.flight.Criteria;
+import org.apache.arrow.flight.FlightDescriptor;
+import org.apache.arrow.flight.FlightInfo;
+import org.apache.arrow.flight.FlightProducer;
+import org.apache.arrow.flight.FlightStream;
+import org.apache.arrow.flight.Location;
+import org.apache.arrow.flight.PutResult;
+import org.apache.arrow.flight.Result;
+import org.apache.arrow.flight.Ticket;
 import org.apache.arrow.flight.example.ExampleTicket;
 import org.apache.arrow.flight.example.FlightHolder;
 import org.apache.arrow.flight.example.Stream;

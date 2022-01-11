@@ -5,76 +5,7 @@ Working with schema
 Common definition of table has an schema. Java arrow is columnar oriented and it also has an schema representation. 
 Consider that each name on the schema maps to a columns for a predefined data type
 
-
 .. contents::
-
-We are going to use this util for creating arrow objects:
-
-.. code-block:: java
-
-   import org.apache.arrow.memory.RootAllocator;
-   import org.apache.arrow.vector.BitVectorHelper;
-   import org.apache.arrow.vector.IntVector;
-   import org.apache.arrow.vector.VarCharVector;
-   import org.apache.arrow.vector.complex.BaseRepeatedValueVector;
-   import org.apache.arrow.vector.complex.ListVector;
-   import org.apache.arrow.vector.types.Types;
-   import org.apache.arrow.vector.types.pojo.FieldType;
-
-   import java.util.List;
-
-
-   void setVector(IntVector vector, Integer... values) {
-       final int length = values.length;
-       vector.allocateNew(length);
-       for (int i = 0; i < length; i++) {
-           if (values[i] != null) {
-               vector.set(i, values[i]);
-           }
-       }
-       vector.setValueCount(length);
-   }
-
-   void setVector(VarCharVector vector, byte[]... values) {
-       final int length = values.length;
-       vector.allocateNewSafe();
-       for (int i = 0; i < length; i++) {
-           if (values[i] != null) {
-               vector.set(i, values[i]);
-           }
-       }
-       vector.setValueCount(length);
-   }
-
-   void setVector(ListVector vector, List<Integer>... values) {
-       vector.allocateNewSafe();
-       Types.MinorType type = Types.MinorType.INT;
-       vector.addOrGetVector(FieldType.nullable(type.getType()));
-
-       IntVector dataVector = (IntVector) vector.getDataVector();
-       dataVector.allocateNew();
-
-       // set underlying vectors
-       int curPos = 0;
-       vector.getOffsetBuffer().setInt(0, curPos);
-       for (int i = 0; i < values.length; i++) {
-           if (values[i] == null) {
-               BitVectorHelper.unsetBit(vector.getValidityBuffer(), i);
-           } else {
-               BitVectorHelper.setBit(vector.getValidityBuffer(), i);
-               for (int value : values[i]) {
-                   dataVector.setSafe(curPos, value);
-                   curPos += 1;
-               }
-           }
-           vector.getOffsetBuffer().setInt((i + 1) * BaseRepeatedValueVector.OFFSET_WIDTH, curPos);
-       }
-       dataVector.setValueCount(curPos);
-       vector.setLastSet(values.length - 1);
-       vector.setValueCount(values.length);
-   }
-
-   RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE); // deal with byte buffer allocation
 
 Define data type
 ================
@@ -160,9 +91,71 @@ Populate data
 =============
 
 .. code-block:: java
-   :emphasize-lines: 3,12-15
+   :emphasize-lines: 12,23,34
 
-   import org.apache.arrow.vector.*;
+   import org.apache.arrow.memory.RootAllocator;
+   import org.apache.arrow.vector.BitVectorHelper;
+   import org.apache.arrow.vector.IntVector;
+   import org.apache.arrow.vector.VarCharVector;
+   import org.apache.arrow.vector.complex.BaseRepeatedValueVector;
+   import org.apache.arrow.vector.complex.ListVector;
+   import org.apache.arrow.vector.types.Types;
+   import org.apache.arrow.vector.types.pojo.FieldType;
+   import org.apache.arrow.vector.VectorSchemaRoot;
+
+   import java.util.List;
+
+   void setVector(IntVector vector, Integer... values) {
+       final int length = values.length;
+       vector.allocateNew(length);
+       for (int i = 0; i < length; i++) {
+           if (values[i] != null) {
+               vector.set(i, values[i]);
+           }
+       }
+       vector.setValueCount(length);
+   }
+
+   void setVector(VarCharVector vector, byte[]... values) {
+       final int length = values.length;
+       vector.allocateNewSafe();
+       for (int i = 0; i < length; i++) {
+           if (values[i] != null) {
+               vector.set(i, values[i]);
+           }
+       }
+       vector.setValueCount(length);
+   }
+
+   void setVector(ListVector vector, List<Integer>... values) {
+       vector.allocateNewSafe();
+       Types.MinorType type = Types.MinorType.INT;
+       vector.addOrGetVector(FieldType.nullable(type.getType()));
+
+       IntVector dataVector = (IntVector) vector.getDataVector();
+       dataVector.allocateNew();
+
+       // set underlying vectors
+       int curPos = 0;
+       vector.getOffsetBuffer().setInt(0, curPos);
+       for (int i = 0; i < values.length; i++) {
+           if (values[i] == null) {
+               BitVectorHelper.unsetBit(vector.getValidityBuffer(), i);
+           } else {
+               BitVectorHelper.setBit(vector.getValidityBuffer(), i);
+               for (int value : values[i]) {
+                   dataVector.setSafe(curPos, value);
+                   curPos += 1;
+               }
+           }
+           vector.getOffsetBuffer().setInt((i + 1) * BaseRepeatedValueVector.OFFSET_WIDTH, curPos);
+       }
+       dataVector.setValueCount(curPos);
+       vector.setLastSet(values.length - 1);
+       vector.setValueCount(values.length);
+   }
+
+   RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
 
    VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator);
 
@@ -183,6 +176,7 @@ Populate data
 Render data & metadata:
 
 .. code-block:: java
+   :emphasize-lines: 1,8
 
    jshell> System.out.println(vectorSchemaRoot.contentToTSVString());
 
@@ -267,6 +261,7 @@ Java arrow offer Schema.fromJSON() method to create an schema from json definiti
    Schema schemaPersonFromJson = Schema.fromJSON(jsonSchemaDefnition);
 
 .. code-block:: java
+   :emphasize-lines: 1,5
 
     jshell> schemaPersonFromJson
 

@@ -11,10 +11,10 @@ Recipes related to leveraging Arrow Flight protocol
 Simple Service with Arrow Flight
 ================================
 
-Common Classes
-**************
+Flight Producer and Server
+**************************
 
-We are going to use this util for data manipulation:
+We are going to create: Flight Producer and Fligh Server:
 
 * InMemoryStore: A FlightProducer that hosts an in memory store of Arrow buffers. Used for integration testing.
 
@@ -31,9 +31,20 @@ A FlightProducer that hosts an in memory store of Arrow buffers. Used for integr
 
 .. code-block:: java
    :name: UtilStore
-   :emphasize-lines: 17,44-45,65-66,78-79,89-90,122-123,139-140,149-150
+   :emphasize-lines: 28,55-56,76-77,89-90,100-101,133-134,150-151,160-161
 
-    import org.apache.arrow.flight.*;
+    import org.apache.arrow.flight.Action;
+    import org.apache.arrow.flight.ActionType;
+    import org.apache.arrow.flight.CallStatus;
+    import org.apache.arrow.flight.Criteria;
+    import org.apache.arrow.flight.FlightDescriptor;
+    import org.apache.arrow.flight.FlightInfo;
+    import org.apache.arrow.flight.FlightProducer;
+    import org.apache.arrow.flight.FlightStream;
+    import org.apache.arrow.flight.Location;
+    import org.apache.arrow.flight.PutResult;
+    import org.apache.arrow.flight.Result;
+    import org.apache.arrow.flight.Ticket;
     import org.apache.arrow.flight.example.ExampleTicket;
     import org.apache.arrow.flight.example.FlightHolder;
     import org.apache.arrow.flight.example.Stream;
@@ -311,7 +322,7 @@ Validate lists actions available on the Flight service:
     }
 
 .. code-block:: java
-   :emphasize-lines: 1-3
+   :emphasize-lines: 1
 
     jshell> actionTypes
 
@@ -337,22 +348,135 @@ Get List Flights
 Put Data
 --------
 
-Consider: Populate VectorSchemaRoot as it was created at :ref:`arrow-io` to create vectorSchemaRoot variable: VectorSchemaRoot vectorSchemaRoot = createVectorSchemaRoot();
+Lets create one VectorSchemaRoot using createVectorSchemaRoot method defined below:
 
 .. code-block:: java
-   :emphasize-lines: 1
+   :emphasize-lines: 21
 
-   VectorSchemaRoot vectorSchemaRoot = createVectorSchemaRoot();
+   import org.apache.arrow.memory.RootAllocator;
+   import org.apache.arrow.vector.BitVectorHelper;
+   import org.apache.arrow.vector.IntVector;
+   import org.apache.arrow.vector.VarCharVector;
+   import org.apache.arrow.vector.VectorSchemaRoot;
+   import org.apache.arrow.vector.complex.BaseRepeatedValueVector;
+   import org.apache.arrow.vector.complex.ListVector;
+   import org.apache.arrow.vector.types.Types;
+   import org.apache.arrow.vector.types.pojo.ArrowType;
+   import org.apache.arrow.vector.types.pojo.Field;
+   import org.apache.arrow.vector.types.pojo.FieldType;
+   import org.apache.arrow.vector.types.pojo.Schema;
 
-.. code-block:: java
-   :emphasize-lines: 1-6
+   import java.util.ArrayList;
+   import java.util.HashMap;
+   import java.util.List;
+   import java.util.Map;
 
-   jshell> System.out.println(vectorSchemaRoot.contentToTSVString())
+   import static java.util.Arrays.asList;
 
-   name     document age   points
-   david    A        10    [1,3,5,7,9]
-   gladis   B        20    [2,4,6,8,10]
-   juan     C        30    [1,2,3,5,8]
+      void setVector(IntVector vector, Integer... values) {
+       final int length = values.length;
+       vector.allocateNew(length);
+       for (int i = 0; i < length; i++) {
+           if (values[i] != null) {
+               vector.set(i, values[i]);
+           }
+       }
+       vector.setValueCount(length);
+   }
+
+   void setVector(VarCharVector vector, byte[]... values) {
+       final int length = values.length;
+       vector.allocateNewSafe();
+       for (int i = 0; i < length; i++) {
+           if (values[i] != null) {
+               vector.set(i, values[i]);
+           }
+       }
+       vector.setValueCount(length);
+   }
+
+   void setVector(ListVector vector, List<Integer>... values) {
+       vector.allocateNewSafe();
+       Types.MinorType type = Types.MinorType.INT;
+       vector.addOrGetVector(FieldType.nullable(type.getType()));
+
+       IntVector dataVector = (IntVector) vector.getDataVector();
+       dataVector.allocateNew();
+
+       // set underlying vectors
+       int curPos = 0;
+       vector.getOffsetBuffer().setInt(0, curPos);
+       for (int i = 0; i < values.length; i++) {
+           if (values[i] == null) {
+               BitVectorHelper.unsetBit(vector.getValidityBuffer(), i);
+           } else {
+               BitVectorHelper.setBit(vector.getValidityBuffer(), i);
+               for (int value : values[i]) {
+                   dataVector.setSafe(curPos, value);
+                   curPos += 1;
+               }
+           }
+           vector.getOffsetBuffer().setInt((i + 1) * BaseRepeatedValueVector.OFFSET_WIDTH, curPos);
+       }
+       dataVector.setValueCount(curPos);
+       vector.setLastSet(values.length - 1);
+       vector.setValueCount(values.length);
+   }
+
+   VectorSchemaRoot createVectorSchemaRoot(){
+       // create a column data type
+       Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
+
+       Map<String, String> metadata = new HashMap<>();
+       metadata.put("A", "Id card");
+       metadata.put("B", "Passport");
+       metadata.put("C", "Visa");
+       Field document = new Field("document", new FieldType(true, new ArrowType.Utf8(), null, metadata), null);
+
+       Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
+
+       FieldType intType = new FieldType(true, new ArrowType.Int(32, true), /*dictionary=*/null);
+       FieldType listType = new FieldType(true, new ArrowType.List(), /*dictionary=*/null);
+       Field childField = new Field("intCol", intType, null);
+       List<Field> childFields = new ArrayList<>();
+       childFields.add(childField);
+       Field points = new Field("points", listType, childFields);
+
+       // create a definition
+       Schema schemaPerson = new Schema(asList(name, document, age, points));
+
+       RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE); // deal with byte buffer allocation
+       VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator);
+
+       // getting field vectors
+       VarCharVector nameVectorOption1 = (VarCharVector) vectorSchemaRoot.getVector("name"); //interface FieldVector
+       VarCharVector documentVectorOption1 = (VarCharVector) vectorSchemaRoot.getVector("document"); //interface FieldVector
+       IntVector ageVectorOption1 = (IntVector) vectorSchemaRoot.getVector("age");
+       ListVector pointsVectorOption1 = (ListVector) vectorSchemaRoot.getVector("points");
+
+       // add values to the field vectors
+       setVector(nameVectorOption1, "david".getBytes(), "gladis".getBytes(), "juan".getBytes());
+       setVector(documentVectorOption1, "A".getBytes(), "B".getBytes(), "C".getBytes());
+       setVector(ageVectorOption1, 10,20,30);
+       setVector(pointsVectorOption1, asList(1,3,5,7,9), asList(2,4,6,8,10), asList(1,2,3,5,8));
+       vectorSchemaRoot.setRowCount(3);
+
+       return vectorSchemaRoot;
+   }
+
+.. code-block:: 
+   :emphasize-lines: 1,5
+
+    jshell> VectorSchemaRoot vectorSchemaRoot = createVectorSchemaRoot();
+
+    vectorSchemaRoot ==> org.apache.arrow.vector.VectorSchemaRoot@3d1848cc
+
+    jshell> System.out.println(vectorSchemaRoot.contentToTSVString())
+
+    name     document age   points
+    david    A        10    [1,3,5,7,9]
+    gladis   B        20    [2,4,6,8,10]
+    juan     C        30    [1,2,3,5,8]
 
 Let transfer data of vectorSchemaRoot:
 
@@ -360,6 +484,7 @@ Let transfer data of vectorSchemaRoot:
    :emphasize-lines: 12,20,25,31
 
     import org.apache.arrow.flight.FlightClient;
+    import org.apache.arrow.flight.AsyncPutListener;
 
     /**
      * 2.- Exchange data.
@@ -402,7 +527,7 @@ Get list actions updated:
     listFlights = client.listFlights(Criteria.ALL);
 
 .. code-block:: java
-   :emphasize-lines: 1-13
+   :emphasize-lines: 1
 
     jshell> listFlights.forEach(t -> System.out.println(t));
 
@@ -424,7 +549,7 @@ Get Info per Path
 .. code-block:: java
    :emphasize-lines: 7
 
-    import org.apache.arrow.flight.*;
+    import org.apache.arrow.flight.FlightInfo;
 
     /**
      * 3.- Get info por new path just created
@@ -433,7 +558,7 @@ Get Info per Path
     FlightInfo info = client.getInfo(FlightDescriptor.path("hello"));
 
 .. code-block:: java
-   :emphasize-lines: 1-3
+   :emphasize-lines: 1
 
    jshell> info
 
@@ -445,7 +570,7 @@ Request Data
 .. code-block:: java
    :emphasize-lines: 9
 
-    import org.apache.arrow.flight.*;
+    import org.apache.arrow.flight.FlightStream;
 
     /**
      * 4.- Request data per path
@@ -460,7 +585,7 @@ Request Data
     }
 
 .. code-block:: java
-   :emphasize-lines: 1-6
+   :emphasize-lines: 1
 
     jshell> System.out.println(dataResponse);
 

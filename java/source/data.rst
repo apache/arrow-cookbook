@@ -10,10 +10,21 @@ We are going to use this util for data manipulation:
 
 .. code-block:: java
 
-   import org.apache.arrow.algorithm.sort.VectorValueComparator;
-   import org.apache.arrow.memory.RootAllocator;
+Compare Vectors for Field Equality
+==================================
+
+.. code-block:: java
+   :emphasize-lines: 10
+
    import org.apache.arrow.vector.IntVector;
-   import org.apache.arrow.vector.VarCharVector;
+   import org.apache.arrow.vector.compare.TypeEqualsVisitor;
+   import org.apache.arrow.memory.RootAllocator;
+
+   RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
+
+   IntVector right = new IntVector("int", rootAllocator);
+   IntVector left1 = new IntVector("int", rootAllocator);
+   IntVector left2 = new IntVector("int2", rootAllocator);
 
    void setVector(IntVector vector, Integer... values) {
        final int length = values.length;
@@ -24,35 +35,7 @@ We are going to use this util for data manipulation:
            }
        }
        vector.setValueCount(length);
-   }
-
-   class TestVectorValueComparator extends VectorValueComparator<VarCharVector> {
-       @Override
-       public int compareNotNull(int index1, int index2) {
-           byte b1 = vector1.get(index1)[0];
-           byte b2 = vector2.get(index2)[0];
-           return b1 - b2;
-       }
-
-       @Override
-       public VectorValueComparator<VarCharVector> createNew() {
-           return new TestVectorValueComparator();
-       }
-   }
-   RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE); // deal with byte buffer allocation
-
-Compare Vectors for Field Equality
-==================================
-
-.. code-block:: java
-   :emphasize-lines: 10
-
-   import org.apache.arrow.vector.IntVector;
-   import org.apache.arrow.vector.compare.TypeEqualsVisitor;
-
-   IntVector right = new IntVector("int", rootAllocator);
-   IntVector left1 = new IntVector("int", rootAllocator);
-   IntVector left2 = new IntVector("int2", rootAllocator);
+   }   
 
    setVector(right, 10,20,30);
 
@@ -61,7 +44,7 @@ Compare Vectors for Field Equality
 Comparing vector fields:
 
 .. code-block:: java
-   :emphasize-lines: 1-4
+   :emphasize-lines: 1,3
 
    jshell> visitor.equals(left1);
    true
@@ -77,9 +60,24 @@ Compare Values on the Array
    import org.apache.arrow.algorithm.sort.StableVectorComparator;
    import org.apache.arrow.algorithm.sort.VectorValueComparator;
    import org.apache.arrow.vector.VarCharVector;
+   import org.apache.arrow.memory.RootAllocator;
 
-   // compare two values at the given indices in the vectors.
-   // comparing org.apache.arrow.algorithm.sort.VectorValueComparator on algorithm
+   class TestVectorValueComparator extends VectorValueComparator<VarCharVector> {
+       @Override
+       public int compareNotNull(int index1, int index2) {
+           byte b1 = vector1.get(index1)[0];
+           byte b2 = vector2.get(index2)[0];
+           return b1 - b2;
+       }
+
+       @Override
+       public VectorValueComparator<VarCharVector> createNew() {
+           return new TestVectorValueComparator();
+       }
+   }
+
+   RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
+
    VarCharVector vec = new VarCharVector("valueindexcomparator", rootAllocator);
    vec.allocateNew(100, 5);
    vec.setValueCount(10);
@@ -88,14 +86,14 @@ Compare Values on the Array
    vec.set(2, "aa".getBytes());
    vec.set(3, "abc".getBytes());
    vec.set(4, "a".getBytes());
-   VectorValueComparator<VarCharVector> comparatorValues = new TestVectorValueComparator(); // less than, equal to, greater than
-   VectorValueComparator<VarCharVector> stableComparator = new StableVectorComparator<>(comparatorValues);//Stable comparator only supports comparing values from the same vector
+   VectorValueComparator<VarCharVector> comparatorValues = new TestVectorValueComparator();
+   VectorValueComparator<VarCharVector> stableComparator = new StableVectorComparator<>(comparatorValues);
    stableComparator.attachVector(vec);
 
 Comparing two values at the given indices in the vectors:
 
 .. code-block:: java
-   :emphasize-lines: 1-12
+   :emphasize-lines: 1,3,5,7,9,11
 
    jshell> stableComparator.compare(0, 1) > 0;
    true 
@@ -125,16 +123,17 @@ Algorithm: org.apache.arrow.algorithm.search.VectorSearcher#linearSearch - O(n)
    import org.apache.arrow.algorithm.sort.DefaultVectorComparators;
    import org.apache.arrow.algorithm.sort.VectorValueComparator;
    import org.apache.arrow.vector.IntVector;
+   import org.apache.arrow.memory.RootAllocator;
 
-   // search values on the array
-   // linear search org.apache.arrow.algorithm.search.VectorSearcher#linearSearch - O(n)
+   RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
+
    IntVector rawVector = new IntVector("", rootAllocator);
    IntVector negVector = new IntVector("", rootAllocator);
    rawVector.allocateNew(10);
    rawVector.setValueCount(10);
    negVector.allocateNew(1);
    negVector.setValueCount(1);
-   for (int i = 0; i < 10; i++) { // prepare data in sorted order
+   for (int i = 0; i < 10; i++) {
        if (i == 0) {
            rawVector.setNull(i);
        } else {
@@ -144,7 +143,6 @@ Algorithm: org.apache.arrow.algorithm.search.VectorSearcher#linearSearch - O(n)
    negVector.set(0, -333);
    VectorValueComparator<IntVector> comparatorInt = DefaultVectorComparators.createDefaultComparator(rawVector);
 
-   // do search
    List<Integer> listResultLinearSearch = new ArrayList<Integer>();
    for (int i = 0; i < 10; i++) {
        int result = VectorSearcher.linearSearch(rawVector, comparatorInt, rawVector, i);
@@ -154,7 +152,7 @@ Algorithm: org.apache.arrow.algorithm.search.VectorSearcher#linearSearch - O(n)
 Verify results:
 
 .. code-block:: java
-   :emphasize-lines: 1-3
+   :emphasize-lines: 1
    
    jshell> listResultLinearSearch
 
@@ -172,16 +170,17 @@ Algorithm: org.apache.arrow.algorithm.search.VectorSearcher#binarySearch - O(log
    import org.apache.arrow.algorithm.sort.DefaultVectorComparators;
    import org.apache.arrow.algorithm.sort.VectorValueComparator;
    import org.apache.arrow.vector.IntVector;
+   import org.apache.arrow.memory.RootAllocator;
 
-   // search values on the array
-   // linear search org.apache.arrow.algorithm.search.VectorSearcher#linearSearch - O(n)
+   RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
+
    IntVector rawVector = new IntVector("", rootAllocator);
    IntVector negVector = new IntVector("", rootAllocator);
    rawVector.allocateNew(10);
    rawVector.setValueCount(10);
    negVector.allocateNew(1);
    negVector.setValueCount(1);
-   for (int i = 0; i < 10; i++) { // prepare data in sorted order
+   for (int i = 0; i < 10; i++) {
        if (i == 0) {
            rawVector.setNull(i);
        } else {
@@ -191,7 +190,6 @@ Algorithm: org.apache.arrow.algorithm.search.VectorSearcher#binarySearch - O(log
    negVector.set(0, -333);
    VectorValueComparator<IntVector> comparatorInt = DefaultVectorComparators.createDefaultComparator(rawVector);
 
-   // do search
    List<Integer> listResultBinarySearch = new ArrayList<Integer>();
    for (int i = 0; i < 10; i++) {
        int result = VectorSearcher.binarySearch(rawVector, comparatorInt, rawVector, i);
@@ -201,7 +199,7 @@ Algorithm: org.apache.arrow.algorithm.search.VectorSearcher#binarySearch - O(log
 Verify results:
 
 .. code-block:: java
-   :emphasize-lines: 1-3
+   :emphasize-lines: 1
 
    jshell> listResultBinarySearch
 
@@ -223,12 +221,13 @@ Algorithm: org.apache.arrow.algorithm.sort.FixedWidthInPlaceVectorSorter - O(nlo
    import org.apache.arrow.algorithm.sort.FixedWidthInPlaceVectorSorter;
    import org.apache.arrow.algorithm.sort.VectorValueComparator;
    import org.apache.arrow.vector.IntVector;
+   import org.apache.arrow.memory.RootAllocator;
 
-   // Sort the vector - In-place sorter
+   RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
+
    IntVector vecToSort = new IntVector("in-place-sorter", rootAllocator);
    vecToSort.allocateNew(10);
    vecToSort.setValueCount(10);
-   // fill data to sort
    vecToSort.set(0, 10);
    vecToSort.set(1, 8);
    vecToSort.setNull(2);
@@ -239,7 +238,6 @@ Algorithm: org.apache.arrow.algorithm.sort.FixedWidthInPlaceVectorSorter - O(nlo
    vecToSort.set(7, 23);
    vecToSort.set(8, 35);
    vecToSort.set(9, 2);
-   // sort the vector
    FixedWidthInPlaceVectorSorter sorter = new FixedWidthInPlaceVectorSorter();
    VectorValueComparator<IntVector> comparator = DefaultVectorComparators.createDefaultComparator(vecToSort);
    sorter.sortInPlace(vecToSort, comparator);
@@ -247,7 +245,7 @@ Algorithm: org.apache.arrow.algorithm.sort.FixedWidthInPlaceVectorSorter - O(nlo
 Verify results:
 
 .. code-block:: java
-   :emphasize-lines: 1-22
+   :emphasize-lines: 1,3,5,7,9,11,13,15,17,19
 
    jshell> vecToSort.getValueCount()==10;
    true 
@@ -282,14 +280,18 @@ FixedWidthOutOfPlaceVectorSorter & VariableWidthOutOfPlaceVectorSor
 .. code-block:: java
    :emphasize-lines: 20-25
 
-   import org.apache.arrow.algorithm.sort.*;
+   import org.apache.arrow.algorithm.sort.DefaultVectorComparators;
+   import org.apache.arrow.algorithm.sort.FixedWidthOutOfPlaceVectorSorter;
+   import org.apache.arrow.algorithm.sort.OutOfPlaceVectorSorter;
+   import org.apache.arrow.algorithm.sort.VectorValueComparator;
    import org.apache.arrow.vector.IntVector;
+   import org.apache.arrow.memory.RootAllocator;
 
-   // Sort the vector - Out-of-place sorter:
+   RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
+
    IntVector vecOutOfPlaceSorter = new IntVector("out-of-place-sorter", rootAllocator);
    vecOutOfPlaceSorter.allocateNew(10);
    vecOutOfPlaceSorter.setValueCount(10);
-   // fill data to sort
    vecOutOfPlaceSorter.set(0, 10);
    vecOutOfPlaceSorter.set(1, 8);
    vecOutOfPlaceSorter.setNull(2);
@@ -300,7 +302,6 @@ FixedWidthOutOfPlaceVectorSorter & VariableWidthOutOfPlaceVectorSor
    vecOutOfPlaceSorter.set(7, 23);
    vecOutOfPlaceSorter.set(8, 35);
    vecOutOfPlaceSorter.set(9, 2);
-   // sort the vector
    OutOfPlaceVectorSorter<IntVector> sorterOutOfPlaceSorter = new FixedWidthOutOfPlaceVectorSorter<>();
    VectorValueComparator<IntVector> comparatorOutOfPlaceSorter = DefaultVectorComparators.createDefaultComparator(vecOutOfPlaceSorter);
    IntVector sortedVec = (IntVector) vecOutOfPlaceSorter.getField().getFieldType().createNewSingleVector("new-out-of-place-sorter", rootAllocator, null);
@@ -311,7 +312,7 @@ FixedWidthOutOfPlaceVectorSorter & VariableWidthOutOfPlaceVectorSor
 Verify results:
 
 .. code-block:: java
-   :emphasize-lines: 1-22
+   :emphasize-lines: 1,3,5,7,9,11,13,15,17,19,21
 
    jshell> vecOutOfPlaceSorter.getValueCount()==sortedVec.getValueCount();
    true 
@@ -349,10 +350,10 @@ Question: What is the average age per city that are talking about cryptocurrency
 Solving Use Case
 ****************
 
-Util Functions
---------------
+Populate data
+-------------
 
-We are going to use this util for our use case -  data filter & aggregation
+Populate a VectorSchemaRoot:
 
 .. code-block:: java
 
@@ -369,7 +370,6 @@ We are going to use this util for our use case -  data filter & aggregation
 
     import static java.util.Arrays.asList;
 
-    // define fields
     List<Field> createFields(){
         // create a column data type
         Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
@@ -379,12 +379,10 @@ We are going to use this util for our use case -  data filter & aggregation
         return asList(name, topic, city, age);
     }
 
-    // create schema
     private static Schema createSchema(){
         return new Schema(createFields());
     }
 
-    // create the vector schema root
     RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE); // deal with byte buffer allocation
     VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(createSchema(), rootAllocator);
 
@@ -412,11 +410,10 @@ We are going to use this util for our use case -  data filter & aggregation
 
     // populate data
     void populateData(VectorSchemaRoot vectorSchemaRoot){
-        VarCharVector name = (VarCharVector) vectorSchemaRoot.getVector("name"); //interface FieldVector
-        VarCharVector city = (VarCharVector) vectorSchemaRoot.getVector("city"); //interface FieldVector
-        VarCharVector topic = (VarCharVector) vectorSchemaRoot.getVector("topic"); //interface FieldVector
+        VarCharVector name = (VarCharVector) vectorSchemaRoot.getVector("name");
+        VarCharVector city = (VarCharVector) vectorSchemaRoot.getVector("city");
+        VarCharVector topic = (VarCharVector) vectorSchemaRoot.getVector("topic");
         IntVector age = (IntVector) vectorSchemaRoot.getVector("age");
-        // add values to the field vectors
         setVector(name, "david".getBytes(), "gladis".getBytes(), "juan".getBytes(), "pedro".getBytes(), "oscar".getBytes(), "ronald".getBytes(), "francisco".getBytes());
         setVector(city, "lima".getBytes(), "cuzco".getBytes(), "huancayo".getBytes(), "tarapoto".getBytes(), "lima".getBytes(), "lima".getBytes(), "lima".getBytes());
         setVector(topic, "cryptocurrency".getBytes(), "fashion".getBytes(), "cryptocurrency".getBytes(), "healthcare".getBytes(), "security".getBytes(), "cryptocurrency".getBytes(), "cryptocurrency".getBytes());
@@ -426,10 +423,8 @@ We are going to use this util for our use case -  data filter & aggregation
 
     populateData(vectorSchemaRoot);
 
-
-Render data:
-
 .. code-block:: java
+  :emphasize-lines: 1
 
    jshell> System.out.println(vectorSchemaRoot.contentToTSVString());
 
@@ -446,6 +441,7 @@ Get Index Filter by Age Between 21-27
 -------------------------------------
 
 .. code-block:: java
+  :emphasize-lines: 9
 
     import org.apache.arrow.vector.IntVector;
     import org.apache.arrow.vector.VectorSchemaRoot;
@@ -467,6 +463,7 @@ Get Index Filter by Age Between 21-27
     }
 
 .. code-block:: java
+  :emphasize-lines: 1,3
 
    jshell> getIndexFilterPerAge(vectorSchemaRoot)
 
@@ -498,6 +495,7 @@ Get Index Filter by Topic Cryptocurrency
     }
 
 .. code-block:: java
+  :emphasize-lines: 1,3
 
    jshell> getIndexFilterPerTopic(vectorSchemaRoot)
 
@@ -536,6 +534,7 @@ Cross Index Filter: Age & Topic
     }
 
 .. code-block:: java
+  :emphasize-lines: 1,3
 
    jshell> intersectionIndexFilter(ageSelectedIndexFilterPerAge, ageSelectedIndexFilterPerTopic)
 
@@ -547,6 +546,7 @@ Aggregation
 -----------
 
 .. code-block:: java
+  :emphasize-lines: 12
 
     import org.apache.arrow.vector.IntVector;
     import org.apache.arrow.vector.VarCharVector;
@@ -572,6 +572,7 @@ Aggregation
     }
 
 .. code-block:: java
+  :emphasize-lines: 1,4,7
 
    jshell> doAggregation(ageAndCityIndexFilterIntersection, mapCountCityPerCrossFilter, mapSumAgePerCrossFilter, vectorSchemaRoot);
 
@@ -586,6 +587,7 @@ Report
 ******
 
 .. code-block:: java
+  :emphasize-lines: 3
 
     import java.util.Map;
 
@@ -600,6 +602,7 @@ Report
     }
 
 .. code-block:: java
+  :emphasize-lines: 1
 
    jshell> report(mapCountCityPerCrossFilter, mapSumAgePerCrossFilter);
 
