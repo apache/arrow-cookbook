@@ -16,33 +16,33 @@ We are going to use this util for data manipulation:
    import org.apache.arrow.vector.VarCharVector;
 
    void setVector(IntVector vector, Integer... values) {
-      final int length = values.length;
-      vector.allocateNew(length);
-      for (int i = 0; i < length; i++) {
-          if (values[i] != null) {
-              vector.set(i, values[i]);
-          }
-      }
-      vector.setValueCount(length);
+       final int length = values.length;
+       vector.allocateNew(length);
+       for (int i = 0; i < length; i++) {
+           if (values[i] != null) {
+               vector.set(i, values[i]);
+           }
+       }
+       vector.setValueCount(length);
    }
 
-  class TestVectorValueComparator extends VectorValueComparator<VarCharVector> {
-    @Override
-    public int compareNotNull(int index1, int index2) {
-        byte b1 = vector1.get(index1)[0];
-        byte b2 = vector2.get(index2)[0];
-        return b1 - b2;
-    }
+   class TestVectorValueComparator extends VectorValueComparator<VarCharVector> {
+       @Override
+       public int compareNotNull(int index1, int index2) {
+           byte b1 = vector1.get(index1)[0];
+           byte b2 = vector2.get(index2)[0];
+           return b1 - b2;
+       }
 
-    @Override
-    public VectorValueComparator<VarCharVector> createNew() {
-        return new TestVectorValueComparator();
-    }
-  }
-  RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE); // deal with byte buffer allocation
+       @Override
+       public VectorValueComparator<VarCharVector> createNew() {
+           return new TestVectorValueComparator();
+       }
+   }
+   RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE); // deal with byte buffer allocation
 
-Compare fields on the array
-===========================
+Compare Vectors for Field Equality
+==================================
 
 .. code-block:: java
    :emphasize-lines: 10
@@ -68,7 +68,7 @@ Comparing vector fields:
    jshell> visitor.equals(left2);
    false
 
-Compare values on the array
+Compare Values on the Array
 ===========================
 
 .. code-block:: java
@@ -110,10 +110,10 @@ Comparing two values at the given indices in the vectors:
    jshell> stableComparator.compare(3, 3) == 0;
    true
 
-Search values on the array
+Search Values on the Array
 ==========================
 
-Linear search - O(n)
+Linear Search - O(n)
 ********************
 
 Algorithm: org.apache.arrow.algorithm.search.VectorSearcher#linearSearch - O(n)
@@ -135,11 +135,11 @@ Algorithm: org.apache.arrow.algorithm.search.VectorSearcher#linearSearch - O(n)
    negVector.allocateNew(1);
    negVector.setValueCount(1);
    for (int i = 0; i < 10; i++) { // prepare data in sorted order
-    if (i == 0) {
-        rawVector.setNull(i);
-    } else {
-        rawVector.set(i, i);
-    }
+       if (i == 0) {
+           rawVector.setNull(i);
+       } else {
+           rawVector.set(i, i);
+       }
    }
    negVector.set(0, -333);
    VectorValueComparator<IntVector> comparatorInt = DefaultVectorComparators.createDefaultComparator(rawVector);
@@ -147,8 +147,8 @@ Algorithm: org.apache.arrow.algorithm.search.VectorSearcher#linearSearch - O(n)
    // do search
    List<Integer> listResultLinearSearch = new ArrayList<Integer>();
    for (int i = 0; i < 10; i++) {
-      int result = VectorSearcher.linearSearch(rawVector, comparatorInt, rawVector, i);
-      listResultLinearSearch.add(result);
+       int result = VectorSearcher.linearSearch(rawVector, comparatorInt, rawVector, i);
+       listResultLinearSearch.add(result);
    }
 
 Verify results:
@@ -160,7 +160,7 @@ Verify results:
 
    listResultLinearSearch ==> [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
-Binary search - O(log(n))
+Binary Search - O(log(n))
 *************************
 
 Algorithm: org.apache.arrow.algorithm.search.VectorSearcher#binarySearch - O(log(n))
@@ -182,11 +182,11 @@ Algorithm: org.apache.arrow.algorithm.search.VectorSearcher#binarySearch - O(log
    negVector.allocateNew(1);
    negVector.setValueCount(1);
    for (int i = 0; i < 10; i++) { // prepare data in sorted order
-    if (i == 0) {
-        rawVector.setNull(i);
-    } else {
-        rawVector.set(i, i);
-    }
+       if (i == 0) {
+           rawVector.setNull(i);
+       } else {
+           rawVector.set(i, i);
+       }
    }
    negVector.set(0, -333);
    VectorValueComparator<IntVector> comparatorInt = DefaultVectorComparators.createDefaultComparator(rawVector);
@@ -194,8 +194,8 @@ Algorithm: org.apache.arrow.algorithm.search.VectorSearcher#binarySearch - O(log
    // do search
    List<Integer> listResultBinarySearch = new ArrayList<Integer>();
    for (int i = 0; i < 10; i++) {
-      int result = VectorSearcher.binarySearch(rawVector, comparatorInt, rawVector, i);
-      listResultBinarySearch.add(result);
+       int result = VectorSearcher.binarySearch(rawVector, comparatorInt, rawVector, i);
+       listResultBinarySearch.add(result);
    }
 
 Verify results:
@@ -207,10 +207,10 @@ Verify results:
 
    listResultBinarySearch ==> [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
-Sort values on the array
+Sort Values on the Array
 ========================
 
-In-place sorter - O(nlog(n))
+In-place Sorter - O(nlog(n))
 ****************************
 
 Sorting by manipulating the original vector.
@@ -272,7 +272,7 @@ Verify results:
    jshell> 35==vecToSort.get(9);
    true
 
-Out-place sorter - O(nlog(n))
+Out-place Sorter - O(nlog(n))
 *****************************
 
 Sorting by copies vector elements to a new vector in sorted order - O(nlog(n))
@@ -346,42 +346,42 @@ Scenario: Read data that contains twitter post for analytics
 
 Question: What is the average age per city that are talking about cryptocurrency for people between 21-27 years on twitter post
 
-Solving use case
+Solving Use Case
 ****************
 
-Util functions
+Util Functions
 --------------
 
 We are going to use this util for our use case -  data filter & aggregation
 
 .. code-block:: java
 
-   import org.apache.arrow.memory.RootAllocator;
-   import org.apache.arrow.vector.IntVector;
-   import org.apache.arrow.vector.VarCharVector;
-   import org.apache.arrow.vector.VectorSchemaRoot;
-   import org.apache.arrow.vector.types.pojo.ArrowType;
-   import org.apache.arrow.vector.types.pojo.Field;
-   import org.apache.arrow.vector.types.pojo.FieldType;
-   import org.apache.arrow.vector.types.pojo.Schema;
+    import org.apache.arrow.memory.RootAllocator;
+    import org.apache.arrow.vector.IntVector;
+    import org.apache.arrow.vector.VarCharVector;
+    import org.apache.arrow.vector.VectorSchemaRoot;
+    import org.apache.arrow.vector.types.pojo.ArrowType;
+    import org.apache.arrow.vector.types.pojo.Field;
+    import org.apache.arrow.vector.types.pojo.FieldType;
+    import org.apache.arrow.vector.types.pojo.Schema;
 
-   import java.util.List;
+    import java.util.List;
 
-   import static java.util.Arrays.asList;
+    import static java.util.Arrays.asList;
 
-   // define fields
-   List<Field> createFields(){
-      // create a column data type
-      Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
-      Field topic = new Field("topic", FieldType.nullable(new ArrowType.Utf8()), null);
-      Field city = new Field("city", FieldType.nullable(new ArrowType.Utf8()), null);
-      Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
-      return asList(name, topic, city, age);
-   }
+    // define fields
+    List<Field> createFields(){
+        // create a column data type
+        Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
+        Field topic = new Field("topic", FieldType.nullable(new ArrowType.Utf8()), null);
+        Field city = new Field("city", FieldType.nullable(new ArrowType.Utf8()), null);
+        Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
+        return asList(name, topic, city, age);
+    }
 
-   // create schema
+    // create schema
     private static Schema createSchema(){
-      return new Schema(createFields());
+        return new Schema(createFields());
     }
 
     // create the vector schema root
@@ -389,39 +389,39 @@ We are going to use this util for our use case -  data filter & aggregation
     VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(createSchema(), rootAllocator);
 
     void setVector(IntVector vector, Integer... values) {
-      final int length = values.length;
-      vector.allocateNew(length);
-      for (int i = 0; i < length; i++) {
-         if (values[i] != null) {
-             vector.set(i, values[i]);
-         }
-      }
-      vector.setValueCount(length);
+        final int length = values.length;
+        vector.allocateNew(length);
+        for (int i = 0; i < length; i++) {
+            if (values[i] != null) {
+                vector.set(i, values[i]);
+            }
+        }
+        vector.setValueCount(length);
     }
 
     void setVector(VarCharVector vector, byte[]... values) {
-      final int length = values.length;
-      vector.allocateNewSafe();
-      for (int i = 0; i < length; i++) {
-         if (values[i] != null) {
-             vector.set(i, values[i]);
-         }
-      }
-      vector.setValueCount(length);
+        final int length = values.length;
+        vector.allocateNewSafe();
+        for (int i = 0; i < length; i++) {
+            if (values[i] != null) {
+                vector.set(i, values[i]);
+            }
+        }
+        vector.setValueCount(length);
     }
 
     // populate data
     void populateData(VectorSchemaRoot vectorSchemaRoot){
-      VarCharVector name = (VarCharVector) vectorSchemaRoot.getVector("name"); //interface FieldVector
-      VarCharVector city = (VarCharVector) vectorSchemaRoot.getVector("city"); //interface FieldVector
-      VarCharVector topic = (VarCharVector) vectorSchemaRoot.getVector("topic"); //interface FieldVector
-      IntVector age = (IntVector) vectorSchemaRoot.getVector("age");
-      // add values to the field vectors
-      setVector(name, "david".getBytes(), "gladis".getBytes(), "juan".getBytes(), "pedro".getBytes(), "oscar".getBytes(), "ronald".getBytes(), "francisco".getBytes());
-      setVector(city, "lima".getBytes(), "cuzco".getBytes(), "huancayo".getBytes(), "tarapoto".getBytes(), "lima".getBytes(), "lima".getBytes(), "lima".getBytes());
-      setVector(topic, "cryptocurrency".getBytes(), "fashion".getBytes(), "cryptocurrency".getBytes(), "healthcare".getBytes(), "security".getBytes(), "cryptocurrency".getBytes(), "cryptocurrency".getBytes());
-      setVector(age, 21, 22, 26, 23, 27, 44, 25);
-      vectorSchemaRoot.setRowCount(7);
+        VarCharVector name = (VarCharVector) vectorSchemaRoot.getVector("name"); //interface FieldVector
+        VarCharVector city = (VarCharVector) vectorSchemaRoot.getVector("city"); //interface FieldVector
+        VarCharVector topic = (VarCharVector) vectorSchemaRoot.getVector("topic"); //interface FieldVector
+        IntVector age = (IntVector) vectorSchemaRoot.getVector("age");
+        // add values to the field vectors
+        setVector(name, "david".getBytes(), "gladis".getBytes(), "juan".getBytes(), "pedro".getBytes(), "oscar".getBytes(), "ronald".getBytes(), "francisco".getBytes());
+        setVector(city, "lima".getBytes(), "cuzco".getBytes(), "huancayo".getBytes(), "tarapoto".getBytes(), "lima".getBytes(), "lima".getBytes(), "lima".getBytes());
+        setVector(topic, "cryptocurrency".getBytes(), "fashion".getBytes(), "cryptocurrency".getBytes(), "healthcare".getBytes(), "security".getBytes(), "cryptocurrency".getBytes(), "cryptocurrency".getBytes());
+        setVector(age, 21, 22, 26, 23, 27, 44, 25);
+        vectorSchemaRoot.setRowCount(7);
     }
 
     populateData(vectorSchemaRoot);
@@ -442,29 +442,29 @@ Render data:
    ronald      cryptocurrency lima     44
    francisco   cryptocurrency lima     25
 
-Get index filter by age between 21-27
+Get Index Filter by Age Between 21-27
 -------------------------------------
 
 .. code-block:: java
 
-   import org.apache.arrow.vector.IntVector;
-   import org.apache.arrow.vector.VectorSchemaRoot;
+    import org.apache.arrow.vector.IntVector;
+    import org.apache.arrow.vector.VectorSchemaRoot;
 
-   import java.util.ArrayList;
-   import java.util.List;
+    import java.util.ArrayList;
+    import java.util.List;
 
-   List ageSelectedIndexFilterPerAge = new ArrayList<Integer>();
+    List ageSelectedIndexFilterPerAge = new ArrayList<Integer>();
 
-   void getIndexFilterPerAge(VectorSchemaRoot schemaRoot) {
-     IntVector ageVector = (IntVector) schemaRoot.getVector("age");
-     
-     for (int i = 0; i < schemaRoot.getRowCount(); i++) {
-         int current = ageVector.get(i);
-         if (21 <= current && current <= 27) { // Get index for age between 21-27
-             ageSelectedIndexFilterPerAge.add(i);
-         }
-     }
-   }
+    void getIndexFilterPerAge(VectorSchemaRoot schemaRoot) {
+        IntVector ageVector = (IntVector) schemaRoot.getVector("age");
+
+        for (int i = 0; i < schemaRoot.getRowCount(); i++) {
+            int current = ageVector.get(i);
+            if (21 <= current && current <= 27) { // Get index for age between 21-27
+                ageSelectedIndexFilterPerAge.add(i);
+            }
+        }
+    }
 
 .. code-block:: java
 
@@ -473,28 +473,28 @@ Get index filter by age between 21-27
    jshell> ageSelectedIndexFilterPerAge
    ageSelectedIndexFilterPerAge ==> [0, 1, 2, 3, 4, 6]
 
-Get index filter by topic cryptocurrency
+Get Index Filter by Topic Cryptocurrency
 ----------------------------------------
 
 .. code-block:: java
 
-   import org.apache.arrow.vector.IntVector;
-   import org.apache.arrow.vector.VectorSchemaRoot;
+    import org.apache.arrow.vector.IntVector;
+    import org.apache.arrow.vector.VectorSchemaRoot;
 
-   import java.util.ArrayList;
-   import java.util.List;
+    import java.util.ArrayList;
+    import java.util.List;
 
-   List ageSelectedIndexFilterPerTopic = new ArrayList<Integer>();
+    List ageSelectedIndexFilterPerTopic = new ArrayList<Integer>();
 
-   void getIndexFilterPerTopic(VectorSchemaRoot schemaRoot) {
-     VarCharVector topicVector = (VarCharVector) schemaRoot.getVector("topic");
-     byte[] byteToSearch = "cryptocurrency".getBytes();
-     
-     for (int i = 0; i < schemaRoot.getRowCount(); i++) {
-         if(Arrays.equals(topicVector.get(i), byteToSearch)){ // Get index for city equals to lima
-             ageSelectedIndexFilterPerTopic.add(i);
-         }
-     }
+    void getIndexFilterPerTopic(VectorSchemaRoot schemaRoot) {
+        VarCharVector topicVector = (VarCharVector) schemaRoot.getVector("topic");
+        byte[] byteToSearch = "cryptocurrency".getBytes();
+
+        for (int i = 0; i < schemaRoot.getRowCount(); i++) {
+            if(Arrays.equals(topicVector.get(i), byteToSearch)){ // Get index for city equals to lima
+                ageSelectedIndexFilterPerTopic.add(i);
+            }
+        }
     }
 
 .. code-block:: java
@@ -504,36 +504,36 @@ Get index filter by topic cryptocurrency
    jshell> ageSelectedIndexFilterPerTopic
    ageSelectedIndexFilterPerTopic ==> [0, 2, 5, 6]
 
-Cross index filter: age & topic
+Cross Index Filter: Age & Topic
 -------------------------------
 
 .. code-block:: java
 
-   import org.apache.arrow.vector.IntVector;
-   import org.apache.arrow.vector.VectorSchemaRoot;
+    import org.apache.arrow.vector.IntVector;
+    import org.apache.arrow.vector.VectorSchemaRoot;
 
-   import java.util.ArrayList;
-   import java.util.List;
+    import java.util.ArrayList;
+    import java.util.List;
 
-   List ageAndCityIndexFilterIntersection = new ArrayList<Integer>();
+    List ageAndCityIndexFilterIntersection = new ArrayList<Integer>();
 
-   void intersectionIndexFilter(List<Integer> firstIndex, List<Integer> secondIndex) {
-     
-     int indexAge = 0;
-     int indexCity = 0;
+    void intersectionIndexFilter(List<Integer> firstIndex, List<Integer> secondIndex) {
 
-     while (indexAge < firstIndex.size() && indexCity < secondIndex.size()) {
-         if (firstIndex.get(indexAge) < secondIndex.get(indexCity)) {
-             indexAge++;
-         } else if (firstIndex.get(indexAge) > secondIndex.get(indexCity)) {
-             indexCity++;
-         } else {
-             ageAndCityIndexFilterIntersection.add(firstIndex.get(indexAge));
-             indexAge++;
-             indexCity++;
-         }
-     }
-   }
+        int indexAge = 0;
+        int indexCity = 0;
+
+        while (indexAge < firstIndex.size() && indexCity < secondIndex.size()) {
+            if (firstIndex.get(indexAge) < secondIndex.get(indexCity)) {
+                indexAge++;
+            } else if (firstIndex.get(indexAge) > secondIndex.get(indexCity)) {
+                indexCity++;
+            } else {
+                ageAndCityIndexFilterIntersection.add(firstIndex.get(indexAge));
+                indexAge++;
+                indexCity++;
+            }
+        }
+    }
 
 .. code-block:: java
 
@@ -548,18 +548,18 @@ Aggregation
 
 .. code-block:: java
 
-   import org.apache.arrow.vector.IntVector;
-   import org.apache.arrow.vector.VarCharVector;
-   import org.apache.arrow.vector.VectorSchemaRoot;
+    import org.apache.arrow.vector.IntVector;
+    import org.apache.arrow.vector.VarCharVector;
+    import org.apache.arrow.vector.VectorSchemaRoot;
 
-   import java.nio.charset.StandardCharsets;
-   import java.util.List;
-   import java.util.Map;
+    import java.nio.charset.StandardCharsets;
+    import java.util.List;
+    import java.util.Map;
 
-   Map mapCountCityPerCrossFilter = new HashMap<String, Integer>();
-   Map mapSumAgePerCrossFilter = new HashMap<Integer, Integer>();
+    Map mapCountCityPerCrossFilter = new HashMap<String, Integer>();
+    Map mapSumAgePerCrossFilter = new HashMap<Integer, Integer>();
 
-   void doAggregation(List<Integer> crossFilterIndex, Map mapCountCityPerCrossFilter, Map mapSumAgePerCrossFilter, VectorSchemaRoot vectorSchemaRoot){
+    void doAggregation(List<Integer> crossFilterIndex, Map mapCountCityPerCrossFilter, Map mapSumAgePerCrossFilter, VectorSchemaRoot vectorSchemaRoot){
         IntVector ageVector = (IntVector) vectorSchemaRoot.getVector("age");
         VarCharVector cityVector = (VarCharVector) vectorSchemaRoot.getVector("city");
         for(int index: crossFilterIndex){
@@ -587,9 +587,9 @@ Report
 
 .. code-block:: java
 
-   import java.util.Map;
+    import java.util.Map;
 
-   void report(Map mapCountCityPerCrossFilter, Map mapSumAgePerCrossFilter){
+    void report(Map mapCountCityPerCrossFilter, Map mapSumAgePerCrossFilter){
         System.out.println(">>>>> REPORT <<<<< ");
         for ( Object keyCity : mapCountCityPerCrossFilter.keySet()) {
             int sumAgePerCrossFilter = (int) mapSumAgePerCrossFilter.get(keyCity);

@@ -30,62 +30,67 @@ import java.io.IOException;
  */
 public class ExampleFlightServer implements AutoCloseable {
 
-  private final FlightServer flightServer;
-  private final Location location;
-  private final BufferAllocator allocator;
-  private final InMemoryStore mem;
+    private final FlightServer flightServer;
+    private final Location location;
+    private final BufferAllocator allocator;
+    private final InMemoryStore mem;
 
-  /**
-   * Constructs a new instance using Allocator for allocating buffer storage that binds
-   * to the given location.
-   */
-  public ExampleFlightServer(BufferAllocator allocator, Location location) {
-    this.allocator = allocator.newChildAllocator("flight-server", 0, Long.MAX_VALUE);
-    this.location = location;
-    this.mem = new InMemoryStore(this.allocator, location);
-    this.flightServer = FlightServer.builder(allocator, location, mem).build();
-  }
+    /**
+     * Constructs a new instance using Allocator for allocating buffer storage that binds
+     * to the given location.
+     */
+    public ExampleFlightServer(BufferAllocator allocator, Location location) {
+        this.allocator = allocator.newChildAllocator("flight-server", 0, Long.MAX_VALUE);
+        this.location = location;
+        this.mem = new InMemoryStore(this.allocator, location);
+        this.flightServer = FlightServer.builder(allocator, location, mem).build();
+    }
 
-  public Location getLocation() {
-    return location;
-  }
+    public Location getLocation() {
+        return location;
+    }
 
-  public int getPort() {
-    return this.flightServer.getPort();
-  }
+    public int getPort() {
+        return this.flightServer.getPort();
+    }
 
-  public void start() throws IOException {
-    flightServer.start();
-  }
+    public void start() throws IOException {
+        flightServer.start();
+    }
 
-  public void awaitTermination() throws InterruptedException {
-    flightServer.awaitTermination();
-  }
+    public void awaitTermination() throws InterruptedException {
+        flightServer.awaitTermination();
+    }
 
-  public InMemoryStore getStore() {
-    return mem;
-  }
+    public InMemoryStore getStore() {
+        return mem;
+    }
 
-  /**
-   *  Main method starts the server listening to localhost:12233.
-   */
-  public static void main(String[] args) throws Exception {
-    final BufferAllocator a = new RootAllocator(Long.MAX_VALUE);
-    final ExampleFlightServer efs = new ExampleFlightServer(a, Location.forGrpcInsecure("localhost", 22334));
-    efs.start();
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      try {
-        System.out.println("\nExiting...");
-        AutoCloseables.close(efs, a);
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-    }));
-    efs.awaitTermination();
-  }
+    /**
+     *  Main method starts the server listening to localhost:12233.
+     */
+    public static void main(String[] args) throws Exception {
+        final BufferAllocator a = new RootAllocator(Long.MAX_VALUE);
+        final ExampleFlightServer efs = new ExampleFlightServer(a, Location.forGrpcInsecure("localhost", 22334));
+        efs.start();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                System.out.println("\nExiting...");
+                AutoCloseables.close(efs, a);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }));
+        efs.awaitTermination();
+    }
 
-  @Override
-  public void close() throws Exception {
-    AutoCloseables.close(mem, flightServer, allocator);
-  }
+    @Override
+    public void close() throws Exception {
+        AutoCloseables.close(mem, flightServer, allocator);
+    }
 }
+
+//
+
+
+

@@ -138,8 +138,7 @@ In case we need to add metadata to our definition we could use:
 Create the schema
 =================
 
-Tables detain multiple columns, each with its own name
-and type. The union of types and names is what defines a schema.
+A schema is a list of Fields, where each Field is defined by name and type.
 
 .. code-block:: java
    :emphasize-lines: 5

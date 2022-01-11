@@ -1,10 +1,12 @@
+.. _arrow-create:
+
 ======================
 Creating Arrow Objects
 ======================
 
 | A vector is the basic unit in the Arrow Java library. Vector by definition is intended to be mutable, a Vector can be changed it is mutable.
 
-| Vectors are provided by java arrow for the interface `FieldVector <https://arrow.apache.org/docs/java/reference/org/apache/arrow/vector/FieldVector.html>`_ that extends `ValueVector <https://arrow.apache.org/docs/java/reference/org/apache/arrow/vector/ValueVector.html>`_.
+| Vectors are provided by java arrow for the interface `FieldVector <https://arrow.apache.org/docs/java/reference/org/apache/arrow/vector/FieldVector.html>`_ that extends `ValueVector <https://arrow.apache.org/docs/java/vector.html>`_.
 
 .. contents::
 
@@ -80,7 +82,7 @@ Creating Vectors (arrays)
 =========================
 
 Array of Int (32-bit integer value)
----------------------------------
+-----------------------------------
 
 .. code-block:: java
    :emphasize-lines: 4
@@ -138,6 +140,8 @@ Array of List
 
 Creating VectorSchemaRoot (Table)
 =================================
+
+A `VectorSchemaRoot <https://arrow.apache.org/docs/java/vector_schema_root.html>`_ is a container that can hold batches, batches flow through VectorSchemaRoot as part of a pipeline.
 
 .. code-block:: java
    :emphasize-lines: 21

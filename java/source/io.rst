@@ -4,18 +4,14 @@
 Reading and writing data
 ========================
 
-Recipes related to reading and writing data from disk using
-Apache Arrow.
+Recipes related to reading and writing data from disk using Apache Arrow.
+
+Arrow defines two types of binary formats for serializing record batches `IPC <https://arrow.apache.org/docs/java/ipc.html>`_: Streaming format / File or Random Access format
 
 .. contents::
 
-Writing array
+Writing Array
 =============
-
-It is possible to dump data in the raw arrow format which allows 
-direct memory mapping of data from disk. This format is called
-the Arrow IPC format. There are two option: Random access format
-& Streaming format.
 
 We are going to use this util for reading and writing data:
 
@@ -150,10 +146,10 @@ We are going to use this util for reading and writing data:
    gladis   B        20    [2,4,6,8,10]
    juan     C        30    [1,2,3,5,8]
 
-Writing arrays with the IPC file format
+Writing Arrays with the IPC File Format
 ***************************************
 
-Write - Random access to file
+Write - Random Access to File
 -----------------------------
 
 .. code-block:: java
@@ -172,7 +168,7 @@ Write - Random access to file
    writer.writeBatch();
    writer.end();
 
-Write - random access to buffer
+Write - Random Access to Buffer
 -------------------------------
 
 .. code-block:: java
@@ -191,10 +187,10 @@ Write - random access to buffer
    writerBuffer.end();
 
 
-Writing arrays with the IPC streamed format
+Writing Arrays with the IPC Streamed Format
 *******************************************
 
-Write - Streaming to file
+Write - Streaming to File
 -------------------------
 
 .. code-block:: java
@@ -213,7 +209,7 @@ Write - Streaming to file
    writerStream.writeBatch();
    writerStream.end();
 
-Write - Streaming to buffer
+Write - Streaming to Buffer
 ---------------------------
 
 .. code-block:: java
@@ -233,14 +229,10 @@ Write - Streaming to buffer
 Read array
 ==========
 
-Arrow vectors that have been written to disk in the Arrow IPC
-format can be memory mapped back directly from the disk. There 
-are two option: Random access format & Streaming format
-
-Read arrays with the IPC file format
+Read Arrays with the IPC File Format
 ************************************
 
-Read - random access to file
+Read - Random Access to File
 ----------------------------
 
 Consider: Before to run next code you need to write array to file with `Write - random access to file`_.
@@ -269,7 +261,7 @@ Consider: Before to run next code you need to write array to file with `Write - 
    gladis   B        20    [2,4,6,8,10]
    juan     C        30    [1,2,3,5,8]
 
-Read - random acces to buffer
+Read - Random Acces to Buffer
 -----------------------------
 
 Consider: Before to run next code you need to write array to file with `Write - random access to buffer`_.
@@ -297,10 +289,10 @@ Consider: Before to run next code you need to write array to file with `Write - 
    gladis   B        20    [2,4,6,8,10]
    juan     C        30    [1,2,3,5,8]
 
-Read arrays with the IPC streamed format
+Read Arrays with the IPC Streamed Format
 ****************************************
 
-Read - Streaming to file
+Read - Streaming to File
 ------------------------
 
 Consider: Before to run next code you need to write array to file with `Write - streaming to file`_.
@@ -328,7 +320,7 @@ Consider: Before to run next code you need to write array to file with `Write - 
    gladis   B        20    [2,4,6,8,10]
    juan     C        30    [1,2,3,5,8]
 
-Read - Streaming to buffer
+Read - Streaming to Buffer
 --------------------------
 
 Consider: Before to run next code you need to write array to file with `Write - streaming to buffer`_.
