@@ -4,6 +4,19 @@
 
 If you find a bug in the cookbook, please let us know by opening an issue on GitHub.
 
+## What makes a good recipe?
+
+Recipes are solutions to specific problems that the user can copy/paste into their own code.
+They answer specific questions that users might search for on Google or StackOverflow.
+Some questions might be trivial, like how to read a CSV, while other might be more 
+advanced; the complexity doesn't matter. If there is someone searching for that question,
+the cookbook should have an answer for it.
+
+Recipes should provide immediate instructions for how to perform a task, including a 
+code example that can be copied and pasted. They do not need to explain the theoretical
+knowledge behind the solution, but can instead link the relevant part of the Arrow user
+guide and API documentation.
+
 ## Do you want to contribute new recipes or improvements?
 
 We always welcome contributions of new recipes for the cookbook.  
