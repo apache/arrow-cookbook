@@ -8,6 +8,7 @@ your file as either a data frame or as an Arrow Table object.
 
 
 There are a number of circumstances in which you may want to read in the data as an Arrow Table:
+
 * your dataset is large and if you load it into memory, it may lead to performance issues
 * you want faster performance from your `dplyr` queries
 * you want to be able to take advantage of Arrow's compute functions
