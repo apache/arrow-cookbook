@@ -8,7 +8,7 @@ If you find a bug in the cookbook, please let us know by opening an issue on Git
 
 Recipes are solutions to specific problems that the user can copy/paste into their own code.
 They answer specific questions that users might search for on Google or StackOverflow.
-Some questions might be trivial, like how to read a CSV, while other might be more 
+Some questions might be trivial, like how to read a CSV, while others might be more 
 advanced; the complexity doesn't matter. If there is someone searching for that question,
 the cookbook should have an answer for it.
 
