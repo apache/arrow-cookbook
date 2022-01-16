@@ -6,6 +6,13 @@ that Arrow users might want to do. The cookbook is actually
 composed of multiple cookbooks, one for each supported platform,
 which contain the recipes for that specific platform.
 
+The cookbook aims to provide immediate instructions for common tasks, in 
+contrast with the [Arrow User Guides](https://arrow.apache.org/docs/index.html)
+which provides in-depth explanation. In terms of the 
+[Diátaxis framework|https://diataxis.fr/], the cookbook is *task-oriented*
+while the user guide is *learning-oriented*. The cookbook will often refer to
+the user guide for deeper explanation.
+
 All cookbooks are buildable to HTML and verifiable by running
 a set of tests that confirm that the recipes are still working
 as expected.
