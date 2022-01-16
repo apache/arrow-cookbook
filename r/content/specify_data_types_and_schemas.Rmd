@@ -78,7 +78,7 @@ oscars <- tibble::tibble(
 )
 
 # Convert tibble to an Arrow table
-oscars_arrow <- Table$create(oscars)
+oscars_arrow <- arrow_table(oscars)
 
 # The default mapping from numeric column "num_awards" is to a double
 oscars_arrow
@@ -115,7 +115,7 @@ oscars <- tibble::tibble(
 )
 
 # Convert tibble to an Arrow table
-oscars_arrow <- Table$create(oscars)
+oscars_arrow <- arrow_table(oscars)
 
 # Set up schema with "num_awards" as float16 which doesn't have an R equivalent
 oscars_schema_invalid <- schema(actor = string(), num_awards = float16())
@@ -158,7 +158,7 @@ oscars <- tibble::tibble(
 oscars_schema <- schema(actor = string(), num_awards = int16())
 
 # create arrow Table containing data and schema
-oscars_data_arrow <- Table$create(oscars, schema = oscars_schema)
+oscars_data_arrow <- arrow_table(oscars, schema = oscars_schema)
 
 oscars_data_arrow
 ```
