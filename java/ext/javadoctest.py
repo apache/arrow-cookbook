@@ -1,11 +1,8 @@
-from sphinx.ext.doctest import *
-from sphinx.locale import __
 import subprocess
-from subprocess import Popen,PIPE
 import os
-
-class JavaTestDirective(TestDirective):
-    pass
+from sphinx.ext.doctest import TestcodeDirective, TestoutputDirective, DocTestBuilder, Any, Dict, doctest, sphinx
+from sphinx.locale import __
+from subprocess import Popen, PIPE
 
 class JavaDocTestBuilder(DocTestBuilder):
     """
@@ -16,17 +13,16 @@ class JavaDocTestBuilder(DocTestBuilder):
                 'results in %(outdir)s/output.txt.')
     def compile(self, code: str, name: str, type: str, flags: Any, dont_inherit: bool) -> Any:
         # go to project that contains all your arrow maven dependencies
-        cwd = os.getcwd()
-        os.chdir('./source/demo')
+        dir_arrow_maven_project = os.path.dirname(os.getcwd())+'/java/source/demo'
 
         # create list of all arrow jar dependencies
-        proc_mvn_dependency = subprocess.Popen(['mvn', '-q', 'dependency:build-classpath', '-DincludeTypes=jar', '-Dmdep.outputFile=.cp.tmp'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        proc_mvn_dependency = subprocess.Popen(['mvn', '-q', 'dependency:build-classpath', '-DincludeTypes=jar', '-Dmdep.outputFile=.cp.tmp'], cwd=dir_arrow_maven_project, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         stdout_mvn, stderr_mvn = proc_mvn_dependency.communicate()
-        if not os.path.exists('.cp.tmp'):
+        if not os.path.exists(dir_arrow_maven_project + '/.cp.tmp'):
             raise RuntimeError(__('invalid process to create jshell dependencies library'))
 
         # get list of all arrow jar dependencies
-        proc_get_dependency = subprocess.Popen(['cat', '.cp.tmp'], stdout=subprocess.PIPE, text=True)
+        proc_get_dependency = subprocess.Popen(['cat', '.cp.tmp'], cwd=dir_arrow_maven_project, stdout=subprocess.PIPE, text=True)
         stdout_dependency, stderr_dependency = proc_get_dependency.communicate()
         if not stdout_dependency:
             raise RuntimeError(__('invalid process to list jshell dependencies library'))
@@ -41,9 +37,6 @@ class JavaDocTestBuilder(DocTestBuilder):
 
         # continue with python logic code to do java output validation battle tested
         output = 'print('+stdout_java_arrow+')'
-
-        # go to default directory 
-        os.chdir(cwd)
 
         # continue with sphinx default logic
         return compile(output, name, self.type, flags, dont_inherit)

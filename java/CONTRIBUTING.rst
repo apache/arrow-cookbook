@@ -1,7 +1,7 @@
 Bulding the Java Cookbook
 =========================
 
-The java cookbook uses the Sphinx documentation system.
+The Java cookbook uses the Sphinx documentation system.
 
 Running ``make java`` from the cookbook root directory (the one where
 the ``README.rst`` exists) will install all necessary dependencies

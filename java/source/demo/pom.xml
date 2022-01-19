@@ -12,7 +12,6 @@
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <arrow.version>6.0.0</arrow.version>
-        <arrow.flight.version>0.15.1</arrow.flight.version>
     </properties>
 
     <dependencies>
