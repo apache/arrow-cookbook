@@ -2,6 +2,10 @@
 
 We actively welcome contributions to the Arrow R cookbook!  If you want to make a contribution, please fork this repo and make a pull request with your changes.  If you see any errors or have suggestions for recipes you'd like to see but do not know how to create, please open a GitHub issue.
 
+# Fixing Typos
+
+If you find any typos or minor issues in the cookbook, feel free to submit a PR without opening an issue first.
+
 # Adding R Recipes
 
 The recipes are written in RMarkdown format using `bookdown`.
