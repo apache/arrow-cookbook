@@ -19,3 +19,4 @@ r/*.Rproj
 
 *target/
 .DS_Store
+.cp.tmp

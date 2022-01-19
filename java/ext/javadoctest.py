@@ -1,5 +1,6 @@
 import subprocess
 import os
+import pathlib
 from sphinx.ext.doctest import TestcodeDirective, TestoutputDirective, DocTestBuilder, Any, Dict, doctest, sphinx
 from sphinx.locale import __
 from subprocess import Popen, PIPE
@@ -13,17 +14,16 @@ class JavaDocTestBuilder(DocTestBuilder):
                 'results in %(outdir)s/output.txt.')
     def compile(self, code: str, name: str, type: str, flags: Any, dont_inherit: bool) -> Any:
         # go to project that contains all your arrow maven dependencies
-        dir_arrow_maven_project = os.path.dirname(os.getcwd())+'/java/source/demo'
+        dir_arrow_maven_project = os.path.join(pathlib.Path.cwd(), 'source', 'demo')
 
         # create list of all arrow jar dependencies
-        proc_mvn_dependency = subprocess.Popen(['mvn', '-q', 'dependency:build-classpath', '-DincludeTypes=jar', '-Dmdep.outputFile=.cp.tmp'], cwd=dir_arrow_maven_project, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        stdout_mvn, stderr_mvn = proc_mvn_dependency.communicate()
+        subprocess.run(['mvn', '-q', 'dependency:build-classpath', '-DincludeTypes=jar', '-Dmdep.outputFile=.cp.tmp'], cwd=dir_arrow_maven_project, text=True)
         if not os.path.exists(dir_arrow_maven_project + '/.cp.tmp'):
             raise RuntimeError(__('invalid process to create jshell dependencies library'))
 
         # get list of all arrow jar dependencies
-        proc_get_dependency = subprocess.Popen(['cat', '.cp.tmp'], cwd=dir_arrow_maven_project, stdout=subprocess.PIPE, text=True)
-        stdout_dependency, stderr_dependency = proc_get_dependency.communicate()
+        with open(os.path.join(dir_arrow_maven_project, ".cp.tmp")) as f:
+            stdout_dependency = f.read()
         if not stdout_dependency:
             raise RuntimeError(__('invalid process to list jshell dependencies library'))
 
