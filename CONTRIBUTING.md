@@ -26,6 +26,7 @@ Any changes which add new code chunks or recipes must be tested when the `make t
 is run, please refer to the language specific cookbook contribution documentation for information on
 how to make your recipes testable.
 
+ * [Contributing to C++ Cookbook](cpp/CONTRIBUTING.md)
  * [Contributing to Python Cookbook](python/CONTRIBUTING.rst)
  * [Contributing to R Cookbook](r/CONTRIBUTING.md)
  
