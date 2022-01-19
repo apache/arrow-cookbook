@@ -28,7 +28,8 @@ how to make your recipes testable.
 
  * [Contributing to Python Cookbook](python/CONTRIBUTING.rst)
  * [Contributing to R Cookbook](r/CONTRIBUTING.md)
- 
+ * [Contributing to Java Cookbook](java/CONTRIBUTING.md)
+
  ------------------------------------------------------------------------
 
 All participation in the Apache Arrow project is governed by the Apache
