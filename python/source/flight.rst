@@ -385,3 +385,214 @@ stream as it arrives, instead of reading them all into a table:
     # Shutdown the server
     server.shutdown()
     repo.cleanup()
+
+Authentication with user/password
+=================================
+
+Often, services need a way to authenticate the user and identify who
+they are. Flight provides several ways to implement authentication;
+the simplest uses a user-password scheme. At startup, the client
+authenticates itself with the server using a username and
+password. The server returns an authorization token to include on
+future requests.
+
+.. warning:: Authentication should only be used over an encrypted
+             channel, i.e. TLS should be enabled.
+
+.. note:: While the scheme is described as "`(HTTP) basic
+          authentication`_", it does not actually implement HTTP
+          authentication (RFC 7325) per se.
+
+While Flight provides some interfaces to implement such a scheme, the
+server must provide the actual implementation, as demonstrated
+below. **The implementation here is not secure and is provided as a
+minimal example only.**
+
+.. testcode::
+
+   import base64
+   import pyarrow as pa
+   import pyarrow.flight
+
+
+   class EchoServer(pa.flight.FlightServerBase):
+       """A simple server that just echoes any requests from DoAction."""
+
+       def do_action(self, context, action):
+           return [action.type.encode("utf-8"), action.body]
+
+
+   class BasicAuthServerMiddlewareFactory(pa.flight.ServerMiddlewareFactory):
+       """Middleware that implements username-password authentication."""
+
+       def __init__(self, creds):
+           self.creds = creds
+
+       def start_call(self, info, headers):
+           """Validate credentials at the start of every call."""
+           # Search for the authentication header (case-insensitive)
+           token = None
+           for header in headers:
+               if header.lower() == "authorization":
+                   token = headers[header]
+                   break
+
+           if not token:
+               raise pa.flight.FlightUnauthenticatedError("No credentials supplied")
+
+           # The header has the structure "AuthType TokenValue", e.g. "Basic foo"
+           # or "Bearer bar".
+           values = token[0].split(" ", maxsplit=1)
+
+           if values[0] == "Basic":
+               # Initial "login". The user provided a username/password
+               # combination encoded in the same way as HTTP Basic Auth.
+               decoded = base64.b64decode(values[1])
+               username, password = decoded.decode("utf-8").split(':', maxsplit=1)
+               if username not in self.creds or password != self.creds[username]:
+                   raise pa.flight.FlightUnauthenticatedError("Unknown user or invalid password")
+               # Return a bearer token to the user for future calls.
+               # Obviously, this is insecure and easily faked. This is for
+               # demonstration only.
+               bearer_token = username
+               return BasicAuthServerMiddleware(bearer_token)
+           elif values[0] == "Bearer":
+               # An actual call. Validate the bearer token returned to the user.
+               # The token is just the username.
+               token = values[1]
+               if token not in self.creds:
+                   raise pa.flight.FlightUnauthenticatedError("Invalid token")
+               return BasicAuthServerMiddleware(token)
+
+           raise pa.flight.FlightUnauthenticatedError("No credentials supplied")
+
+
+   class BasicAuthServerMiddleware(pa.flight.ServerMiddleware):
+       """Middleware that implements username-password authentication."""
+
+       def __init__(self, token):
+           self.token = token
+
+       def sending_headers(self):
+           """Return the authentication token to the client."""
+           return {"authorization": f"Bearer {self.token}"}
+
+
+   class NoOpAuthHandler(pa.flight.ServerAuthHandler):
+       """
+       A handler that implements username-password authentication.
+
+       This is required only so that the server will respond to the internal
+       Handshake RPC call, which the client calls when authenticate_basic_token
+       is called. Otherwise, it should be a no-op as the actual authentication is
+       implemented in middleware.
+       """
+
+       def authenticate(self, outgoing, incoming):
+           pass
+
+       def is_valid(self, token):
+           return ""
+
+We can then start the server:
+
+.. code-block::
+
+    if __name__ == '__main__':
+        server = EchoServer(
+            auth_handler=NoOpAuthHandler(),
+            location="grpc://0.0.0.0:8816",
+            middleware={
+                "basic": BasicAuthServerMiddlewareFactory({
+                    "test": "password",
+                })
+            },
+        )
+        server.serve()
+
+.. testcode::
+    :hide:
+
+    # Code block to start for real a server in background
+    # and wait for it to be available.
+    # Previous code block is just to show to user how to start it.
+    import threading
+    server = EchoServer(
+        auth_handler=NoOpAuthHandler(),
+        location="grpc://0.0.0.0:8816",
+        middleware={
+            "basic": BasicAuthServerMiddlewareFactory({
+                "test": "password",
+            })
+        },
+    )
+    t = threading.Thread(target=server.serve)
+    t.start()
+
+Then, we can make a client and log in:
+
+.. testcode::
+
+   import pyarrow as pa
+   import pyarrow.flight
+
+   client = pa.flight.connect("grpc://0.0.0.0:8816")
+
+   token_pair = client.authenticate_basic_token(b'test', b'password')
+   print(token_pair)
+
+.. testoutput::
+
+   (b'authorization', b'Bearer test')
+
+For future calls, we include the authentication token with the call:
+
+.. testcode::
+
+   action = pa.flight.Action("echo", b"Hello, world!")
+   options = pa.flight.FlightCallOptions(headers=[token_pair])
+   for response in client.do_action(action=action, options=options):
+       print(response.body.to_pybytes())
+
+.. testoutput::
+
+   b'echo'
+   b'Hello, world!'
+
+If we fail to do so, we get an authentication error:
+
+.. testcode::
+
+   try:
+       list(client.do_action(action=action))
+   except pa.flight.FlightUnauthenticatedError as e:
+       print("Unauthenticated:", e)
+   else:
+       raise RuntimeError("Expected call to fail")
+
+.. testoutput::
+
+   Unauthenticated: No credentials supplied. Detail: Unauthenticated
+
+Or if we use the wrong credentials on login, we also get an error:
+
+.. testcode::
+
+   try:
+       client.authenticate_basic_token(b'invalid', b'password')
+   except pa.flight.FlightUnauthenticatedError as e:
+       print("Unauthenticated:", e)
+   else:
+       raise RuntimeError("Expected call to fail")
+
+.. testoutput::
+
+   Unauthenticated: Unknown user or invalid password. Detail: Unauthenticated
+
+.. testcode::
+    :hide:
+
+    # Shutdown the server
+    server.shutdown()
+
+.. _(HTTP) basic authentication: https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication#basic_authentication_scheme
