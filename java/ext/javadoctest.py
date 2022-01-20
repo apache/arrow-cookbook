@@ -50,17 +50,13 @@ class JavaDocTestBuilder(DocTestBuilder):
             )
 
         # execute java testing code thru jshell and read output
-        proc_java_arrow_code = subprocess.Popen(
-            ["echo", "" + code], stdout=subprocess.PIPE
-        )
         proc_jshell_process = subprocess.Popen(
             ["jshell", "--class-path", stdout_dependency, "-"],
-            stdin=proc_java_arrow_code.stdout,
+            stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             text=True,
         )
-        proc_java_arrow_code.stdout.close()
-        out_java_arrow, err_java_arrow = proc_jshell_process.communicate()
+        out_java_arrow, err_java_arrow = proc_jshell_process.communicate(code)
         if err_java_arrow:
             raise RuntimeError(__("invalid process to run jshell"))
 
