@@ -25,7 +25,7 @@ class JavaDocTestBuilder(DocTestBuilder):
         path_arrow_project = os.path.join(pathlib.Path.cwd(), "source", "demo")
 
         # create list of all arrow jar dependencies
-        subprocess.run(
+        subprocess.check_call(
             [
                 "mvn",
                 "-q",
@@ -62,9 +62,7 @@ class JavaDocTestBuilder(DocTestBuilder):
         proc_java_arrow_code.stdout.close()
         out_java_arrow, err_java_arrow = proc_jshell_process.communicate()
         if err_java_arrow:
-            raise RuntimeError(
-                __("invalid process to run jshell for arrow project")
-            )
+            raise RuntimeError(__("invalid process to run jshell"))
 
         # continue with python logic code to do java output validation
         output = "print(" + out_java_arrow + ")"
