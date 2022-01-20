@@ -11,6 +11,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 import os
 import sys
+
 sys.path.append(os.path.abspath("../ext"))
 
 
@@ -27,7 +28,7 @@ author = 'The Apache Software Foundation'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-	"javadoctest"
+    "javadoctest"
 ]
 
 # Add any paths that contain templates here, relative to this directory.

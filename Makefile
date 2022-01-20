@@ -22,6 +22,9 @@ pydeps:
 	@echo ">>> Installing Python Dependencies <<<\n"
 	cd python && pip install -r requirements.txt
 
+javadeps:
+	@echo ">>> Installing Java Dependencies <<<\n"
+	cd java && pip install -r requirements.txt
 
 py: pydeps
 	@echo ">>> Building Python Cookbook <<<\n"
@@ -73,13 +76,13 @@ cpp: cpptest
 
 
 .PHONY: java
-java: 
+java: javadeps
 	@echo ">>> Building Java Cookbook <<<\n"
 	cd java && make html
 	mkdir -p build/java
 	cp -r java/build/html/* build/java
 
 
-javatest:
+javatest: javadeps
 	@echo ">>> Testing Java Cookbook <<<\n"
 	cd java && make javadoctest
