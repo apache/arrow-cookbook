@@ -54,12 +54,14 @@ was created: ext/javadoctest.py
 Execute validations before commit sphinx directive extension:
 
 Format code (before committing)
+
 .. code-block:: bash
 
     > cd java/ext
     > black javadoctest.py
 
 Sort imports (before committing)
+
 .. code-block:: bash
 
     > cd java/ext
@@ -68,6 +70,7 @@ Sort imports (before committing)
 Lint code (before committing)
 
 .. code-block:: bash
+
     > cd java/ext
     > flake8
 ------------------------------------------------------------------------
