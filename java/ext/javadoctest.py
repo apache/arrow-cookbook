@@ -50,26 +50,29 @@ class JavaDocTestBuilder(DocTestBuilder):
             )
 
         # execute java testing code thru jshell and read output
+        # JDK11 support '-' This allows the pipe to work as expected without requiring a shell
+        # Migrating to /dev/stdin to also support JDK9+
         proc_jshell_process = subprocess.Popen(
-            ["jshell", "--class-path", stdout_dependency, "-"],
+            ["jshell", "--class-path", stdout_dependency, "-s", "/dev/stdin"],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             text=True,
         )
         out_java_arrow, err_java_arrow = proc_jshell_process.communicate(code)
         if err_java_arrow:
-            raise RuntimeError(__("invalid proc ess to run jshell"))
+            raise RuntimeError(__("invalid process to run jshell"))
 
         # continue with python logic code to do java output validation
-        output = "print('" + self.clean_output(out_java_arrow) + "')"
+        output = f"print('''{self.clean_output(out_java_arrow)}''')"
 
         # continue with sphinx default logic
         return compile(output, name, self.type, flags, dont_inherit)
 
     def clean_output(self, output: str):
+        if output[-3:] == '-> ':
+            output = output[:-3]
         if output[-1:] == '\n':
             output = output[:-1]
-        output = output.replace('\n', '\\n')
         output = (4*' ').join(output.split('\t'))
         return output
 
