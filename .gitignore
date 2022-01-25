@@ -16,3 +16,7 @@ r/*.Rproj
 *.feather
 
 *.pyc
+
+*target/
+.DS_Store
+.cp.tmp

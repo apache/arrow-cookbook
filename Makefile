@@ -1,11 +1,11 @@
 all: html
 
 
-html: py r
+html: py r java
 	@echo "\n\n>>> Cookbooks (except C++) Available in ./build <<<"
 
 
-test: pytest rtest
+test: pytest rtest javatest
 
 
 help:
@@ -15,12 +15,16 @@ help:
 	@echo "make r           Build the Cookbook for R only."
 	@echo "make pytest      Verify the cookbook for Python only."
 	@echo "make rtest       Verify the cookbook for R only."
-
+	@echo "make java        Build the Cookbook for Java only."
+	@echo "make javatest    Verify the cookbook for Java only."
 
 pydeps:
 	@echo ">>> Installing Python Dependencies <<<\n"
 	cd python && pip install -r requirements.txt
 
+javadeps:
+	@echo ">>> Installing Java Dependencies <<<\n"
+	cd java && pip install -r requirements.txt
 
 py: pydeps
 	@echo ">>> Building Python Cookbook <<<\n"
@@ -69,3 +73,16 @@ cpp: cpptest
 	cd cpp && make html
 	mkdir -p build/cpp
 	cp -r cpp/build/html/* build/cpp
+
+
+.PHONY: java
+java: javadeps
+	@echo ">>> Building Java Cookbook <<<\n"
+	cd java && make html
+	mkdir -p build/java
+	cp -r java/build/html/* build/java
+
+
+javatest: javadeps
+	@echo ">>> Testing Java Cookbook <<<\n"
+	cd java && make javadoctest
