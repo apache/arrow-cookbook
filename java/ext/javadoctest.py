@@ -28,7 +28,7 @@ class JavaDocTestBuilder(DocTestBuilder):
         subprocess.check_call(
             [
                 "mvn",
-                "-X",
+                "-q",
                 "dependency:build-classpath",
                 "-DincludeTypes=jar",
                 "-Dmdep.outputFile=.cp.tmp",
