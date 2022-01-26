@@ -11,6 +11,7 @@ Welcome to java arrow's documentation!
    :caption: Contents:
 
    create
+   io
 
 Indices and tables
 ==================
