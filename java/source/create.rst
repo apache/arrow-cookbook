@@ -36,6 +36,7 @@ Array of Int (32-bit integer value)
 
     [1, 2, 3]
 
+
 Array of Varchar
 ----------------
 
