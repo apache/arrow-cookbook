@@ -12,6 +12,7 @@ Welcome to java arrow's documentation!
 
    create
    io
+   schema
 
 Indices and tables
 ==================
