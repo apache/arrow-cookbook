@@ -22,7 +22,7 @@ class JavaDocTestBuilder(DocTestBuilder):
         self, code: str, name: str, type: str, flags: Any, dont_inherit: bool
     ) -> Any:
         # go to project that contains all your arrow maven dependencies
-        path_arrow_project = os.path.join(pathlib.Path.cwd(), "source", "demo")
+        path_arrow_project = pathlib.Path(__file__).parent.parent / "source" / "demo"
 
         # create list of all arrow jar dependencies
         subprocess.check_call(
@@ -36,13 +36,13 @@ class JavaDocTestBuilder(DocTestBuilder):
             cwd=path_arrow_project,
             text=True,
         )
-        if not os.path.exists(path_arrow_project + "/.cp.tmp"):
+        if not (path_arrow_project / ".cp.tmp").exists():
             raise RuntimeError(
                 __("invalid process to create jshell dependencies library")
             )
 
         # get list of all arrow jar dependencies
-        with open(os.path.join(path_arrow_project, ".cp.tmp")) as f:
+        with open(path_arrow_project / ".cp.tmp") as f:
             stdout_dependency = f.read()
         if not stdout_dependency:
             raise RuntimeError(
