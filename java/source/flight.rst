@@ -1686,7 +1686,7 @@ Request Data
         dataResponse = stream.getRoot().contentToTSVString();
     }
 
-    System.out.println(dataResponse);
+    System.out.print(dataResponse);
 
 .. testoutput::
 
