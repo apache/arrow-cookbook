@@ -65,12 +65,10 @@ Array of List
 .. testcode::
 
     import org.apache.arrow.memory.RootAllocator;
+    import org.apache.arrow.vector.complex.impl.UnionListWriter;
     import org.apache.arrow.vector.types.Types.MinorType;
     import org.apache.arrow.vector.types.pojo.FieldType;
     import org.apache.arrow.vector.complex.ListVector;
-    import org.apache.arrow.vector.IntVector;
-    import org.apache.arrow.vector.BitVectorHelper;
-    import org.apache.arrow.vector.complex.BaseRepeatedValueVector;
 
     RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
 
@@ -78,30 +76,25 @@ Array of List
     listVector.allocateNew();
     MinorType type = MinorType.INT;
     listVector.addOrGetVector(FieldType.nullable(type.getType()));
-
-    IntVector dataVector = (IntVector) listVector.getDataVector();
-    dataVector.allocateNew();
-
-    listVector.getOffsetBuffer().setInt(0, 0);
-
-    BitVectorHelper.setBit(listVector.getValidityBuffer(), 0);
-    dataVector.set(0, 1);
-    dataVector.set(1, 2);
-    dataVector.set(2, 3);
-    listVector.getOffsetBuffer().setInt(1 * BaseRepeatedValueVector.OFFSET_WIDTH, 3);
-
-    BitVectorHelper.setBit(listVector.getValidityBuffer(), 1);
-    dataVector.set(3, 9);
-    dataVector.set(4, 8);
-    listVector.getOffsetBuffer().setInt(2 * BaseRepeatedValueVector.OFFSET_WIDTH, 5);
-
-    BitVectorHelper.setBit(listVector.getValidityBuffer(), 2);
-    dataVector.set(5, 10);
-    dataVector.set(6, 20);
-    dataVector.set(7, 30);
-    listVector.getOffsetBuffer().setInt(3 * BaseRepeatedValueVector.OFFSET_WIDTH, 8);
-
-    listVector.setLastSet(2);
+    UnionListWriter listWriter = listVector.getWriter();
+    listWriter.allocate();
+    listWriter.setPosition(0);
+    listWriter.startList();
+    listWriter.bigInt().writeBigInt(1);
+    listWriter.bigInt().writeBigInt(2);
+    listWriter.bigInt().writeBigInt(3);
+    listWriter.endList();
+    listWriter.setPosition(1);
+    listWriter.startList();
+    listWriter.bigInt().writeBigInt(9);
+    listWriter.bigInt().writeBigInt(8);
+    listWriter.endList();
+    listWriter.setPosition(2);
+    listWriter.startList();
+    listWriter.bigInt().writeBigInt(10);
+    listWriter.bigInt().writeBigInt(20);
+    listWriter.bigInt().writeBigInt(30);
+    listWriter.endList();
     listVector.setValueCount(4);
 
     System.out.print(listVector);
