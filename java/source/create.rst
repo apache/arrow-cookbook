@@ -67,42 +67,30 @@ Array of List
 
     import org.apache.arrow.memory.RootAllocator;
     import org.apache.arrow.vector.complex.impl.UnionListWriter;
-    import org.apache.arrow.vector.types.Types.MinorType;
-    import org.apache.arrow.vector.types.pojo.FieldType;
     import org.apache.arrow.vector.complex.ListVector;
 
     RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
-
     ListVector listVector = ListVector.empty("listVector", rootAllocator);
-    listVector.allocateNew();
-    MinorType type = MinorType.INT;
-    listVector.addOrGetVector(FieldType.nullable(type.getType()));
     UnionListWriter listWriter = listVector.getWriter();
-    listWriter.allocate();
-    listWriter.setPosition(0);
-    listWriter.startList();
-    listWriter.bigInt().writeBigInt(1);
-    listWriter.bigInt().writeBigInt(2);
-    listWriter.bigInt().writeBigInt(3);
-    listWriter.endList();
-    listWriter.setPosition(1);
-    listWriter.startList();
-    listWriter.bigInt().writeBigInt(9);
-    listWriter.bigInt().writeBigInt(8);
-    listWriter.endList();
-    listWriter.setPosition(2);
-    listWriter.startList();
-    listWriter.bigInt().writeBigInt(10);
-    listWriter.bigInt().writeBigInt(20);
-    listWriter.bigInt().writeBigInt(30);
-    listWriter.endList();
+    int[] data = new int[] { 1, 2, 3, 10, 20, 30, 100, 200, 300, 1000, 2000, 3000 };
+    int tmp_index = 0;
+    for(int i = 0; i < 4; i++) {
+        listWriter.setPosition(i);
+        listWriter.startList();
+        for(int j = 0; j < 3; j++) {
+            listWriter.writeInt(data[tmp_index]);
+            tmp_index = tmp_index + 1;
+        }
+        listWriter.setValueCount(3);
+        listWriter.endList();
+    }
     listVector.setValueCount(4);
 
     System.out.print(listVector);
 
 .. testoutput::
 
-    [[1,2,3], [9,8], [10,20,30], null]
+    [[1,2,3], [10,20,30], [100,200,300], [1000,2000,3000]]
 
 Creating VectorSchemaRoot (Table)
 =================================
