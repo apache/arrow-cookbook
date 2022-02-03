@@ -32,6 +32,7 @@ class JavaDocTestBuilder(DocTestBuilder):
                 "dependency:build-classpath",
                 "-DincludeTypes=jar",
                 "-Dmdep.outputFile=.cp.tmp",
+                "-U"
             ],
             cwd=path_arrow_project,
             text=True,
