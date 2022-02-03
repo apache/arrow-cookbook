@@ -12,7 +12,7 @@ Welcome to java arrow's documentation!
 
    create
    schema
-   jni
+   dataset
 
 Indices and tables
 ==================

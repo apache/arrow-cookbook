@@ -1,26 +1,21 @@
-===
-JNI
-===
-
-Recipes related to leveraging Arrow java jni
-
-.. contents::
+=======
+Dataset
+=======
 
 Current java project that use JNI are:
 
 * Arrow Java Dataset: Java implementation of Arrow Dataset API/Framework - JniLoader INSTANCE = new JniLoader(Collections.singletonList("arrow_cdata_jni"))
 * Arrow Java C Data Interface: Java implementation of C Data Interface - JniLoader INSTANCE = new JniLoader(Collections.singletonList("arrow_dataset_jni"))
 
-Arrow Java Dataset
-==================
+.. contents::
 
 Schema
-******
+======
 
-Let read schema information for a parquet file using arrow dataset module (Number of rows in each file: 1000)
+Let read schema information for a parquet file using arrow dataset module (Number of rows in each file: 3)
 
 Inspect Schema
---------------
+**************
 
 .. testcode::
 
@@ -45,7 +40,7 @@ Inspect Schema
     Schema<id: Int(32, true), name: Utf8>(metadata: {parquet.avro.schema={"type":"record","name":"User","namespace":"org.apache.arrow.dataset","fields":[{"name":"id","type":["int","null"]},{"name":"name","type":["string","null"]}]}, writer.model.name=avro})
 
 Infer Schema
-------------
+************
 
 .. testcode::
 
@@ -76,12 +71,12 @@ Infer Schema
     Schema<id: Int(32, true), name: Utf8>(metadata: {parquet.avro.schema={"type":"record","name":"User","namespace":"org.apache.arrow.dataset","fields":[{"name":"id","type":["int","null"]},{"name":"name","type":["string","null"]}]}, writer.model.name=avro})
 
 Query Parquet File
-******************
+==================
 
-Let query information for a parquet file usign arrow dataset module (Number of rows in each file: 1000)
+Let query information for a parquet file usign arrow dataset module (Number of rows in each file: 3)
 
 Query Data Size
----------------
+***************
 
 .. testcode::
 
@@ -117,7 +112,7 @@ Query Data Size
     3
 
 Query Data Content
-------------------
+******************
 
 .. testcode::
 
@@ -176,7 +171,7 @@ Query Data Content
     Juan
 
 Query Data Content with Projection
-----------------------------------
+**********************************
 
 .. testcode::
 
