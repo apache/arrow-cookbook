@@ -36,7 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Install dependencies
-        run: sudo apt install libcurl4-openssl-dev libssl-dev python3-pip openjdk-11-jdk maven libre2-9-dbgsym
+        run: sudo apt install libcurl4-openssl-dev libssl-dev python3-pip openjdk-11-jdk maven espeak
       - name: Run tests
         run: make javatest
       - name: Build cookbook
