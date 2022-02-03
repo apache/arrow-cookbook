@@ -45,11 +45,13 @@ class JavaDocTestBuilder(DocTestBuilder):
         # get list of all arrow jar dependencies
         with open(path_arrow_project / ".cp.tmp") as f:
             stdout_dependency = f.read()
-            print(stdout_dependency)
         if not stdout_dependency:
             raise RuntimeError(
                 __("invalid process to list jshell dependencies library")
             )
+
+        output = subprocess.getoutput("jar -tf /home/runner/.m2/repository/org/apache/arrow/arrow-dataset/6.0.0/arrow-dataset-6.0.0.jar")
+        print(output)
 
         # execute java testing code thru jshell and read output
         # JDK11 support '-' This allows the pipe to work as expected without requiring a shell
