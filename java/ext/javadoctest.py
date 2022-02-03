@@ -50,13 +50,13 @@ class JavaDocTestBuilder(DocTestBuilder):
                 __("invalid process to list jshell dependencies library")
             )
 
-        output = subprocess.getoutput("unzip /home/runner/.m2/repository/org/apache/arrow/arrow-dataset/6.0.0/arrow-dataset-6.0.0.jar")
+        output = subprocess.getoutput("unzip /home/runner/.m2/repository/org/apache/arrow/arrow-dataset/6.0.1/arrow-dataset-6.0.1.jar")
         print(output)
 
-        ls_output = subprocess.getoutput("ls -latr /home/runner/.m2/repository/org/apache/arrow/arrow-dataset/6.0.0/")
+        ls_output = subprocess.getoutput("ls -latr /home/runner/.m2/repository/org/apache/arrow/arrow-dataset/6.0.1/")
         print(ls_output)
 
-        ldd_output = subprocess.getoutput("ldd /home/runner/.m2/repository/org/apache/arrow/arrow-dataset/6.0.0/libarrow_dataset_jni.so")
+        ldd_output = subprocess.getoutput("ldd /home/runner/.m2/repository/org/apache/arrow/arrow-dataset/6.0.1/libarrow_dataset_jni.so")
         print(ldd_output)
 
         # execute java testing code thru jshell and read output
