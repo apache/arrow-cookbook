@@ -32,11 +32,11 @@ class JavaDocTestBuilder(DocTestBuilder):
                 "dependency:build-classpath",
                 "-DincludeTypes=jar",
                 "-Dmdep.outputFile=.cp.tmp",
-                "-U"
             ],
             cwd=path_arrow_project,
             text=True,
         )
+
         if not (path_arrow_project / ".cp.tmp").exists():
             raise RuntimeError(
                 __("invalid process to create jshell dependencies library")
@@ -45,6 +45,7 @@ class JavaDocTestBuilder(DocTestBuilder):
         # get list of all arrow jar dependencies
         with open(path_arrow_project / ".cp.tmp") as f:
             stdout_dependency = f.read()
+            print(stdout_dependency)
         if not stdout_dependency:
             raise RuntimeError(
                 __("invalid process to list jshell dependencies library")
