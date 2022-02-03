@@ -36,7 +36,6 @@ class JavaDocTestBuilder(DocTestBuilder):
             cwd=path_arrow_project,
             text=True,
         )
-
         if not (path_arrow_project / ".cp.tmp").exists():
             raise RuntimeError(
                 __("invalid process to create jshell dependencies library")
@@ -49,9 +48,6 @@ class JavaDocTestBuilder(DocTestBuilder):
             raise RuntimeError(
                 __("invalid process to list jshell dependencies library")
             )
-
-        output = subprocess.getoutput("jar -tf /home/runner/.m2/repository/org/apache/arrow/arrow-dataset/6.0.0/arrow-dataset-6.0.0.jar")
-        print(output)
 
         # execute java testing code thru jshell and read output
         # JDK11 support '-' This allows the pipe to work as expected without requiring a shell

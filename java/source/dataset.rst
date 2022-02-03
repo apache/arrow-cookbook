@@ -4,8 +4,24 @@ Dataset
 
 Current java project that use JNI are:
 
-* Arrow Java Dataset: Java implementation of Arrow Dataset API/Framework - JniLoader INSTANCE = new JniLoader(Collections.singletonList("arrow_cdata_jni"))
-* Arrow Java C Data Interface: Java implementation of C Data Interface - JniLoader INSTANCE = new JniLoader(Collections.singletonList("arrow_dataset_jni"))
+* `Arrow Java Dataset <https://arrow.apache.org/docs/dev/java/dataset.html>`_: Java implementation of Arrow Dataset API/Framework. JniLoader [arrow_cdata_jni]
+* `Arrow Java C Data Interface <https://arrow.apache.org/docs/format/CDataInterface.html>`_: Java implementation of C Data Interface. JniLoader [arrow_dataset_jni]
+
+Consider this for jni *.dylib and *.so library dependencies :
+
+.. code-block:: shell
+
+    (base) ➜  /tmp jar -tf ~/Downloads/arrow-dataset-6.0.0.jar|grep _jni.
+
+    libarrow_dataset_jni.dylib
+    libarrow_dataset_jni.600.0.0.dylib
+    libarrow_dataset_jni.600.dylib
+
+    (base) ➜  /tmp jar -tf ~/Downloads/arrow-dataset-6.0.1.jar|grep _jni.
+
+    libarrow_dataset_jni.so
+    libarrow_dataset_jni.so.600
+    libarrow_dataset_jni.so.600.1.0
 
 .. contents::
 
