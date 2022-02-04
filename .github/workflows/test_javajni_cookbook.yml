@@ -35,6 +35,8 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v1
+      - name: Install dependencies
+        run: brew install python
       - name: Run tests
         run: make javatest
       - name: Build cookbook
