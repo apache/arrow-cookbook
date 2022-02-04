@@ -40,7 +40,7 @@ jobs:
       - name: Get Pip
         run: pip --version
       - name: Upgrade pip
-        run: sudo pip install --upgrade pip
+        run: python3 -m pip install --upgrade pip
       - name: Get Pip After
         run: pip --version
       - name: Run tests
