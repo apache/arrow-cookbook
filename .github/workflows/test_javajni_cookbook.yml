@@ -46,7 +46,7 @@ jobs:
       - name: Info 01
         run: ls -latr /usr/local/Cellar/protobuf/
       - name: Info 02
-        run: ls -latr /usr/local/Cellar/protobuf/3.19.0/lib
+        run: ls -latr /usr/local/Cellar/protobuf/3.19.4/lib
       - name: Run tests
         run: make javatest
       - name: Build cookbook
