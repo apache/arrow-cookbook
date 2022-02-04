@@ -59,6 +59,9 @@ class JavaDocTestBuilder(DocTestBuilder):
         ldd_output = subprocess.getoutput("ldd libarrow_dataset_jni.so")
         print(ldd_output)
 
+        lre2_output = subprocess.getoutput("ls -latr /usr/lib/x86_64-linux-gnu/ | grep re2")
+        print(lre2_output)
+
         # execute java testing code thru jshell and read output
         # JDK11 support '-' This allows the pipe to work as expected without requiring a shell
         # Migrating to /dev/stdin to also support JDK9+
