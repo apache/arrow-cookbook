@@ -39,8 +39,8 @@ jobs:
         run: pwd
       - name: Exclude jni cookbook
         run: |
-          cp source/index.rst source/index.rst.bck
-          cp source/indexwithoutjni.rst source/index.rst
+          cp java/source/index.rst source/index.rst.bck
+          cp java/source/indexwithoutjni.rst source/index.rst
       - name: Install dependencies
         run: sudo apt install libcurl4-openssl-dev libssl-dev python3-pip openjdk-11-jdk maven libthrift-0.13.0 libre2-5 libc6
       - name: Check rst file in
@@ -48,8 +48,8 @@ jobs:
       - name: Run tests
         run: make javatest
       - name: Include jni cookbook
-        run: cp source/index.rst.bck source/index.rst
+        run: cp java/source/index.rst.bck java/source/index.rst
       - name: Check rst file out
-        run: cat source/index.rst
+        run: cat java/source/index.rst
       - name: Build cookbook
         run: make java
