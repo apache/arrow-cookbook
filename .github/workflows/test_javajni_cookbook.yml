@@ -64,4 +64,3 @@ jobs:
         run: cat source/index.rst
       - name: Build cookbook
         run: make java
-

@@ -53,12 +53,3 @@ jobs:
         run: cat source/index.rst
       - name: Build cookbook
         run: make java
-
-  cp /Users/runner/work/arrow-cookbook/arrow-cookbook/java/source/indexwithoutjni.rst
-
-
-  Exception java.lang.RuntimeException: Error creating dataset. Could not read schema from
-    '/Users/runner/work/arrow-cookbook/arrow-cookbook/java/thirdpartydeps/parquetfiles/data1.parquet':
-      Path does not exist '/Users/runner/work/arrow-cookbook/arrow-cookbook/java/thirdpartydeps/parquetfiles/data1.parquet'. Is this a 'parquet' file?
-
-    String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data1.parquet";
