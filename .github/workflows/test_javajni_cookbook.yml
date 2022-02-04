@@ -30,7 +30,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test_py:
+  test_java_jni:
     name: "Test Java JNI Cookbook"
     runs-on: macos-latest
     steps:
@@ -43,8 +43,11 @@ jobs:
         run: brew install snappy utf8proc re2 thrift
       - name: Upgrade pip
         run: python3 -m pip install --upgrade pip
-      - name: Install jni dependencies - protobuf
-        run: pip install protobuf==3.17.3
+      - name: JNI - libarrow_dataset_jni.so compiled with libprotobuf.28.dylib not available at brew formula
+        run: |
+          brew install wget
+          wget https://github.com/davisusanibar/custom-recipes/blob/main/protobuf.rb
+          brew install -s protobuf.rb
       - name: Run tests
         run: make javatest
       - name: Build cookbook
