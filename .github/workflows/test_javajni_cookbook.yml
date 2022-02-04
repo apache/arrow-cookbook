@@ -39,12 +39,10 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '11'
-      - name: Install dependencies
-        run: brew install python3
+      - name: Install jni dependencies
+        run: brew install snappy utf8proc re2 thrift
       - name: Upgrade pip
         run: python3 -m pip install --upgrade pip
-      - name: Get Java
-        run: java -version
       - name: Run tests
         run: make javatest
       - name: Build cookbook
