@@ -40,9 +40,11 @@ jobs:
           distribution: 'temurin'
           java-version: '11'
       - name: Install jni dependencies
-        run: brew install snappy utf8proc re2 thrift protobuf-c
+        run: brew install snappy utf8proc re2 thrift protobuf@3.17
       - name: Upgrade pip
         run: python3 -m pip install --upgrade pip
+      - name: Info
+        run: /usr/local/Cellar/protobuf/3.17.3/lib
       - name: Run tests
         run: make javatest
       - name: Build cookbook
