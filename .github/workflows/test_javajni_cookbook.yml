@@ -39,6 +39,14 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '11'
+      - name: Get information
+        run: ls -latr /Users/runner/work/arrow-cookbook
+      - name: Get information v2
+        run: ls -latr /Users/runner/work/arrow-cookbook/arrow-cookbook
+      - name: Get information v3
+        run: ls -latr /Users/runner/work/arrow-cookbook/arrow-cookbook/java
+      - name: Get information v4
+        run: ls -latr /Users/runner/work/arrow-cookbook/arrow-cookbook/java/thirdpartydeps
       - name: Install jni dependencies
         run: brew install snappy utf8proc re2 thrift
       - name: Upgrade pip
