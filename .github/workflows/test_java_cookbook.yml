@@ -39,6 +39,17 @@ jobs:
         run: sudo apt install libcurl4-openssl-dev libssl-dev python3-pip openjdk-11-jdk maven libthrift-0.13.0 libre2-5 libc6
       - name: JNI - libarrow_dataset_jni.so need libre2-9.so needs ubuntu impish (21.10) that is not current available at github images
         run: sudo ln -s /usr/lib/x86_64-linux-gnu/libre2.so.5.0.0 /usr/lib/x86_64-linux-gnu/libre2.so.9
+      - name: JNI - libc.so.6 version GLIBC_2.32 not found
+        run: |
+          mkdir $HOME/glibc/ && cd $HOME/glibc
+          wget http://ftp.gnu.org/gnu/libc/glibc-2.32.tar.gz
+          tar -xvzf glibc-2.32.tar.gz
+          mkdir build
+          mkdir glibc-2.32-install
+          cd build
+          ~/glibc/glibc-2.32/configure --prefix=$HOME/glibc/glibc-2.32-install
+          make
+          make install
       - name: Run tests
         run: make javatest
       - name: Build cookbook
