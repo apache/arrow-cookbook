@@ -43,6 +43,8 @@ jobs:
         run: java -version
       - name: Get Java env
         run: export JAVA_HOME=$JAVA_HOME_11_X64
+      - name: Java home
+        run: echo $JAVA_HOME
       - name: Get Java
         run: java -version
       - name: Run tests
