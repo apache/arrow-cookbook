@@ -42,7 +42,9 @@ jobs:
       - name: Get Java
         run: java -version
       - name: Get Java env
-        run: echo $JAVA_HOME_11_X64
+        run: export JAVA_HOME=$JAVA_HOME_11_X64
+      - name: Get Java
+        run: java -version
       - name: Run tests
         run: make javatest
       - name: Build cookbook
