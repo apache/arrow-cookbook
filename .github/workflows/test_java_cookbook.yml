@@ -36,7 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Install dependencies
-        run: sudo apt install libcurl4-openssl-dev libssl-dev python3-pip openjdk-11-jdk maven libthrift-0.13.0 libre2-5
+        run: sudo apt install libcurl4-openssl-dev libssl-dev python3-pip openjdk-11-jdk maven libthrift-0.13.0 libre2-9
       - name: Run tests
         run: make javatest
       - name: Build cookbook
