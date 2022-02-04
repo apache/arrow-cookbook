@@ -22,7 +22,7 @@ on:
     branches:
        - mainv2
     paths:
-     - "java/notjni/*"
+     - "java/**"
      - ".github/workflows/test_java_cookbook.yml"
      
 concurrency:
@@ -30,17 +30,33 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test_py:
+  test_java:
     name: "Test Java Cookbook"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
+      - name: Exclude jni cookbook
+        run: |
+          cp source/index.rst source/index.rst.bck
+          cp source/indexwithoutjni.rst source/index.rst
       - name: Install dependencies
         run: sudo apt install libcurl4-openssl-dev libssl-dev python3-pip openjdk-11-jdk maven libthrift-0.13.0 libre2-5 libc6
-      - name: JNI - libarrow_dataset_jni.so need libre2-9.so needs ubuntu impish (21.10) that is not current available at github images
-        run: sudo ln -s /usr/lib/x86_64-linux-gnu/libre2.so.5.0.0 /usr/lib/x86_64-linux-gnu/libre2.so.9
+      - name: Check rst file in
+        run: cat source/index.rst
       - name: Run tests
         run: make javatest
+      - name: Include jni cookbook
+        run: cp source/index.rst.bck source/index.rst
+      - name: Check rst file out
+        run: cat source/index.rst
       - name: Build cookbook
         run: make java
 
+  cp /Users/runner/work/arrow-cookbook/arrow-cookbook/java/source/indexwithoutjni.rst
+
+
+  Exception java.lang.RuntimeException: Error creating dataset. Could not read schema from
+    '/Users/runner/work/arrow-cookbook/arrow-cookbook/java/thirdpartydeps/parquetfiles/data1.parquet':
+      Path does not exist '/Users/runner/work/arrow-cookbook/arrow-cookbook/java/thirdpartydeps/parquetfiles/data1.parquet'. Is this a 'parquet' file?
+
+    String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data1.parquet";

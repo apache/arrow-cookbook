@@ -22,7 +22,7 @@ on:
     branches:
        - main
     paths:
-     - "java/source/dataset"
+     - "java/**"
      - ".github/workflows/test_javajni_cookbook.yml"
      
 concurrency:
@@ -39,25 +39,27 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '11'
-      - name: Get information
-        run: ls -latr /Users/runner/work/arrow-cookbook
-      - name: Get information v2
-        run: ls -latr /Users/runner/work/arrow-cookbook/arrow-cookbook
-      - name: Get information v3
-        run: ls -latr /Users/runner/work/arrow-cookbook/arrow-cookbook/java
-      - name: Get information v4
-        run: ls -latr /Users/runner/work/arrow-cookbook/arrow-cookbook/java/thirdpartydeps
+      - name: Exclude non jni cookbook
+        run: |
+          cp source/index.rst source/index.rst.bck
+          cp source/indexwithjni.rst source/index.rst
       - name: Install jni dependencies
         run: brew install snappy utf8proc re2 thrift
       - name: Upgrade pip
         run: python3 -m pip install --upgrade pip
-      - name: JNI - libarrow_dataset_jni.so compiled with libprotobuf.28.dylib not available at brew formula
+      - name: JNI - libarrow_dataset_jni compiled with libprotobuf.28.dylib not available at brew formula
         run: |
           brew install wget
           wget https://raw.githubusercontent.com/davisusanibar/custom-recipes/main/protobuf.rb
           HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=false brew install -s protobuf.rb
+      - name: Check rst file in
+        run: cat source/index.rst
       - name: Run tests
         run: make javatest
+      - name: Include jni cookbook
+        run: cp source/index.rst.bck source/index.rst
+      - name: Check rst file out
+        run: cat source/index.rst
       - name: Build cookbook
         run: make java
 
