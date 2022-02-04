@@ -38,7 +38,7 @@ jobs:
       - name: Install dependencies
         run: sudo apt install libcurl4-openssl-dev libssl-dev python3-pip openjdk-11-jdk maven libthrift-0.13.0 libre2-5
       - name: JNI Cookbook (*.so need libre2-9 that is only available at ubuntu impish (21.10) that s not current available at github images)
-        run: ln -s /usr/lib/x86_64-linux-gnu/libre2.so.5.0.0 libre2.so.9
+        run: ln -s /usr/lib/x86_64-linux-gnu/libre2.so.5.0.0 /usr/lib/x86_64-linux-gnu/libre2.so.9
       - name: Run tests
         run: make javatest
       - name: Build cookbook
