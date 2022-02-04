@@ -23,7 +23,6 @@ class JavaDocTestBuilder(DocTestBuilder):
     ) -> Any:
         # go to project that contains all your arrow maven dependencies
         path_arrow_project = pathlib.Path(__file__).parent.parent / "source" / "demo"
-        breakpoint()
         # create list of all arrow jar dependencies
         subprocess.check_call(
             [

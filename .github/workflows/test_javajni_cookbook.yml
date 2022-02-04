@@ -22,7 +22,7 @@ on:
     branches:
        - main
     paths:
-     - "java/**"
+     - "java/**dataset.rst"
      - ".github/workflows/test_javajni_cookbook.yml"
      
 concurrency:
