@@ -47,7 +47,7 @@ jobs:
         run: |
           brew install wget
           wget https://raw.githubusercontent.com/davisusanibar/custom-recipes/main/protobuf.rb
-          brew install -s protobuf.rb
+          HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=false brew install -s protobuf.rb
       - name: Run tests
         run: make javatest
       - name: Build cookbook
