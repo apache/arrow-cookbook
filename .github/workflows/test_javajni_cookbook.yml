@@ -36,7 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Install dependencies
-        run: brew install python
+        run: brew install python3
       - name: Run tests
         run: make javatest
       - name: Build cookbook

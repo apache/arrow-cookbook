@@ -20,7 +20,7 @@ name: Test Java Cookbook
 on:
   pull_request:
     branches:
-       - main
+       - mainv2
     paths:
      - "java/notjni/*"
      - ".github/workflows/test_java_cookbook.yml"
