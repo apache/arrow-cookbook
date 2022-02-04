@@ -22,7 +22,7 @@ on:
     branches:
        - main
     paths:
-     - "java/**dataset.rst"
+      - "java/**"
      - ".github/workflows/test_javajni_cookbook.yml"
      
 concurrency:
@@ -39,10 +39,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '11'
-      - name: Exclude non jni cookbook
-        run: |
-          cp java/source/index.rst java/source/index.rst.bck
-          cp java/source/indexwithjni.rst java/source/index.rst
       - name: Install jni dependencies
         run: brew install snappy utf8proc re2 thrift
       - name: Upgrade pip
@@ -52,13 +48,17 @@ jobs:
           brew install wget
           wget https://raw.githubusercontent.com/davisusanibar/custom-recipes/main/protobuf.rb
           HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=false brew install -s protobuf.rb
-      - name: Check rst file in
-        run: cat java/source/index.rst
+      - name: Disable jni cookbooks
+        run: |
+          brew install rename
+          rename 's/\.rst/\.rstbck/' ./java/source/others/*.rst
+      - name: Check files
+        run: ls -latr java/source
       - name: Run tests
         run: make javatest
-      - name: Include jni cookbook
-        run: cp java/source/index.rst.bck java/source/index.rst
-      - name: Check rst file out
-        run: cat java/source/index.rst
+      - name: Enable jni cookbooks
+        run:  rename 's/\.rstbck/\.rst/' ./java/source/others/*.rstbck
+      - name: Check files
+        run: ls -latr java/source
       - name: Build cookbook
         run: make java

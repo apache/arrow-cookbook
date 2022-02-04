@@ -10,9 +10,9 @@ Welcome to java arrow's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   create
-   schema
-   dataset
+   others/create
+   others/schema
+   jni/dataset
 
 Indices and tables
 ==================
