@@ -40,7 +40,7 @@ jobs:
       - name: Upgrade pip
         run: python3 -m pip install --upgrade pip
       - name: Get Java
-        run: java --version
+        run: java -version
       - name: Get Java env
         run: echo $JAVA_HOME_11_X64
       - name: Run tests
