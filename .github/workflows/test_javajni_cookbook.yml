@@ -39,12 +39,19 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '11'
+      - uses: actions/checkout@v2
       - name: Cache libprotobuf.28.dylib
+        id: cache-libprotobuf
         uses: actions/cache@v2
+        env:
+          cache-name: cache-lib-protobuf
         with:
-          path: |
-            /usr/local/opt/protobuf
-          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+          path: /usr/local/opt/protobuf
+          key: ${{ runner.os }}-build-${{ env.cache-name }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
       - name: Install jni dependencies
         run: brew install snappy utf8proc re2 thrift
       - name: Upgrade pip
