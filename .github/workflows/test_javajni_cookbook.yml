@@ -41,8 +41,8 @@ jobs:
           java-version: '11'
       - name: Exclude non jni cookbook
         run: |
-          cp source/index.rst source/index.rst.bck
-          cp source/indexwithjni.rst source/index.rst
+          cp java/source/index.rst java/source/index.rst.bck
+          cp java/source/indexwithjni.rst java/source/index.rst
       - name: Install jni dependencies
         run: brew install snappy utf8proc re2 thrift
       - name: Upgrade pip
@@ -53,12 +53,12 @@ jobs:
           wget https://raw.githubusercontent.com/davisusanibar/custom-recipes/main/protobuf.rb
           HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=false brew install -s protobuf.rb
       - name: Check rst file in
-        run: cat source/index.rst
+        run: cat java/source/index.rst
       - name: Run tests
         run: make javatest
       - name: Include jni cookbook
-        run: cp source/index.rst.bck source/index.rst
+        run: cp java/source/index.rst.bck java/source/index.rst
       - name: Check rst file out
-        run: cat source/index.rst
+        run: cat java/source/index.rst
       - name: Build cookbook
         run: make java
