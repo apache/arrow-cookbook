@@ -35,6 +35,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
+      - name: View path
+        run: pwd
       - name: Exclude jni cookbook
         run: |
           cp source/index.rst source/index.rst.bck
