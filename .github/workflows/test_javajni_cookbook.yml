@@ -46,7 +46,7 @@ jobs:
       - name: JNI - libarrow_dataset_jni.so compiled with libprotobuf.28.dylib not available at brew formula
         run: |
           brew install wget
-          wget https://github.com/davisusanibar/custom-recipes/blob/main/protobuf.rb
+          wget https://raw.githubusercontent.com/davisusanibar/custom-recipes/main/protobuf.rb
           brew install -s protobuf.rb
       - name: Run tests
         run: make javatest
