@@ -39,13 +39,9 @@ jobs:
         run: sudo apt install libcurl4-openssl-dev libssl-dev python3-pip openjdk-11-jdk maven libthrift-0.13.0 libre2-5 libc6 rename
       - name: Disable jni cookbooks
         run: rename 's/\.rst/\.rstbck/' ./java/source/jni/*.rst
-      - name: Check files
-        run: ls -latr java/source
       - name: Run tests
         run: make javatest
       - name: Enable jni cookbooks
         run:  rename 's/\.rstbck/\.rst/' ./java/source/jni/*.rstbck
-      - name: Check files
-        run: ls -latr java/source
       - name: Build cookbook
         run: make java

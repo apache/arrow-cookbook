@@ -39,6 +39,12 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '11'
+      - name: Cache libprotobuf.28.dylib
+        uses: actions/cache@v2
+        with:
+          path: |
+            /usr/local/opt/protobuf
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
       - name: Install jni dependencies
         run: brew install snappy utf8proc re2 thrift
       - name: Upgrade pip
@@ -52,13 +58,9 @@ jobs:
         run: |
           brew install rename
           rename 's/\.rst/\.rstbck/' ./java/source/others/*.rst
-      - name: Check files
-        run: ls -latr java/source
       - name: Run tests
         run: make javatest
       - name: Enable jni cookbooks
-        run:  rename 's/\.rstbck/\.rst/' ./java/source/others/*.rstbck
-      - name: Check files
-        run: ls -latr java/source
+        run: rename 's/\.rstbck/\.rst/' ./java/source/others/*.rstbck
       - name: Build cookbook
         run: make java
