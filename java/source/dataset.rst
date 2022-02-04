@@ -39,3 +39,33 @@ Inspect Schema
 
     Schema<id: Int(32, true), name: Utf8>(metadata: {parquet.avro.schema={"type":"record","name":"User","namespace":"org.apache.arrow.dataset","fields":[{"name":"id","type":["int","null"]},{"name":"name","type":["string","null"]}]}, writer.model.name=avro})
 
+Infer Schema
+************
+
+.. testcode::
+
+    import org.apache.arrow.dataset.file.FileFormat;
+    import org.apache.arrow.dataset.file.FileSystemDatasetFactory;
+    import org.apache.arrow.dataset.jni.NativeMemoryPool;
+    import org.apache.arrow.dataset.scanner.ScanOptions;
+    import org.apache.arrow.dataset.scanner.Scanner;
+    import org.apache.arrow.dataset.source.Dataset;
+    import org.apache.arrow.dataset.source.DatasetFactory;
+    import org.apache.arrow.memory.RootAllocator;
+    import org.apache.arrow.vector.types.pojo.Schema;
+    import org.apache.arrow.util.AutoCloseables;
+
+    String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data1.parquet";
+    RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
+    DatasetFactory datasetFactory = new FileSystemDatasetFactory(rootAllocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
+    ScanOptions options = new ScanOptions(1);
+    Dataset dataset = datasetFactory.finish();
+    Scanner scanner = dataset.newScan(options);
+    Schema schema = scanner.schema();
+    AutoCloseables.close(datasetFactory, dataset, scanner);
+
+    System.out.println(schema);
+
+.. testoutput::
+
+    Schema<id: Int(32, true), name: Utf8>(metadata: {parquet.avro.schema={"type":"record","name":"User","namespace":"org.apache.arrow.dataset","fields":[{"name":"id","type":["int","null"]},{"name":"name","type":["string","null"]}]}, writer.model.name=avro})
