@@ -39,8 +39,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '11'
-      - name: View path
-        run: pwd
       - name: Exclude non jni cookbook
         run: |
           cp source/index.rst source/index.rst.bck
