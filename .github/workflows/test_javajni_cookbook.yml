@@ -46,7 +46,9 @@ jobs:
         env:
           cache-name: cache-lib-protobuf
         with:
-          path: /usr/local/opt/protobuf/
+          path: |
+            /usr/local/opt/protobuf
+            /usr/local/Cellar/protobuf/3.17.3
           key: ${{ runner.os }}-build-${{ env.cache-name }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}
