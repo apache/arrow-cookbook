@@ -21,7 +21,8 @@
 #include "common.h"
 
 TEST(CreatingArrowObjects, CreateArrays) {
-  StartRecipe("CreatingArrays", [] () {
+  StartRecipeCollection([] {
+    StartRecipe("CreatingArrays");
     arrow::Int32Builder builder;
     ARROW_RETURN_NOT_OK(builder.Append(1));
     ARROW_RETURN_NOT_OK(builder.Append(2));
@@ -31,7 +32,8 @@ TEST(CreatingArrowObjects, CreateArrays) {
     return EndRecipe("CreatingArrays");
   });
 
-  StartRecipe("CreatingArraysPtr", [] () {
+  StartRecipeCollection([] {
+    StartRecipe("CreatingArraysPtr");
     // Raw pointers
     arrow::Int64Builder long_builder = arrow::Int64Builder();
     std::array<int64_t, 4> values = {1, 2, 3, 4};

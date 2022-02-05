@@ -60,10 +60,11 @@ arrow::Status EndRecipe(const std::string& recipe_name) {
   return arrow::Status::OK();
 }
 
-void StartRecipe(const std::string& recipe_name, std::function<arrow::Status()> recipe_func) {
-    DoStartRecipe(recipe_name);
-    ASSERT_OK(recipe_func());
+void StartRecipeCollection(const std::function<arrow::Status()>& recipe_func) {
+  ASSERT_OK(recipe_func());
 }
+
+void StartRecipe(const std::string& recipe_name) { DoStartRecipe(recipe_name); }
 
 std::shared_ptr<arrow::Schema> RecipesTableSchema() {
   return arrow::schema({arrow::field("Recipe Name", arrow::utf8()),

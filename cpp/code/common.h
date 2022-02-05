@@ -21,6 +21,7 @@
 #include <arrow/result.h>
 #include <arrow/status.h>
 
+#include <functional>
 #include <sstream>
 #include <string>
 
@@ -46,7 +47,8 @@
 inline std::stringstream rout;
 
 arrow::Status EndRecipe(const std::string& recipe_name);
-void StartRecipe(const std::string& recipe_name, std::function<arrow::Status()> recipe_func);
+void StartRecipeCollection(const std::function<arrow::Status()>& recipe_func);
+void StartRecipe(const std::string& recipe_name);
 arrow::Status DumpRecipeOutput(const std::string& output_filename);
 bool HasRecipeOutput();
 arrow::Result<std::string> FindTestDataFile(const std::string& test_data_name);

@@ -21,7 +21,8 @@
 #include "common.h"
 
 TEST(BasicArrow, ReturnNotOkNoMacro) {
-  StartRecipe("ReturnNotOkNoMacro", [] () {
+  StartRecipeCollection([] {
+    StartRecipe("ReturnNotOkNoMacro");
     std::function<arrow::Status()> test_fn = [] {
       arrow::NullBuilder builder;
       arrow::Status st = builder.Reserve(2);
@@ -46,7 +47,8 @@ TEST(BasicArrow, ReturnNotOkNoMacro) {
 }
 
 TEST(BasicArrow, ReturnNotOk) {
-  StartRecipe("ReturnNotOk", [] () {
+  StartRecipeCollection([] {
+    StartRecipe("ReturnNotOk");
     std::function<arrow::Status()> test_fn = [] {
       arrow::NullBuilder builder;
       ARROW_RETURN_NOT_OK(builder.Reserve(2));
