@@ -57,9 +57,7 @@ jobs:
       - name: Upgrade pip
         run: python3 -m pip install --upgrade pip
       - name: Validate packages 1
-        run: ls -latr /usr/local/opt/protobuf
-      - name: Validate packages 2
-        run: ls -latr /usr/local/opt/protobuf/lib
+        run: ls -latr /usr/local/opt/protobuf/
       - name: JNI - libarrow_dataset_jni compiled with libprotobuf.28.dylib not available at brew formula
         if: steps.cache-libprotobuf.outputs.cache-hit != 'true'
         run: |
