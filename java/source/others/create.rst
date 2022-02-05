@@ -35,3 +35,26 @@ Array of Int (32-bit integer value)
 .. testoutput::
 
     [1, 2, 3]
+
+Array of Varchar
+----------------
+
+.. testcode::
+
+    import org.apache.arrow.vector.VarCharVector;
+    import org.apache.arrow.memory.RootAllocator;
+
+    RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
+
+    VarCharVector varVector = new VarCharVector("varVector", rootAllocator);
+    varVector.allocateNew(3);
+    varVector.set(0, "one".getBytes());
+    varVector.set(1, "two".getBytes());
+    varVector.set(2, "three".getBytes());
+    varVector.setValueCount(3);
+
+    System.out.print(varVector);
+
+.. testoutput::
+
+    [one, two, three]
