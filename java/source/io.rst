@@ -68,7 +68,7 @@ Write - Out to File
             writer.writeBatch();
         }
         writer.end();
-        System.out.println(writer.getRecordBlocks().size());
+        System.out.println("Record batches written: " + writer.getRecordBlocks().size());
     } catch (FileNotFoundException e) {
         e.printStackTrace();
     } catch (IOException e) {
