@@ -265,9 +265,8 @@ Write - Out to Buffer
 Reading
 =======
 
-Both libraries writing random access file and streaming format offer the same API
-with the difference that random acces file offer access to the entire payload and
-we could move where do we need to go
+Reading the random access format and streaming format both offer the same API,
+with the difference that random access files also offer access to any record batch by index.
 
 Reading Random Access Files
 ***************************
