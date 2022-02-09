@@ -119,11 +119,9 @@ Our server can then be started with
     # Code block to start for real a server in background
     # and wait for it to be available.
     # Previous code block is just to show to user how to start it.
-    import threading
-    server = FlightServer()
-    server._repo.mkdir(exist_ok=True)
-    t = threading.Thread(target=server.serve)
-    t.start()
+    import tempfile
+    repo = tempfile.TemporaryDirectory(prefix="arrow-cookbook-flight")
+    server = FlightServer(repo=pathlib.Path(repo.name))
 
     pa.flight.connect("grpc://0.0.0.0:8815").wait_for_available()
 
@@ -225,6 +223,7 @@ we might list all parquet files that are currently stored by the server:
 
     # Shutdown the server
     server.shutdown()
+    repo.cleanup()
 
 Streaming Parquet Storage Service
 =================================
@@ -335,11 +334,9 @@ Let's give the server a spin. As before, we'll start the server:
     # Code block to start for real a server in background
     # and wait for it to be available.
     # Previous code block is just to show to user how to start it.
-    import threading
-    server = FlightServer()
-    server._repo.mkdir(exist_ok=True)
-    t = threading.Thread(target=server.serve)
-    t.start()
+    import tempfile
+    repo = tempfile.TemporaryDirectory(prefix="arrow-cookbook-flight")
+    server = FlightServer(repo=pathlib.Path(repo.name))
 
     pa.flight.connect("grpc://0.0.0.0:8815").wait_for_available()
 
@@ -387,3 +384,4 @@ stream as it arrives, instead of reading them all into a table:
 
     # Shutdown the server
     server.shutdown()
+    repo.cleanup()
