@@ -390,13 +390,13 @@ Authentication with user/password
 =================================
 
 Often, services need a way to authenticate the user and identify who
-they are. Flight provides several ways to implement authentication;
-the simplest uses a user-password scheme. At startup, the client
-authenticates itself with the server using a username and
-password. The server returns an authorization token to include on
-future requests.
+they are. Flight provides :doc:`several ways to implement
+authentication <pyarrow:format/Flight>`; the simplest uses a
+user-password scheme. At startup, the client authenticates itself with
+the server using a username and password. The server returns an
+authorization token to include on future requests.
 
-.. warning:: Authentication should only be used over an encrypted
+.. warning:: Authentication should only be used over a secure encrypted
              channel, i.e. TLS should be enabled.
 
 .. note:: While the scheme is described as "`(HTTP) basic
@@ -411,6 +411,8 @@ minimal example only.**
 .. testcode::
 
    import base64
+   import secrets
+
    import pyarrow as pa
    import pyarrow.flight
 
@@ -423,46 +425,53 @@ minimal example only.**
 
 
    class BasicAuthServerMiddlewareFactory(pa.flight.ServerMiddlewareFactory):
-       """Middleware that implements username-password authentication."""
+       """
+       Middleware that implements username-password authentication.
+
+       Parameters
+       ----------
+       creds: Dict[str, str]
+           A dictionary of username-password values to accept.
+       """
 
        def __init__(self, creds):
            self.creds = creds
+           # Map generated bearer tokens to users
+           self.tokens = {}
 
        def start_call(self, info, headers):
            """Validate credentials at the start of every call."""
            # Search for the authentication header (case-insensitive)
-           token = None
+           auth_header = None
            for header in headers:
                if header.lower() == "authorization":
-                   token = headers[header]
+                   auth_header = headers[header][0]
                    break
 
-           if not token:
+           if not auth_header:
                raise pa.flight.FlightUnauthenticatedError("No credentials supplied")
 
-           # The header has the structure "AuthType TokenValue", e.g. "Basic foo"
-           # or "Bearer bar".
-           values = token[0].split(" ", maxsplit=1)
+           # The header has the structure "AuthType TokenValue", e.g.
+           # "Basic <encoded username+password>" or "Bearer <random token>".
+           auth_type, _, value = auth_header.partition(" ")
 
-           if values[0] == "Basic":
+           if auth_type == "Basic":
                # Initial "login". The user provided a username/password
                # combination encoded in the same way as HTTP Basic Auth.
-               decoded = base64.b64decode(values[1])
-               username, password = decoded.decode("utf-8").split(':', maxsplit=1)
-               if username not in self.creds or password != self.creds[username]:
+               decoded = base64.b64decode(value).decode("utf-8")
+               username, _, password = decoded.partition(':')
+               if not password or password != self.creds.get(username):
                    raise pa.flight.FlightUnauthenticatedError("Unknown user or invalid password")
-               # Return a bearer token to the user for future calls.
-               # Obviously, this is insecure and easily faked. This is for
-               # demonstration only.
-               bearer_token = username
-               return BasicAuthServerMiddleware(bearer_token)
-           elif values[0] == "Bearer":
-               # An actual call. Validate the bearer token returned to the user.
-               # The token is just the username.
-               token = values[1]
-               if token not in self.creds:
-                   raise pa.flight.FlightUnauthenticatedError("Invalid token")
+               # Generate a secret, random bearer token for future calls.
+               token = secrets.token_urlsafe(32)
+               self.tokens[token] = username
                return BasicAuthServerMiddleware(token)
+           elif auth_type == "Bearer":
+               # An actual call. Validate the bearer token.
+               username = self.tokens.get(value)
+               if username is None:
+                   raise pa.flight.FlightUnauthenticatedError("Invalid token")
+               return BasicAuthServerMiddleware(value)
 
            raise pa.flight.FlightUnauthenticatedError("No credentials supplied")
 
@@ -543,7 +552,7 @@ Then, we can make a client and log in:
 
 .. testoutput::
 
-   (b'authorization', b'Bearer test')
+   (b'authorization', b'Bearer ...')
 
 For future calls, we include the authentication token with the call:
 
