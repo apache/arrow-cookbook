@@ -13,6 +13,7 @@ Welcome to java arrow's documentation!
    create
    schema
    data
+   jni
 
 Indices and tables
 ==================
