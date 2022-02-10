@@ -32,6 +32,7 @@ class DatasetReadingTest : public ::testing::Test {
     std::shared_ptr<arrow::dataset::ScannerBuilder> scanner_builder =
         arrow::dataset::ScannerBuilder::FromRecordBatchReader(std::move(table_reader));
     ASSERT_OK(scanner_builder->UseThreads(true));
+    ASSERT_OK(scanner_builder->UseAsync(true));
     ASSERT_OK_AND_ASSIGN(std::shared_ptr<arrow::dataset::Scanner> scanner,
                          scanner_builder->Finish());
 
@@ -145,7 +146,6 @@ TEST_F(DatasetReadingTest, DatasetRead) {
 
   // Create a scanner
   arrow::dataset::ScannerBuilder scanner_builder(dataset);
-  ASSERT_OK(scanner_builder.UseAsync(true));
   ASSERT_OK(scanner_builder.UseThreads(true));
   ASSERT_OK_AND_ASSIGN(std::shared_ptr<arrow::dataset::Scanner> scanner,
                        scanner_builder.Finish());
