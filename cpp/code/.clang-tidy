@@ -16,6 +16,7 @@
 # under the License.
 ---
 Checks: '*,-llvmlibc*,-cert-err58-cpp,-modernize-use-trailing-return-type,-fuchsia-*,-cppcoreguidelines-*,
-  -readability-magic-numbers,-clang-analyzer-cplusplus.NewDelete,-clang-analyzer-cplusplus.NewDeleteLeaks'
+  -readability-magic-numbers,-clang-analyzer-cplusplus.NewDelete,-clang-analyzer-cplusplus.NewDeleteLeaks,
+  -readability-function-cognitive-complexity, -hicpp-special-member-functions'
 WarningsAsErrors: '*'
 FormatStyle: 'file'
