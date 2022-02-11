@@ -49,15 +49,6 @@ class JavaDocTestBuilder(DocTestBuilder):
                 __("invalid process to list jshell dependencies library")
             )
 
-        output = subprocess.getoutput("unzip /home/runner/.m2/repository/org/apache/arrow/arrow-dataset/7.0.0/arrow-dataset-7.0.0.jar")
-        print(output)
-
-        ls_output = subprocess.getoutput("ls -latr")
-        print(ls_output)
-
-        ldd_output = subprocess.getoutput("ldd libarrow_dataset_jni.so")
-        print(ldd_output)
-
         # execute java testing code thru jshell and read output
         # JDK11 support '-' This allows the pipe to work as expected without requiring a shell
         # Migrating to /dev/stdin to also support JDK9+
