@@ -12,6 +12,7 @@ Welcome to java arrow's documentation!
 
    create
    schema
+   data
    dataset
 
 Indices and tables

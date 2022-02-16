@@ -1,3 +1,5 @@
+.. _arrow-dataset:
+
 =======
 Dataset
 =======
@@ -12,7 +14,7 @@ Current java project that use JNI are:
 Schema
 ======
 
-Let read schema information for a parquet file using arrow dataset module (Number of rows in each file: 3)
+Let read schema information for a parquet file using arrow dataset module
 
 Inspect Schema
 **************
@@ -73,7 +75,7 @@ Infer Schema
 Query Parquet File
 ==================
 
-Let query information for a parquet file usign arrow dataset module (Number of rows in each file: 3)
+Let query information for a parquet file usign arrow dataset module
 
 Query Data Size
 ***************
@@ -228,67 +230,3 @@ Query Data Content with Projection
     Gladis
     Juan
 
-JNI Library
-===========
-
-Shared Libraries / Dynamically Loaded Modules
-*********************************************
-
-Consider arrow dataset versions for jni libarrow_dataset_jni.dylib and libarrow_dataset_jni.so.
-
-.. code-block:: shell
-
-    (base) ➜  /tmp jar -tf ~/Downloads/arrow-dataset-6.0.0.jar|grep _jni.
-
-    libarrow_dataset_jni.dylib
-    libarrow_dataset_jni.600.0.0.dylib
-    libarrow_dataset_jni.600.dylib
-
-    (base) ➜  /tmp jar -tf ~/Downloads/arrow-dataset-6.0.1.jar|grep _jni.
-
-    libarrow_dataset_jni.so
-    libarrow_dataset_jni.so.600
-    libarrow_dataset_jni.so.600.1.0
-
-Library Dependencies
-********************
-
-Consider this for jni libarrow_dataset_jni.dylib and libarrow_dataset_jni.so library dependencies.
-
-Shared Libraries:
-
-.. code-block:: shell
-
-    (base) ➜  /tmp objdump -p libarrow_dataset_jni.so | grep NEEDED
-      NEEDED       liblz4.so.1
-      NEEDED       libsnappy.so.1
-      NEEDED       libz.so.1
-      NEEDED       libzstd.so.1
-      NEEDED       libutf8proc.so.2
-      NEEDED       libre2.so.9
-      NEEDED       libthrift-0.13.0.so
-      NEEDED       libstdc++.so.6
-      NEEDED       libm.so.6
-      NEEDED       libgcc_s.so.1
-      NEEDED       libpthread.so.0
-      NEEDED       libc.so.6
-      NEEDED       ld-linux-x86-64.so.2
-
-
-Dynamically Loaded Modules:
-
-.. code-block:: shell
-
-    (base) ➜  /tmp otool -L libarrow_dataset_jni.dylib
-    libarrow_dataset_jni.dylib:
-        @rpath/libarrow_dataset_jni.600.dylib (compatibility version 600.0.0, current version 600.0.0)
-        /usr/local/opt/lz4/lib/liblz4.1.dylib (compatibility version 1.0.0, current version 1.9.3)
-        /usr/local/opt/snappy/lib/libsnappy.1.dylib (compatibility version 1.0.0, current version 1.1.9)
-        /usr/lib/libz.1.dylib (compatibility version 1.0.0, current version 1.2.11)
-        /usr/local/opt/zstd/lib/libzstd.1.dylib (compatibility version 1.0.0, current version 1.5.0)
-        /usr/local/opt/protobuf/lib/libprotobuf.28.dylib (compatibility version 29.0.0, current version 29.3.0)
-        /usr/local/opt/utf8proc/lib/libutf8proc.2.dylib (compatibility version 2.0.0, current version 2.4.1)
-        /usr/local/opt/re2/lib/libre2.9.dylib (compatibility version 9.0.0, current version 9.0.0)
-        /usr/local/opt/thrift/lib/libthrift-0.15.0.dylib (compatibility version 0.0.0, current version 0.0.0)
-        /usr/local/opt/llvm/lib/libc++.1.dylib (compatibility version 1.0.0, current version 1.0.0)
-        /usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1292.100.5)
