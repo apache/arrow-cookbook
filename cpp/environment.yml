@@ -6,7 +6,7 @@ dependencies:
   - _openmp_mutex=4.5=1_gnu
   - abseil-cpp=20210324.2=h9c3ff4c_0
   - alabaster=0.7.12=py_0
-  - arrow-cpp=5.0.0=py39h3d6947c_1_cpu
+  - arrow-cpp=6.0.1=py39h01fd06f_8_cpu
   - aws-c-cal=0.5.11=h95a6274_0
   - aws-c-common=0.6.2=h7f98852_0
   - aws-c-event-stream=0.2.7=h3541f99_13
@@ -18,9 +18,9 @@ dependencies:
   - binutils_linux-64=2.36=hf3e587d_0
   - brotlipy=0.7.0=py39h3811e60_1001
   - bzip2=1.0.8=h7f98852_4
-  - c-ares=1.17.1=h7f98852_1
-  - ca-certificates=2021.5.30=ha878542_0
-  - certifi=2021.5.30=py39hf3d152e_0
+  - c-ares=1.18.1=h7f98852_0
+  - ca-certificates=2021.10.8=ha878542_0
+  - certifi=2021.10.8=py39hf3d152e_1
   - cffi=1.14.6=py39he32792d_0
   - chardet=4.0.0=py39hf3d152e_1
   - charset-normalizer=2.0.0=pyhd8ed1ab_0
@@ -37,7 +37,8 @@ dependencies:
   - gcc_linux-64=11.1.0=h97fdae6_0
   - gflags=2.2.2=he1b5a44_1004
   - glog=0.5.0=h48cff8f_0
-  - grpc-cpp=1.39.0=h36ce80c_1
+  - grpc-cpp=1.42.0=ha1441d3_1
+  - gtest=1.10.0=h4bd325d_7
   - gxx_impl_linux-64=11.1.0=h6b5115b_8
   - gxx_linux-64=11.1.0=h33c4e4b_0
   - idna=3.1=pyhd3deb0d_0
@@ -58,33 +59,34 @@ dependencies:
   - libevent=2.1.10=hcdb4288_3
   - libffi=3.3=h58526e2_2
   - libgcc-devel_linux-64=11.1.0=h80e7780_8
-  - libgcc-ng=11.1.0=hc902ee8_8
+  - libgcc-ng=11.2.0=h1d223b6_12
   - libgfortran-ng=11.1.0=h69a702a_8
   - libgfortran5=11.1.0=h6c583b3_8
-  - libgomp=11.1.0=hc902ee8_8
+  - libgomp=11.2.0=h1d223b6_12
   - liblapack=3.9.0=10_openblas
   - libllvm11=11.1.0=hf817b99_2
   - libnghttp2=1.43.0=h812cca2_0
   - libopenblas=0.3.17=pthreads_h8fe5266_1
-  - libprotobuf=3.16.0=h780b84a_0
+  - libprotobuf=3.19.4=h780b84a_0
   - libsanitizer=11.1.0=h56837e0_8
   - libssh2=1.9.0=ha56f1ee_6
   - libstdcxx-devel_linux-64=11.1.0=h80e7780_8
-  - libstdcxx-ng=11.1.0=h56837e0_8
-  - libthrift=0.14.2=he6d91bd_1
-  - libutf8proc=2.6.1=h7f98852_0
+  - libstdcxx-ng=11.2.0=he4da1e4_12
+  - libthrift=0.15.0=he6d91bd_1
+  - libutf8proc=2.7.0=h7f98852_0
   - libuv=1.42.0=h7f98852_0
+  - libzlib=1.2.11=h36c2ea0_1013
   - lz4-c=1.9.3=h9c3ff4c_1
   - make=4.3=hd18ef5c_1
   - markupsafe=2.0.1=py39h3811e60_0
   - ncurses=6.2=h58526e2_4
   - numpy=1.21.1=py39hdbf815f_0
-  - openssl=1.1.1k=h7f98852_1
-  - orc=1.6.9=h58a87f1_0
+  - openssl=1.1.1l=h7f98852_0
+  - orc=1.7.2=h1be678f_0
   - packaging=21.0=pyhd8ed1ab_0
   - parquet-cpp=1.5.1=2
   - pip=21.2.3=pyhd8ed1ab_0
-  - pyarrow=5.0.0=py39h3ebc44c_1_cpu
+  - pyarrow=6.0.1=py39hff6fa39_8_cpu
   - pycparser=2.20=pyh9f0ad1d_2
   - pygments=2.9.0=pyhd8ed1ab_0
   - pyopenssl=20.0.1=pyhd8ed1ab_0
@@ -93,7 +95,7 @@ dependencies:
   - python=3.9.6=h49503c6_1_cpython
   - python_abi=3.9=2_cp39
   - pytz=2021.1=pyhd8ed1ab_0
-  - re2=2021.06.01=h9c3ff4c_0
+  - re2=2021.11.01=h9c3ff4c_0
   - readline=8.1=h46c0cb4_0
   - requests=2.26.0=pyhd8ed1ab_0
   - rhash=1.4.1=h7f98852_0
@@ -116,5 +118,5 @@ dependencies:
   - urllib3=1.26.6=pyhd8ed1ab_0
   - wheel=0.36.2=pyhd3deb0d_0
   - xz=5.2.5=h516909a_1
-  - zlib=1.2.11=h516909a_1010
-  - zstd=1.5.0=ha95c52a_0
+  - zlib=1.2.11=h36c2ea0_1013
+  - zstd=1.5.2=ha95c52a_0

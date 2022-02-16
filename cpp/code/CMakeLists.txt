@@ -6,19 +6,8 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
 endif()
 
-# Add googletest
-include(FetchContent)
-FetchContent_Declare(
-        googletest
-        GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG e2239ee6043f73722e7aa812a459f54a28552929 # release-1.11.0
-)
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
-
 # Add Arrow
-find_package(Arrow REQUIRED COMPONENTS dataset parquet)
+find_package(Arrow REQUIRED COMPONENTS dataset flight parquet)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_CLANG_TIDY "clang-tidy")
@@ -40,6 +29,7 @@ function(RECIPE TARGET)
             ${TARGET}
             arrow_shared
             arrow_dataset
+            arrow_flight
             parquet
             gtest
     )
@@ -55,3 +45,4 @@ endfunction()
 recipe(basic_arrow)
 recipe(creating_arrow_objects)
 recipe(datasets)
+recipe(flight)

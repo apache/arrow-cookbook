@@ -30,6 +30,7 @@ serve as robust and well performing solutions to those tasks.
    basic
    create
    datasets
+   flight
 
 Indices and tables
 ==================
