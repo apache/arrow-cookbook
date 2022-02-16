@@ -33,42 +33,45 @@ Write - Out to File
     import org.apache.arrow.vector.VectorSchemaRoot;
     import static java.util.Arrays.asList;
     import org.apache.arrow.vector.ipc.ArrowFileWriter;
+
     import java.io.File;
     import java.io.FileNotFoundException;
     import java.io.FileOutputStream;
     import java.io.IOException;
 
-    // Create and populate data:
-    Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
-    Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
-    Schema schemaPerson = new Schema(asList(name, age));
-    RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
-    VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator);
-    VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
-    nameVector.allocateNew(3);
-    nameVector.set(0, "David".getBytes());
-    nameVector.set(1, "Gladis".getBytes());
-    nameVector.set(2, "Juan".getBytes());
-    IntVector ageVector = (IntVector) vectorSchemaRoot.getVector("age");
-    ageVector.allocateNew(3);
-    ageVector.set(0, 10);
-    ageVector.set(1, 20);
-    ageVector.set(2, 30);
-    vectorSchemaRoot.setRowCount(3);
-    File file = new File("randon_access_to_file.arrow");
-    try (FileOutputStream fileOutputStream = new FileOutputStream(file);
-         ArrowFileWriter writer = new ArrowFileWriter(vectorSchemaRoot, null, fileOutputStream.getChannel())
-    ){
-        writer.start();
-        for (int i=0; i<10; i++){
-            // Generate data or modify the root or use a VectorLoader to get fresh data from somewhere else
-            writer.writeBatch();
+    try (RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE)) {
+        Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
+        Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
+        Schema schemaPerson = new Schema(asList(name, age));
+        try(VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator)){
+            VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
+            nameVector.allocateNew(3);
+            nameVector.set(0, "David".getBytes());
+            nameVector.set(1, "Gladis".getBytes());
+            nameVector.set(2, "Juan".getBytes());
+            IntVector ageVector = (IntVector) vectorSchemaRoot.getVector("age");
+            ageVector.allocateNew(3);
+            ageVector.set(0, 10);
+            ageVector.set(1, 20);
+            ageVector.set(2, 30);
+            vectorSchemaRoot.setRowCount(3);
+            File file = new File("randon_access_to_file.arrow");
+            try (FileOutputStream fileOutputStream = new FileOutputStream(file);
+                 ArrowFileWriter writer = new ArrowFileWriter(vectorSchemaRoot, null, fileOutputStream.getChannel())
+            ) {
+                writer.start();
+                for (int i = 0; i < 10; i++) {
+                    // Generate data or modify the root or use a VectorLoader to get fresh data from somewhere else
+                    writer.writeBatch();
+                }
+                writer.end();
+                System.out.println("Record batches written: " + writer.getRecordBlocks().size());
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-        System.out.println("Record batches written: " + writer.getRecordBlocks().size());
-    } catch (FileNotFoundException e) {
-        e.printStackTrace();
-    } catch (IOException e) {
-        e.printStackTrace();
     }
 
 .. testoutput::
@@ -96,36 +99,37 @@ Write - Out to Buffer
     import java.io.IOException;
     import java.nio.channels.Channels;
 
-    // Create and populate data:
-    Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
-    Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
-    Schema schemaPerson = new Schema(asList(name, age));
-    RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
-    VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator);
-    VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
-    nameVector.allocateNew(3);
-    nameVector.set(0, "David".getBytes());
-    nameVector.set(1, "Gladis".getBytes());
-    nameVector.set(2, "Juan".getBytes());
-    IntVector ageVector = (IntVector) vectorSchemaRoot.getVector("age");
-    ageVector.allocateNew(3);
-    ageVector.set(0, 10);
-    ageVector.set(1, 20);
-    ageVector.set(2, 30);
-    vectorSchemaRoot.setRowCount(3);
-    try (ByteArrayOutputStream out = new ByteArrayOutputStream();
-        ArrowFileWriter writer = new ArrowFileWriter(vectorSchemaRoot, null, /*WritableByteChannel out*/Channels.newChannel(out)))
-    {
-        writer.start();
-        for (int i=0; i<10; i++){
-            // Generate data or modify the root or use a VectorLoader to get fresh data from somewhere else
-            writer.writeBatch();
+    try (RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE)) {
+        Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
+        Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
+        Schema schemaPerson = new Schema(asList(name, age));
+        try(VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator)){
+            VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
+            nameVector.allocateNew(3);
+            nameVector.set(0, "David".getBytes());
+            nameVector.set(1, "Gladis".getBytes());
+            nameVector.set(2, "Juan".getBytes());
+            IntVector ageVector = (IntVector) vectorSchemaRoot.getVector("age");
+            ageVector.allocateNew(3);
+            ageVector.set(0, 10);
+            ageVector.set(1, 20);
+            ageVector.set(2, 30);
+            vectorSchemaRoot.setRowCount(3);
+            try (ByteArrayOutputStream out = new ByteArrayOutputStream();
+                 ArrowFileWriter writer = new ArrowFileWriter(vectorSchemaRoot, null, Channels.newChannel(out)))
+            {
+                writer.start();
+                for (int i=0; i<10; i++){
+                    // Generate data or modify the root or use a VectorLoader to get fresh data from somewhere else
+                    writer.writeBatch();
+                }
+                System.out.println("Record batches written: " + writer.getRecordBlocks().size());
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-        System.out.println("Record batches written: " + writer.getRecordBlocks().size());
-    } catch (FileNotFoundException e) {
-        e.printStackTrace();
-    } catch (IOException e) {
-        e.printStackTrace();
     }
 
 .. testoutput::
@@ -155,37 +159,39 @@ Write - Out to File
     import java.io.FileOutputStream;
     import java.io.IOException;
 
-    // Create and populate data:
-    Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
-    Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
-    Schema schemaPerson = new Schema(asList(name, age));
-    RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
-    VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator);
-    VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
-    nameVector.allocateNew(3);
-    nameVector.set(0, "David".getBytes());
-    nameVector.set(1, "Gladis".getBytes());
-    nameVector.set(2, "Juan".getBytes());
-    IntVector ageVector = (IntVector) vectorSchemaRoot.getVector("age");
-    ageVector.allocateNew(3);
-    ageVector.set(0, 10);
-    ageVector.set(1, 20);
-    ageVector.set(2, 30);
-    vectorSchemaRoot.setRowCount(3);
-    File file = new File("streaming_to_file.arrow");
-    try (FileOutputStream fileOutputStream = new FileOutputStream(file);
-         ArrowStreamWriter writer = new ArrowStreamWriter(vectorSchemaRoot, null, /*WritableByteChannel out*/fileOutputStream.getChannel())
-    ){
-        writer.start();
-        for (int i=0; i<10; i++){
-            // Generate data or modify the root or use a VectorLoader to get fresh data from somewhere else
-            writer.writeBatch();
+    try (RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE)) {
+        // Create and populate data:
+        Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
+        Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
+        Schema schemaPerson = new Schema(asList(name, age));
+        try(VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator)){
+            VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
+            nameVector.allocateNew(3);
+            nameVector.set(0, "David".getBytes());
+            nameVector.set(1, "Gladis".getBytes());
+            nameVector.set(2, "Juan".getBytes());
+            IntVector ageVector = (IntVector) vectorSchemaRoot.getVector("age");
+            ageVector.allocateNew(3);
+            ageVector.set(0, 10);
+            ageVector.set(1, 20);
+            ageVector.set(2, 30);
+            vectorSchemaRoot.setRowCount(3);
+            File file = new File("streaming_to_file.arrow");
+            try (FileOutputStream fileOutputStream = new FileOutputStream(file);
+                 ArrowStreamWriter writer = new ArrowStreamWriter(vectorSchemaRoot, null, fileOutputStream.getChannel())
+            ){
+                writer.start();
+                for (int i=0; i<10; i++){
+                    // Generate data or modify the root or use a VectorLoader to get fresh data from somewhere else
+                    writer.writeBatch();
+                }
+                System.out.println(writer.bytesWritten());
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-        System.out.println(writer.bytesWritten());
-    } catch (FileNotFoundException e) {
-        e.printStackTrace();
-    } catch (IOException e) {
-        e.printStackTrace();
     }
 
 .. testoutput::
@@ -213,36 +219,38 @@ Write - Out to Buffer
     import java.io.IOException;
     import java.nio.channels.Channels;
 
-    // Create and populate data:
-    Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
-    Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
-    Schema schemaPerson = new Schema(asList(name, age));
-    RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
-    VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator);
-    VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
-    nameVector.allocateNew(3);
-    nameVector.set(0, "David".getBytes());
-    nameVector.set(1, "Gladis".getBytes());
-    nameVector.set(2, "Juan".getBytes());
-    IntVector ageVector = (IntVector) vectorSchemaRoot.getVector("age");
-    ageVector.allocateNew(3);
-    ageVector.set(0, 10);
-    ageVector.set(1, 20);
-    ageVector.set(2, 30);
-    vectorSchemaRoot.setRowCount(3);
-    try (ByteArrayOutputStream out = new ByteArrayOutputStream();
-         ArrowStreamWriter writer = new ArrowStreamWriter(vectorSchemaRoot, null, /*WritableByteChannel out*/Channels.newChannel(out))
-    ){
-        writer.start();
-        for (int i=0; i<10; i++){
-            // Generate data or modify the root or use a VectorLoader to get fresh data from somewhere else
-            writer.writeBatch();
+    try (RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE)) {
+        // Create and populate data:
+        Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
+        Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
+        Schema schemaPerson = new Schema(asList(name, age));
+        try(VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator)){
+            VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
+            nameVector.allocateNew(3);
+            nameVector.set(0, "David".getBytes());
+            nameVector.set(1, "Gladis".getBytes());
+            nameVector.set(2, "Juan".getBytes());
+            IntVector ageVector = (IntVector) vectorSchemaRoot.getVector("age");
+            ageVector.allocateNew(3);
+            ageVector.set(0, 10);
+            ageVector.set(1, 20);
+            ageVector.set(2, 30);
+            vectorSchemaRoot.setRowCount(3);
+            try (ByteArrayOutputStream out = new ByteArrayOutputStream();
+                 ArrowStreamWriter writer = new ArrowStreamWriter(vectorSchemaRoot, null, Channels.newChannel(out))
+            ){
+                writer.start();
+                for (int i=0; i<10; i++){
+                    // Generate data or modify the root or use a VectorLoader to get fresh data from somewhere else
+                    writer.writeBatch();
+                }
+                System.out.println(writer.bytesWritten());
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-        System.out.println(writer.bytesWritten());
-    } catch (FileNotFoundException e) {
-        e.printStackTrace();
-    } catch (IOException e) {
-        e.printStackTrace();
     }
 
 .. testoutput::
@@ -264,122 +272,48 @@ Read - From File
 .. testcode::
 
     import org.apache.arrow.memory.RootAllocator;
-    import org.apache.arrow.vector.VarCharVector;
-    import org.apache.arrow.vector.IntVector;
-    import org.apache.arrow.vector.VectorLoader;
-    import org.apache.arrow.vector.VectorUnloader;
     import org.apache.arrow.vector.ipc.ArrowFileReader;
-    import org.apache.arrow.vector.ipc.ArrowFileWriter;
-    import org.apache.arrow.vector.ipc.ArrowStreamReader;
-    import org.apache.arrow.vector.ipc.ArrowStreamWriter;
     import org.apache.arrow.vector.ipc.message.ArrowBlock;
-    import org.apache.arrow.vector.ipc.message.ArrowRecordBatch;
-    import org.apache.arrow.vector.types.pojo.Field;
-    import org.apache.arrow.vector.types.pojo.FieldType;
-    import org.apache.arrow.vector.types.pojo.ArrowType;
-    import org.apache.arrow.vector.types.pojo.Schema;
     import org.apache.arrow.vector.VectorSchemaRoot;
-    import static java.util.Arrays.asList;
     import java.io.File;
     import java.io.FileInputStream;
     import java.io.FileNotFoundException;
     import java.io.FileOutputStream;
     import java.io.IOException;
 
-    RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
-    // Create and populate data:
-    Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
-    Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
-    Schema schemaPerson = new Schema(asList(name, age));
-    VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator);
-    VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
-    nameVector.allocateNew(3);
-    nameVector.set(0, "David".getBytes());
-    nameVector.set(1, "Gladis".getBytes());
-    nameVector.set(2, "Juan".getBytes());
-    IntVector ageVector = (IntVector) vectorSchemaRoot.getVector("age");
-    ageVector.allocateNew(3);
-    ageVector.set(0, 10);
-    ageVector.set(1, 20);
-    ageVector.set(2, 30);
-    vectorSchemaRoot.setRowCount(3);
-    Field name2 = new Field("name2", FieldType.nullable(new ArrowType.Utf8()), null);
-    Field age2 = new Field("age2", FieldType.nullable(new ArrowType.Int(32, true)), null);
-    Schema schemaPerson2 = new Schema(asList(name2, age2));
-    VectorSchemaRoot vectorSchemaRoot2 = VectorSchemaRoot.create(schemaPerson2, rootAllocator);
-    VarCharVector nameVector2 = (VarCharVector) vectorSchemaRoot2.getVector("name2");
-    nameVector2.allocateNew(3);
-    nameVector2.set(0, "Nidia".getBytes());
-    nameVector2.set(1, "Alexa".getBytes());
-    nameVector2.set(2, "Mara".getBytes());
-    IntVector ageVector2 = (IntVector) vectorSchemaRoot2.getVector("age2");
-    ageVector2.allocateNew(3);
-    ageVector2.set(0, 15);
-    ageVector2.set(1, 20);
-    ageVector2.set(2, 15);
-    vectorSchemaRoot2.setRowCount(3);
-    Field name3 = new Field("name3", FieldType.nullable(new ArrowType.Utf8()), null);
-    Field age3 = new Field("age3", FieldType.nullable(new ArrowType.Int(32, true)), null);
-    Schema schemaPerson3 = new Schema(asList(name3, age3));
-    VectorSchemaRoot vectorSchemaRoot3 = VectorSchemaRoot.create(schemaPerson3, rootAllocator);
-    VarCharVector nameVector3 = (VarCharVector) vectorSchemaRoot3.getVector("name3");
-    nameVector3.allocateNew(3);
-    nameVector3.set(0, "Raul".getBytes());
-    nameVector3.set(1, "Jhon".getBytes());
-    nameVector3.set(2, "Thomy".getBytes());
-    IntVector ageVector3 = (IntVector) vectorSchemaRoot3.getVector("age3");
-    ageVector3.allocateNew(3);
-    ageVector3.set(0, 34);
-    ageVector3.set(1, 29);
-    ageVector3.set(2, 33);
-    vectorSchemaRoot3.setRowCount(3);
-    File file = new File("randon_access_to_file.arrow");
-    try (FileOutputStream fileOutputStream = new FileOutputStream(file);
-         ArrowFileWriter writer = new ArrowFileWriter(vectorSchemaRoot, null, /*WritableByteChannel out*/fileOutputStream.getChannel())
-    ){
-        // write
-        writer.start();
-        for (int i=0; i<3; i++){
-            // Generate data or modify the root or use a VectorLoader to get fresh data from somewhere else
-            if (i==1){
-                VectorUnloader vectorUnloader2 = new VectorUnloader(vectorSchemaRoot2);
-                ArrowRecordBatch arrowRecordBatch2 = vectorUnloader2.getRecordBatch();
-                VectorLoader vectorLoader2 = new VectorLoader(vectorSchemaRoot);
-                vectorLoader2.load(arrowRecordBatch2);
-            }
-            if (i==2){
-                VectorUnloader vectorUnloader3 = new VectorUnloader(vectorSchemaRoot3);
-                ArrowRecordBatch arrowRecordBatch3 = vectorUnloader3.getRecordBatch();
-                VectorLoader vectorLoader3 = new VectorLoader(vectorSchemaRoot);
-                vectorLoader3.load(arrowRecordBatch3);
-            }
-            writer.writeBatch();
-        }
-        writer.end();
-
-        // read
+    try(RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE)){
+        File file = new File("./thirdpartydeps/arrowfiles/data1.arrow");
         try (FileInputStream fileInputStream = new FileInputStream(file);
              ArrowFileReader reader = new ArrowFileReader(fileInputStream.getChannel(), rootAllocator)
         ){
-            // read the 2nd batch or the index that you need according to you write
-            ArrowBlock block = reader.getRecordBlocks().get(1);
-            reader.loadRecordBatch(block);
-            VectorSchemaRoot vectorSchemaRootRecover = reader.getVectorSchemaRoot();
-            System.out.print(vectorSchemaRootRecover.contentToTSVString());
+            System.out.println("Record batches readed: " + reader.getRecordBlocks().size());
+            for (ArrowBlock arrowBlock : reader.getRecordBlocks()) {
+                reader.loadRecordBatch(arrowBlock);
+                VectorSchemaRoot vectorSchemaRootRecover = reader.getVectorSchemaRoot();
+                System.out.print(vectorSchemaRootRecover.contentToTSVString());
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
-    } catch (FileNotFoundException e) {
-        e.printStackTrace();
-    } catch (IOException e) {
-        e.printStackTrace();
     }
 
 .. testoutput::
 
+    Record batches readed: 3
+    name    age
+    David    10
+    Gladis    20
+    Juan    30
     name    age
     Nidia    15
     Alexa    20
     Mara    15
+    name    age
+    Raul    34
+    Jhon    29
+    Thomy    33
 
 Read - From Buffer
 ------------------
@@ -387,74 +321,46 @@ Read - From Buffer
 .. testcode::
 
     import org.apache.arrow.memory.RootAllocator;
-    import org.apache.arrow.vector.VarCharVector;
-    import org.apache.arrow.vector.IntVector;
     import org.apache.arrow.vector.ipc.ArrowFileReader;
     import org.apache.arrow.vector.ipc.SeekableReadChannel;
     import org.apache.arrow.vector.ipc.message.ArrowBlock;
-    import org.apache.arrow.vector.types.pojo.Field;
-    import org.apache.arrow.vector.types.pojo.FieldType;
-    import org.apache.arrow.vector.types.pojo.ArrowType;
-    import org.apache.arrow.vector.types.pojo.Schema;
     import org.apache.arrow.vector.VectorSchemaRoot;
-    import static java.util.Arrays.asList;
-    import org.apache.arrow.vector.ipc.ArrowFileWriter;
     import org.apache.arrow.vector.util.ByteArrayReadableSeekableByteChannel;
 
-    import java.io.ByteArrayOutputStream;
-    import java.io.FileNotFoundException;
     import java.io.IOException;
-    import java.nio.channels.Channels;
+    import java.nio.file.Files;
+    import java.nio.file.Path;
+    import java.nio.file.Paths;
 
-    // Create and populate data
-    Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
-    Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
-    Schema schemaPerson = new Schema(asList(name, age));
-    RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
-    VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator);
-    VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
-    nameVector.allocateNew(3);
-    nameVector.set(0, "David".getBytes());
-    nameVector.set(1, "Gladis".getBytes());
-    nameVector.set(2, "Juan".getBytes());
-    IntVector ageVector = (IntVector) vectorSchemaRoot.getVector("age");
-    ageVector.allocateNew(3);
-    ageVector.set(0, 10);
-    ageVector.set(1, 20);
-    ageVector.set(2, 30);
-    vectorSchemaRoot.setRowCount(3);
-    try (ByteArrayOutputStream out = new ByteArrayOutputStream();
-         ArrowFileWriter writer = new ArrowFileWriter(vectorSchemaRoot, null, /*WritableByteChannel out*/Channels.newChannel(out)))
-    {
-        // write
-        writer.start();
-        for (int i=0; i<10; i++){
-            // Generate data or modify the root or use a VectorLoader to get fresh data from somewhere else
-            writer.writeBatch();
+    try(RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE)) {
+        Path path = Paths.get("./thirdpartydeps/arrowfiles/data1.arrow");
+        try (ArrowFileReader reader = new ArrowFileReader(new SeekableReadChannel(new ByteArrayReadableSeekableByteChannel(Files.readAllBytes(path))), rootAllocator)){
+            System.out.println("Record batches readed: " + reader.getRecordBlocks().size());
+            for (ArrowBlock arrowBlock : reader.getRecordBlocks()) {
+                reader.loadRecordBatch(arrowBlock);
+                VectorSchemaRoot vectorSchemaRootRecover = reader.getVectorSchemaRoot();
+                System.out.print(vectorSchemaRootRecover.contentToTSVString());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        writer.end();
-
-        // read
-        try (ArrowFileReader reader = new ArrowFileReader(new SeekableReadChannel(new ByteArrayReadableSeekableByteChannel(out.toByteArray())), rootAllocator)
-        ){
-            // read the 2nd batch or the index that you need according to you write
-            ArrowBlock block = reader.getRecordBlocks().get(1);
-            reader.loadRecordBatch(block);
-            VectorSchemaRoot vectorSchemaRootRecover = reader.getVectorSchemaRoot();
-            System.out.print(vectorSchemaRootRecover.contentToTSVString());
-        }
-    } catch (FileNotFoundException e) {
-        e.printStackTrace();
-    } catch (IOException e) {
-        e.printStackTrace();
     }
 
 .. testoutput::
 
+    Record batches readed: 3
     name    age
     David    10
     Gladis    20
     Juan    30
+    name    age
+    Nidia    15
+    Alexa    20
+    Mara    15
+    name    age
+    Raul    34
+    Jhon    29
+    Thomy    33
 
 Reading Streaming Format
 ************************
@@ -465,63 +371,23 @@ Read - From File
 .. testcode::
 
     import org.apache.arrow.memory.RootAllocator;
-    import org.apache.arrow.vector.VarCharVector;
-    import org.apache.arrow.vector.IntVector;
     import org.apache.arrow.vector.ipc.ArrowStreamReader;
-    import org.apache.arrow.vector.types.pojo.Field;
-    import org.apache.arrow.vector.types.pojo.FieldType;
-    import org.apache.arrow.vector.types.pojo.ArrowType;
-    import org.apache.arrow.vector.types.pojo.Schema;
     import org.apache.arrow.vector.VectorSchemaRoot;
-    import static java.util.Arrays.asList;
-    import org.apache.arrow.vector.ipc.ArrowStreamWriter;
     import java.io.File;
     import java.io.FileInputStream;
-    import java.io.FileNotFoundException;
-    import java.io.FileOutputStream;
     import java.io.IOException;
 
-    // Create and populate data:
-    Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
-    Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
-    Schema schemaPerson = new Schema(asList(name, age));
-    RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
-    VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator);
-    VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
-    nameVector.allocateNew(3);
-    nameVector.set(0, "David".getBytes());
-    nameVector.set(1, "Gladis".getBytes());
-    nameVector.set(2, "Juan".getBytes());
-    IntVector ageVector = (IntVector) vectorSchemaRoot.getVector("age");
-    ageVector.allocateNew(3);
-    ageVector.set(0, 10);
-    ageVector.set(1, 20);
-    ageVector.set(2, 30);
-    vectorSchemaRoot.setRowCount(3);
-    File file = new File("streaming_to_file.arrow");
-    try (FileOutputStream fileOutputStream = new FileOutputStream(file);
-         ArrowStreamWriter writer = new ArrowStreamWriter(vectorSchemaRoot, null, /*WritableByteChannel out*/fileOutputStream.getChannel())
-    ){
-        // write
-        writer.start();
-        for (int i=0; i<2; i++){
-            // Generate data or modify the root or use a VectorLoader to get fresh data from somewhere else
-            writer.writeBatch();
-        }
-
-        // read
+    try(RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE)) {
+        File file = new File("./thirdpartydeps/arrowfiles/data2.arrow");
         try (FileInputStream fileInputStreamForStream = new FileInputStream(file);
-             ArrowStreamReader reader = new ArrowStreamReader(fileInputStreamForStream, rootAllocator)){
-            while(reader.loadNextBatch()){
-                // read the batch (on the next example you could see how to use a VectorLoader to get fresh data)
+             ArrowStreamReader reader = new ArrowStreamReader(fileInputStreamForStream, rootAllocator)) {
+            while (reader.loadNextBatch()) {
                 VectorSchemaRoot vectorSchemaRootRecover = reader.getVectorSchemaRoot();
                 System.out.print(vectorSchemaRootRecover.contentToTSVString());
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-    } catch (FileNotFoundException e) {
-        e.printStackTrace();
-    } catch (IOException e) {
-        e.printStackTrace();
     }
 
 .. testoutput::
@@ -531,12 +397,153 @@ Read - From File
     Gladis    20
     Juan    30
     name    age
-    David    10
-    Gladis    20
-    Juan    30
+    Nidia    15
+    Alexa    20
+    Mara    15
+    name    age
+    Raul    34
+    Jhon    29
+    Thomy    33
 
 Read - From Buffer
 ------------------
+
+.. testcode::
+
+    import org.apache.arrow.memory.RootAllocator;
+    import org.apache.arrow.vector.ipc.ArrowStreamReader;
+
+    import java.io.ByteArrayInputStream;
+    import java.io.IOException;
+    import java.nio.file.Files;
+    import java.nio.file.Path;
+    import java.nio.file.Paths;
+
+    try(RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE)) {
+        Path path = Paths.get("./thirdpartydeps/arrowfiles/data2.arrow");
+        try (ArrowStreamReader reader = new ArrowStreamReader(new ByteArrayInputStream(Files.readAllBytes(path)), rootAllocator)){
+            while(reader.loadNextBatch()){
+                System.out.print(reader.getVectorSchemaRoot().contentToTSVString());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+.. testoutput::
+
+    name    age
+    David    10
+    Gladis    20
+    Juan    30
+    name    age
+    Nidia    15
+    Alexa    20
+    Mara    15
+    name    age
+    Raul    34
+    Jhon    29
+    Thomy    33
+
+Reading Parquet File
+********************
+
+Please check :ref:`arrow-dataset`
+
+Writing Fresh Data
+==================
+
+Write Update Data Modifying The Root
+************************************
+
+.. testcode::
+
+    import org.apache.arrow.memory.RootAllocator;
+    import org.apache.arrow.vector.VarCharVector;
+    import org.apache.arrow.vector.IntVector;
+    import org.apache.arrow.vector.ipc.ArrowFileReader;
+    import org.apache.arrow.vector.ipc.message.ArrowBlock;
+    import org.apache.arrow.vector.types.pojo.Field;
+    import org.apache.arrow.vector.types.pojo.FieldType;
+    import org.apache.arrow.vector.types.pojo.ArrowType;
+    import org.apache.arrow.vector.types.pojo.Schema;
+    import org.apache.arrow.vector.VectorSchemaRoot;
+    import static java.util.Arrays.asList;
+    import org.apache.arrow.vector.ipc.ArrowFileWriter;
+
+    import java.io.File;
+    import java.io.FileInputStream;
+    import java.io.FileOutputStream;
+    import java.io.IOException;
+
+    try (RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE)) {
+        Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
+        Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
+        Schema schemaPerson = new Schema(asList(name, age));
+        try(VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator)){
+            VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
+            nameVector.allocateNew(3);
+            nameVector.set(0, "David".getBytes());
+            nameVector.set(1, "Gladis".getBytes());
+            nameVector.set(2, "Juan".getBytes());
+            IntVector ageVector = (IntVector) vectorSchemaRoot.getVector("age");
+            ageVector.allocateNew(3);
+            ageVector.set(0, 10);
+            ageVector.set(1, 20);
+            ageVector.set(2, 30);
+            vectorSchemaRoot.setRowCount(3);
+            File file = new File("randon_access_to_file_update_root.arrow");
+            try (FileOutputStream fileOutputStream = new FileOutputStream(file);
+                 ArrowFileWriter writer = new ArrowFileWriter(vectorSchemaRoot, null, fileOutputStream.getChannel())
+            ) {
+                writer.start();
+                writer.writeBatch();
+                for (int i = 0; i < 2; i++) {
+                    nameVector.set(0, ("New-"+(i+1)).getBytes());
+                    nameVector.set(1, ("New-"+(i+1)).getBytes());
+                    nameVector.set(2, ("New-"+(i+1)).getBytes());
+                    ageVector.set(0, (i+2)*10);
+                    ageVector.set(1, (i+2)*20);
+                    ageVector.set(2, (i+2)*30);
+                    writer.writeBatch();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try (FileInputStream fileInputStream = new FileInputStream(file);
+                 ArrowFileReader reader = new ArrowFileReader(fileInputStream.getChannel(), rootAllocator)
+            ){
+                System.out.println("Record batches readed: " + reader.getRecordBlocks().size());
+                for (ArrowBlock arrowBlock : reader.getRecordBlocks()) {
+                    reader.loadRecordBatch(arrowBlock);
+                    VectorSchemaRoot vectorSchemaRootRecover = reader.getVectorSchemaRoot();
+                    System.out.print(vectorSchemaRootRecover.contentToTSVString());
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+.. testoutput::
+
+    Record batches readed: 3
+    name    age
+    David    10
+    Gladis    20
+    Juan    30
+    name    age
+    New-1    20
+    New-1    40
+    New-1    60
+    name    age
+    New-2    30
+    New-2    60
+    New-2    90
+
+
+Write Update Data With VectorLoader
+***********************************
 
 .. testcode::
 
@@ -545,108 +552,86 @@ Read - From Buffer
     import org.apache.arrow.vector.IntVector;
     import org.apache.arrow.vector.VectorLoader;
     import org.apache.arrow.vector.VectorUnloader;
-    import org.apache.arrow.vector.ipc.ArrowStreamReader;
-    import org.apache.arrow.vector.ipc.ArrowStreamWriter;
+    import org.apache.arrow.vector.ipc.ArrowFileReader;
+    import org.apache.arrow.vector.ipc.message.ArrowBlock;
     import org.apache.arrow.vector.ipc.message.ArrowRecordBatch;
     import org.apache.arrow.vector.types.pojo.Field;
     import org.apache.arrow.vector.types.pojo.FieldType;
     import org.apache.arrow.vector.types.pojo.ArrowType;
     import org.apache.arrow.vector.types.pojo.Schema;
     import org.apache.arrow.vector.VectorSchemaRoot;
-
     import static java.util.Arrays.asList;
+    import org.apache.arrow.vector.ipc.ArrowFileWriter;
+
     import java.io.File;
     import java.io.FileInputStream;
-    import java.io.FileNotFoundException;
     import java.io.FileOutputStream;
     import java.io.IOException;
 
-    RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
-    // Create and populate data:
-    Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
-    Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
-    Schema schemaPerson = new Schema(asList(name, age));
-    VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator);
-    VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
-    nameVector.allocateNew(3);
-    nameVector.set(0, "David".getBytes());
-    nameVector.set(1, "Gladis".getBytes());
-    nameVector.set(2, "Juan".getBytes());
-    IntVector ageVector = (IntVector) vectorSchemaRoot.getVector("age");
-    ageVector.allocateNew(3);
-    ageVector.set(0, 10);
-    ageVector.set(1, 20);
-    ageVector.set(2, 30);
-    vectorSchemaRoot.setRowCount(3);
-    Field name2 = new Field("name2", FieldType.nullable(new ArrowType.Utf8()), null);
-    Field age2 = new Field("age2", FieldType.nullable(new ArrowType.Int(32, true)), null);
-    Schema schemaPerson2 = new Schema(asList(name2, age2));
-    VectorSchemaRoot vectorSchemaRoot2 = VectorSchemaRoot.create(schemaPerson2, rootAllocator);
-    VarCharVector nameVector2 = (VarCharVector) vectorSchemaRoot2.getVector("name2");
-    nameVector2.allocateNew(3);
-    nameVector2.set(0, "Nidia".getBytes());
-    nameVector2.set(1, "Alexa".getBytes());
-    nameVector2.set(2, "Mara".getBytes());
-    IntVector ageVector2 = (IntVector) vectorSchemaRoot2.getVector("age2");
-    ageVector2.allocateNew(3);
-    ageVector2.set(0, 15);
-    ageVector2.set(1, 20);
-    ageVector2.set(2, 15);
-    vectorSchemaRoot2.setRowCount(3);
-    Field name3 = new Field("name3", FieldType.nullable(new ArrowType.Utf8()), null);
-    Field age3 = new Field("age3", FieldType.nullable(new ArrowType.Int(32, true)), null);
-    Schema schemaPerson3 = new Schema(asList(name3, age3));
-    VectorSchemaRoot vectorSchemaRoot3 = VectorSchemaRoot.create(schemaPerson3, rootAllocator);
-    VarCharVector nameVector3 = (VarCharVector) vectorSchemaRoot3.getVector("name3");
-    nameVector3.allocateNew(3);
-    nameVector3.set(0, "Raul".getBytes());
-    nameVector3.set(1, "Jhon".getBytes());
-    nameVector3.set(2, "Thomy".getBytes());
-    IntVector ageVector3 = (IntVector) vectorSchemaRoot3.getVector("age3");
-    ageVector3.allocateNew(3);
-    ageVector3.set(0, 34);
-    ageVector3.set(1, 29);
-    ageVector3.set(2, 33);
-    vectorSchemaRoot3.setRowCount(3);
-    File file = new File("streaming_to_file.arrow");
-    try (FileOutputStream fileOutputStream = new FileOutputStream(file);
-         ArrowStreamWriter writer = new ArrowStreamWriter(vectorSchemaRoot, null, /*WritableByteChannel out*/fileOutputStream.getChannel())
-    ){
-        // write
-        writer.start();
-        for (int i=0; i<3; i++){
-            // Generate data or modify the root or use a VectorLoader to get fresh data from somewhere else
-            if (i==1){
-                VectorUnloader vectorUnloader2 = new VectorUnloader(vectorSchemaRoot2);
-                ArrowRecordBatch arrowRecordBatch2 = vectorUnloader2.getRecordBatch();
-                VectorLoader vectorLoader2 = new VectorLoader(vectorSchemaRoot);
-                vectorLoader2.load(arrowRecordBatch2);
+    try (RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE)) {
+        Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
+        Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
+        Schema schema = new Schema(asList(name, age));
+        try (VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schema, rootAllocator)) {
+            VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
+            nameVector.allocateNew(3);
+            nameVector.set(0, "Raul".getBytes());
+            nameVector.set(1, "Johao".getBytes());
+            nameVector.set(2, "Rafael".getBytes());
+            IntVector ageVector = (IntVector) vectorSchemaRoot.getVector("age");
+            ageVector.allocateNew(3);
+            ageVector.set(0, 10);
+            ageVector.set(1, 20);
+            ageVector.set(2, 30);
+            vectorSchemaRoot.setRowCount(3);
+            File fileWrite = new File("randon_access_to_file_loadunload.arrow");
+            try (FileOutputStream fileOutputStream = new FileOutputStream(fileWrite);
+                 ArrowFileWriter writer = new ArrowFileWriter(vectorSchemaRoot, null, fileOutputStream.getChannel())
+            ) {
+                writer.start();
+                writer.writeBatch();
+                // Update data with VectorLoader
+                try (FileInputStream fileInputStream = new FileInputStream(new File("./thirdpartydeps/arrowfiles/data1.arrow"));
+                     ArrowFileReader reader = new ArrowFileReader(fileInputStream.getChannel(), rootAllocator)
+                ){
+                    for (ArrowBlock arrowBlock : reader.getRecordBlocks()) {
+                        reader.loadRecordBatch(arrowBlock);
+                        try(VectorSchemaRoot vectorSchemaRootRecover = reader.getVectorSchemaRoot()){
+                            VectorUnloader vectorUnloader = new VectorUnloader(vectorSchemaRootRecover);
+                            try(ArrowRecordBatch arrowRecordBatch = vectorUnloader.getRecordBatch()){
+                                VectorLoader vectorLoader = new VectorLoader(vectorSchemaRoot);
+                                vectorLoader.load(arrowRecordBatch);
+                                // Write fresh data recovered
+                                writer.writeBatch();
+                            }
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            if (i==2){
-                VectorUnloader vectorUnloader3 = new VectorUnloader(vectorSchemaRoot3);
-                ArrowRecordBatch arrowRecordBatch3 = vectorUnloader3.getRecordBatch();
-                VectorLoader vectorLoader3 = new VectorLoader(vectorSchemaRoot);
-                vectorLoader3.load(arrowRecordBatch3);
-            }
-            writer.writeBatch();
-        }
-
-        // read
-        try (FileInputStream fileInputStreamForStream = new FileInputStream(file);
-             ArrowStreamReader reader = new ArrowStreamReader(fileInputStreamForStream, rootAllocator)){
-            while(reader.loadNextBatch()){
-                // read the batch
-                System.out.print(reader.getVectorSchemaRoot().contentToTSVString());
+            try (FileInputStream fileInputStream = new FileInputStream(fileWrite);
+                 ArrowFileReader reader = new ArrowFileReader(fileInputStream.getChannel(), rootAllocator)
+            ) {
+                System.out.println("Record batches readed: " + reader.getRecordBlocks().size());
+                for (ArrowBlock arrowBlock : reader.getRecordBlocks()) {
+                    reader.loadRecordBatch(arrowBlock);
+                    VectorSchemaRoot vectorSchemaRootRecover = reader.getVectorSchemaRoot();
+                    System.out.print(vectorSchemaRootRecover.contentToTSVString());
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
-    } catch (FileNotFoundException e) {
-        e.printStackTrace();
-    } catch (IOException e) {
-        e.printStackTrace();
     }
 
 .. testoutput::
 
+    Record batches readed: 4
+    name    age
+    Raul    10
+    Johao    20
+    Rafael    30
     name    age
     David    10
     Gladis    20
