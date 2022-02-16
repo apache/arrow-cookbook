@@ -45,6 +45,11 @@
             <artifactId>arrow-dataset</artifactId>
             <version>${arrow.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>30.1.1-jre</version>
+        </dependency>
     </dependencies>
 
 </project>
