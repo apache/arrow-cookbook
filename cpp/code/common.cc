@@ -117,7 +117,7 @@ void PopulateMap(const arrow::Table& table,
   std::shared_ptr<arrow::StringArray> table_outputs =
       std::dynamic_pointer_cast<arrow::StringArray>(table.column(1)->chunk(0));
   for (int64_t i = 0; i < table.num_rows(); i++) {
-    values->insert({table_names->GetString(i), table_outputs->GetString(i)});
+    (*values)[table_names->GetString(i)] = table_outputs->GetString(i);
   }
 }
 
