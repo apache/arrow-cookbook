@@ -39,6 +39,8 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '11'
+      - name: Upgrade pip
+        run: python3 -m pip install --upgrade pip
       - name: Run tests
         run: make javatest
       - name: Build cookbook
