@@ -6,7 +6,7 @@ Dataset
 
 Current java project that use JNI are:
 
-* `Arrow Java Dataset <https://arrow.apache.org/docs/dev/java/dataset.html>`_: Java implementation of Arrow Dataset API/Framework. JniLoader [arrow_cdata_jni]
+* `Arrow Java Dataset <https://arrow.apache.org/docs/dev/java/dataset.html>`_: Java implementation of Arrow Datasets library. JniLoader [arrow_cdata_jni]
 * `Arrow Java C Data Interface <https://arrow.apache.org/docs/format/CDataInterface.html>`_: Java implementation of C Data Interface. JniLoader [arrow_dataset_jni]
 
 .. contents::
