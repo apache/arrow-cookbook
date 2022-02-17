@@ -41,7 +41,7 @@ We can construct a dataset with an auto-inferred schema.
 
     1
 
-Let construct our dataset with predefined schema.
+We can also explicitly discover the schema during dataset construction, and pass that to the factory. We could modify or replace the schema ourselves if needed here.
 
 .. testcode::
 
