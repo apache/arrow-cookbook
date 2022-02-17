@@ -167,7 +167,7 @@ Query Data Content For File
     try(RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
         DatasetFactory datasetFactory = new FileSystemDatasetFactory(rootAllocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
         Dataset dataset = datasetFactory.finish()){
-        ScanOptions options = new ScanOptions(100);
+        ScanOptions options = new ScanOptions(/*batchSize*/ 100);
         try(Scanner scanner = dataset.newScan(options)){
             Schema schema = scanner.schema();
             List<ArrowRecordBatch> batches = StreamSupport.stream(scanner.scan().spliterator(), false).flatMap(t -> Streams.stream(t.execute())).collect(Collectors.toList());
