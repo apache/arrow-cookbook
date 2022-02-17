@@ -11,7 +11,7 @@ Dataset
 Dataset
 =======
 
-Let construct our dataset with auto-inferred schema.
+We can construct a dataset with an auto-inferred schema.
 
 .. testcode::
 
