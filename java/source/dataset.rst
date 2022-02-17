@@ -41,7 +41,7 @@ We can construct a dataset with an auto-inferred schema.
 
     1
 
-We can also explicitly discover the schema during dataset construction, and pass that to the factory. We could modify or replace the schema ourselves if needed here.
+Let construct our dataset with predefined schema.
 
 .. testcode::
 
@@ -168,16 +168,14 @@ Query Data Content For File
         DatasetFactory datasetFactory = new FileSystemDatasetFactory(rootAllocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
         Dataset dataset = datasetFactory.finish()){
         ScanOptions options = new ScanOptions(100);
-        try(Scanner scanner = dataset.newScan(options)){
-            Schema schema = scanner.schema();
+        try(Scanner scanner = dataset.newScan(options);
+            VectorSchemaRoot vsr = VectorSchemaRoot.create(scanner.schema(), rootAllocator)){
             List<ArrowRecordBatch> batches = StreamSupport.stream(scanner.scan().spliterator(), false).flatMap(t -> Streams.stream(t.execute())).collect(Collectors.toList());
-            try (VectorSchemaRoot vsr = VectorSchemaRoot.create(schema, rootAllocator)) {
-                VectorLoader loader = new VectorLoader(vsr);
-                for (ArrowRecordBatch batch : batches) {
-                    loader.load(batch);
-                    System.out.print(vsr.contentToTSVString());
-                    batch.close();
-                }
+            VectorLoader loader = new VectorLoader(vsr);
+            for (ArrowRecordBatch batch : batches) {
+                loader.load(batch);
+                System.out.print(vsr.contentToTSVString());
+                batch.close();
             }
         }
     }
@@ -221,18 +219,16 @@ Consider that we have these files: data1: 3 rows, data2: 3 rows and data3: 250 r
         DatasetFactory datasetFactory = new FileSystemDatasetFactory(rootAllocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
         Dataset dataset = datasetFactory.finish()){
         ScanOptions options = new ScanOptions(100);
-        try(Scanner scanner = dataset.newScan(options)){
-            Schema schema = scanner.schema();
+        try(Scanner scanner = dataset.newScan(options);
+            VectorSchemaRoot vsr = VectorSchemaRoot.create(scanner.schema(), rootAllocator)){
             List<ArrowRecordBatch> batches = StreamSupport.stream(scanner.scan().spliterator(), false).flatMap(t -> Streams.stream(t.execute())).collect(Collectors.toList());
-            try (VectorSchemaRoot vsr = VectorSchemaRoot.create(schema, rootAllocator)) {
-                VectorLoader loader = new VectorLoader(vsr);
-                System.out.println("Batch Size: " + batches.size());
-                int count = 1;
-                for (ArrowRecordBatch batch : batches) {
-                    loader.load(batch);
-                    System.out.println("Batch: " + count++ + ", RowCount: " + vsr.getRowCount());
-                    batch.close();
-                }
+            VectorLoader loader = new VectorLoader(vsr);
+            System.out.println("Batch Size: " + batches.size());
+            int count = 1;
+            for (ArrowRecordBatch batch : batches) {
+                loader.load(batch);
+                System.out.println("Batch: " + count++ + ", RowCount: " + vsr.getRowCount());
+                batch.close();
             }
         }
     }
@@ -248,6 +244,8 @@ Consider that we have these files: data1: 3 rows, data2: 3 rows and data3: 250 r
 
 Query Data Content with Projection
 **********************************
+
+In case we need to project only certain columns we could configure ScanOptions with projections needed.
 
 .. testcode::
 
