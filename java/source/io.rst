@@ -35,7 +35,6 @@ Write - Out to File
     import org.apache.arrow.vector.ipc.ArrowFileWriter;
 
     import java.io.File;
-    import java.io.FileNotFoundException;
     import java.io.FileOutputStream;
     import java.io.IOException;
 
@@ -61,13 +60,11 @@ Write - Out to File
             ) {
                 writer.start();
                 for (int i = 0; i < 10; i++) {
-                    // Generate data or modify the root or use a VectorLoader to get fresh data from somewhere else
+                    // All the data that is  going to write comes from the root and as we were not changing root data we are writing the same data 10x times
                     writer.writeBatch();
                 }
                 writer.end();
                 System.out.println("Record batches written: " + writer.getRecordBlocks().size());
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -95,7 +92,6 @@ Write - Out to Buffer
     import org.apache.arrow.vector.ipc.ArrowFileWriter;
 
     import java.io.ByteArrayOutputStream;
-    import java.io.FileNotFoundException;
     import java.io.IOException;
     import java.nio.channels.Channels;
 
@@ -120,12 +116,9 @@ Write - Out to Buffer
             {
                 writer.start();
                 for (int i=0; i<10; i++){
-                    // Generate data or modify the root or use a VectorLoader to get fresh data from somewhere else
                     writer.writeBatch();
                 }
                 System.out.println("Record batches written: " + writer.getRecordBlocks().size());
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -155,7 +148,6 @@ Write - Out to File
     import static java.util.Arrays.asList;
     import org.apache.arrow.vector.ipc.ArrowStreamWriter;
     import java.io.File;
-    import java.io.FileNotFoundException;
     import java.io.FileOutputStream;
     import java.io.IOException;
 
@@ -182,12 +174,9 @@ Write - Out to File
             ){
                 writer.start();
                 for (int i=0; i<10; i++){
-                    // Generate data or modify the root or use a VectorLoader to get fresh data from somewhere else
                     writer.writeBatch();
                 }
                 System.out.println(writer.bytesWritten());
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -215,7 +204,6 @@ Write - Out to Buffer
     import static java.util.Arrays.asList;
 
     import java.io.ByteArrayOutputStream;
-    import java.io.FileNotFoundException;
     import java.io.IOException;
     import java.nio.channels.Channels;
 
@@ -241,12 +229,9 @@ Write - Out to Buffer
             ){
                 writer.start();
                 for (int i=0; i<10; i++){
-                    // Generate data or modify the root or use a VectorLoader to get fresh data from somewhere else
                     writer.writeBatch();
                 }
                 System.out.println(writer.bytesWritten());
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -269,6 +254,8 @@ Reading Random Access Files
 Read - From File
 ----------------
 
+We are providing a path with auto generated arrow files for testing purposes, change that at your convenience.
+
 .. testcode::
 
     import org.apache.arrow.memory.RootAllocator;
@@ -277,7 +264,6 @@ Read - From File
     import org.apache.arrow.vector.VectorSchemaRoot;
     import java.io.File;
     import java.io.FileInputStream;
-    import java.io.FileNotFoundException;
     import java.io.FileOutputStream;
     import java.io.IOException;
 
@@ -286,14 +272,12 @@ Read - From File
         try (FileInputStream fileInputStream = new FileInputStream(file);
              ArrowFileReader reader = new ArrowFileReader(fileInputStream.getChannel(), rootAllocator)
         ){
-            System.out.println("Record batches readed: " + reader.getRecordBlocks().size());
+            System.out.println("Record batches in file: " + reader.getRecordBlocks().size());
             for (ArrowBlock arrowBlock : reader.getRecordBlocks()) {
                 reader.loadRecordBatch(arrowBlock);
                 VectorSchemaRoot vectorSchemaRootRecover = reader.getVectorSchemaRoot();
                 System.out.print(vectorSchemaRootRecover.contentToTSVString());
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -301,7 +285,7 @@ Read - From File
 
 .. testoutput::
 
-    Record batches readed: 3
+    Record batches in file: 3
     name    age
     David    10
     Gladis    20
@@ -335,7 +319,7 @@ Read - From Buffer
     try(RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE)) {
         Path path = Paths.get("./thirdpartydeps/arrowfiles/data1.arrow");
         try (ArrowFileReader reader = new ArrowFileReader(new SeekableReadChannel(new ByteArrayReadableSeekableByteChannel(Files.readAllBytes(path))), rootAllocator)){
-            System.out.println("Record batches readed: " + reader.getRecordBlocks().size());
+            System.out.println("Record batches in file: " + reader.getRecordBlocks().size());
             for (ArrowBlock arrowBlock : reader.getRecordBlocks()) {
                 reader.loadRecordBatch(arrowBlock);
                 VectorSchemaRoot vectorSchemaRootRecover = reader.getVectorSchemaRoot();
@@ -348,7 +332,7 @@ Read - From Buffer
 
 .. testoutput::
 
-    Record batches readed: 3
+    Record batches in file: 3
     name    age
     David    10
     Gladis    20
@@ -448,7 +432,7 @@ Read - From Buffer
 Reading Parquet File
 ********************
 
-Please check :ref:`arrow-dataset`
+Please check :doc:`JNI Dataset <./dataset>`
 
 Writing Fresh Data
 ==================
@@ -513,7 +497,7 @@ Write Update Data Modifying The Root
             try (FileInputStream fileInputStream = new FileInputStream(file);
                  ArrowFileReader reader = new ArrowFileReader(fileInputStream.getChannel(), rootAllocator)
             ){
-                System.out.println("Record batches readed: " + reader.getRecordBlocks().size());
+                System.out.println("Record batches in file: " + reader.getRecordBlocks().size());
                 for (ArrowBlock arrowBlock : reader.getRecordBlocks()) {
                     reader.loadRecordBatch(arrowBlock);
                     VectorSchemaRoot vectorSchemaRootRecover = reader.getVectorSchemaRoot();
@@ -527,7 +511,7 @@ Write Update Data Modifying The Root
 
 .. testoutput::
 
-    Record batches readed: 3
+    Record batches in file: 3
     name    age
     David    10
     Gladis    20
@@ -613,7 +597,7 @@ Write Update Data With VectorLoader
             try (FileInputStream fileInputStream = new FileInputStream(fileWrite);
                  ArrowFileReader reader = new ArrowFileReader(fileInputStream.getChannel(), rootAllocator)
             ) {
-                System.out.println("Record batches readed: " + reader.getRecordBlocks().size());
+                System.out.println("Record batches in file: " + reader.getRecordBlocks().size());
                 for (ArrowBlock arrowBlock : reader.getRecordBlocks()) {
                     reader.loadRecordBatch(arrowBlock);
                     VectorSchemaRoot vectorSchemaRootRecover = reader.getVectorSchemaRoot();
@@ -627,7 +611,7 @@ Write Update Data With VectorLoader
 
 .. testoutput::
 
-    Record batches readed: 4
+    Record batches in file: 4
     name    age
     Raul    10
     Johao    20
