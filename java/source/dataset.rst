@@ -8,8 +8,8 @@ Dataset
 
 .. contents::
 
-Dataset
-=======
+Constructing Datasets
+=====================
 
 We can construct a dataset with an auto-inferred schema.
 
@@ -29,7 +29,7 @@ We can construct a dataset with an auto-inferred schema.
         String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data1.parquet";
         try (DatasetFactory datasetFactory = new FileSystemDatasetFactory(rootAllocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri)) {
             try(Dataset dataset = datasetFactory.finish()){
-                ScanOptions options = new ScanOptions(100);
+                ScanOptions options = new ScanOptions(/*batchSize*/ 100);
                 try(Scanner scanner = dataset.newScan(options)){
                     System.out.println(StreamSupport.stream(scanner.scan().spliterator(), false).count());
                 }
@@ -59,7 +59,7 @@ Let construct our dataset with predefined schema.
     try (RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE)) {
         try (DatasetFactory datasetFactory = new FileSystemDatasetFactory(rootAllocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri)) {
             try(Dataset dataset = datasetFactory.finish(datasetFactory.inspect())){
-                ScanOptions options = new ScanOptions(100);
+                ScanOptions options = new ScanOptions(/*batchSize*/ 100);
                 try(Scanner scanner = dataset.newScan(options)){
                     System.out.println(StreamSupport.stream(scanner.scan().spliterator(), false).count());
                 }
@@ -118,7 +118,7 @@ Infer Schema
     String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data3.parquet";
     try(RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE)){
         try(DatasetFactory datasetFactory = new FileSystemDatasetFactory(rootAllocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri)){
-            ScanOptions options = new ScanOptions(1);
+            ScanOptions options = new ScanOptions(/*batchSize*/ 1);
             try(Dataset dataset = datasetFactory.finish()){
                 try(Scanner scanner = dataset.newScan(options)){
                     Schema schema = scanner.schema();
@@ -167,7 +167,7 @@ Query Data Content For File
     try(RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
         DatasetFactory datasetFactory = new FileSystemDatasetFactory(rootAllocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
         Dataset dataset = datasetFactory.finish()){
-        ScanOptions options = new ScanOptions(100);
+        ScanOptions options = new ScanOptions(/*batchSize*/ 100);
         try(Scanner scanner = dataset.newScan(options);
             VectorSchemaRoot vsr = VectorSchemaRoot.create(scanner.schema(), rootAllocator)){
             List<ArrowRecordBatch> batches = StreamSupport.stream(scanner.scan().spliterator(), false).flatMap(t -> Streams.stream(t.execute())).collect(Collectors.toList());
@@ -218,7 +218,7 @@ Consider that we have these files: data1: 3 rows, data2: 3 rows and data3: 250 r
     try(RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
         DatasetFactory datasetFactory = new FileSystemDatasetFactory(rootAllocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
         Dataset dataset = datasetFactory.finish()){
-        ScanOptions options = new ScanOptions(100);
+        ScanOptions options = new ScanOptions(/*batchSize*/ 100);
         try(Scanner scanner = dataset.newScan(options);
             VectorSchemaRoot vsr = VectorSchemaRoot.create(scanner.schema(), rootAllocator)){
             List<ArrowRecordBatch> batches = StreamSupport.stream(scanner.scan().spliterator(), false).flatMap(t -> Streams.stream(t.execute())).collect(Collectors.toList());
@@ -275,7 +275,7 @@ In case we need to project only certain columns we could configure ScanOptions w
         DatasetFactory datasetFactory = new FileSystemDatasetFactory(rootAllocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
         Dataset dataset = datasetFactory.finish()){
         String[] projection = new String[] {"name"};
-        ScanOptions options = new ScanOptions(100, Optional.of(projection));
+        ScanOptions options = new ScanOptions(/*batchSize*/ 100, Optional.of(projection));
         try(Scanner scanner = dataset.newScan(options)){
             Schema schema = scanner.schema();
             List<ArrowRecordBatch> batches = StreamSupport.stream(scanner.scan().spliterator(), false).flatMap(t -> Streams.stream(t.execute())).collect(Collectors.toList());
