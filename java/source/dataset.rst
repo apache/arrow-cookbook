@@ -8,8 +8,8 @@ Dataset
 
 .. contents::
 
-Dataset
-=======
+Constructing Datasets
+=====================
 
 We can construct a dataset with an auto-inferred schema.
 
