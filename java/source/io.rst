@@ -433,7 +433,7 @@ Read - From Buffer
 Reading Parquet File
 ********************
 
-Please check :doc:`JNI Dataset <./dataset>`
+Please check :doc:`Dataset <./dataset>`
 
 Writing Fresh Data
 ==================
