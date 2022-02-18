@@ -51,7 +51,6 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           auto-update-conda: true
-          python-version: 3.9
           activate-environment: cookbook-cpp
           environment-file: cpp/conda-linux-64.lock
           auto-activate-base: false
