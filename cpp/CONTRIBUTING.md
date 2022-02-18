@@ -134,8 +134,7 @@ To update dependencies modify `cpp/requirements.yml` and then run
 
 ```
 cd cpp
-conda-lock --file environment.yml --kind explicit --platform osx-arm64
-conda-lock -f environment.yml -p linux-aarch64 -p linux-64 -p osx-arm64
+conda-lock --file environment.yml --kind explicit -p linux-aarch64 -p linux-64 -p osx-arm64
 ```
 
 # Development Philosophy
