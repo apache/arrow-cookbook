@@ -41,19 +41,19 @@ jobs:
       - name: Cache conda
         uses: actions/cache@v2
         env:
-          # Increase this value to reset cache if cpp/environment.yml has not changed
+          # Increase this value to reset cache if cpp/conda-linux-64.lock has not changed
           CACHE_NUMBER: 0
         with:
           path: ~/conda_pkgs_dir
           key:
-            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('cpp/environment.yml') }}
+            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('cpp/conda-linux-64.lock') }}
       - name: Setup environment
         uses: conda-incubator/setup-miniconda@v2
         with:
           auto-update-conda: true
           python-version: 3.9
           activate-environment: cookbook-cpp
-          environment-file: cpp/environment.yml
+          environment-file: cpp/conda-linux-64.lock
           auto-activate-base: false
       - name: Test
         run:

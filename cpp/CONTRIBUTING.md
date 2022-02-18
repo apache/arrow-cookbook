@@ -120,7 +120,22 @@ If you are using conda then there is file `cpp/requirements.yml` which can be
 used to create an environment for recipe development with the command:
 
 ```
-conda env create --file cpp/environment.yml
+conda env create -f cpp/environment.yml
+```
+
+There may be a conda-lock file available for your platform. Use this instead to
+avoid having to perform the dependency resolution solve.
+
+```
+conda create -n cookbook-cpp --file cpp/conda-osx-arm64.lock
+```
+
+To update dependencies modify `cpp/requirements.yml` and then run
+
+```
+cd cpp
+conda-lock --file environment.yml --kind explicit --platform osx-arm64
+conda-lock -f environment.yml -p linux-aarch64 -p linux-64 -p osx-arm64
 ```
 
 # Development Philosophy
