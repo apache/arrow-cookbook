@@ -37,7 +37,7 @@ a custom `recipe` directive that can be used like so:
   :dedent: 4
 ```
 
-Each `recipe` directive has two requried arguments. The first is
+Each `recipe` directive has two required arguments. The first is
 a path to the file containing the source file containing the snippet
 and the second is the name of the snippet and must correspond to a
 set of CreateRecipe/EndRecipe calls in the source file.
@@ -120,7 +120,7 @@ If you are using conda then there is file `cpp/requirements.yml` which can be
 used to create an environment for recipe development with the command:
 
 ```
-conda env create -n cookbook-cpp --file cpp/requirements.yml
+conda env create --file cpp/environment.yml
 ```
 
 # Development Philosophy
