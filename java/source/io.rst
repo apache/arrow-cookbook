@@ -59,12 +59,9 @@ Write - Out to File
                  ArrowFileWriter writer = new ArrowFileWriter(vectorSchemaRoot, null, fileOutputStream.getChannel())
             ) {
                 writer.start();
-                for (int i = 0; i < 10; i++) {
-                    // All the data that is  going to write comes from the root and as we were not changing root data we are writing the same data 10x times
-                    writer.writeBatch();
-                }
+                writer.writeBatch();
                 writer.end();
-                System.out.println("Record batches written: " + writer.getRecordBlocks().size());
+                System.out.println("Record batches written: " + writer.getRecordBlocks().size() + ". Number of rows written: " + vectorSchemaRoot.getRowCount());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -73,7 +70,7 @@ Write - Out to File
 
 .. testoutput::
 
-    Record batches written: 10
+    Record batches written: 1. Number of rows written: 3
 
 Write - Out to Buffer
 ---------------------
@@ -102,23 +99,21 @@ Write - Out to Buffer
         try(VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator)){
             VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
             nameVector.allocateNew(3);
+            nameVector.set(0, "David".getBytes());
+            nameVector.set(1, "Gladis".getBytes());
+            nameVector.set(2, "Juan".getBytes());
             IntVector ageVector = (IntVector) vectorSchemaRoot.getVector("age");
             ageVector.allocateNew(3);
+            ageVector.set(0, 10);
+            ageVector.set(1, 20);
+            ageVector.set(2, 30);
             vectorSchemaRoot.setRowCount(3);
             try (ByteArrayOutputStream out = new ByteArrayOutputStream();
                  ArrowFileWriter writer = new ArrowFileWriter(vectorSchemaRoot, null, Channels.newChannel(out)))
             {
                 writer.start();
-                for (int i=0; i<10; i++){
-                    nameVector.set(0, ("New-"+(i+1)).getBytes());
-                    nameVector.set(1, ("New-"+(i+1)).getBytes());
-                    nameVector.set(2, ("New-"+(i+1)).getBytes());
-                    ageVector.set(0, (i+2)*10);
-                    ageVector.set(1, (i+2)*20);
-                    ageVector.set(2, (i+2)*30);
-                    writer.writeBatch();
-                }
-                System.out.println("Record batches written: " + writer.getRecordBlocks().size());
+                writer.writeBatch();
+                System.out.println("Record batches written: " + writer.getRecordBlocks().size() + ". Number of rows written: " + vectorSchemaRoot.getRowCount());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -127,7 +122,7 @@ Write - Out to Buffer
 
 .. testoutput::
 
-    Record batches written: 10
+    Record batches written: 1. Number of rows written: 3
 
 Writing Streaming Format
 ************************
@@ -173,11 +168,8 @@ Write - Out to File
                  ArrowStreamWriter writer = new ArrowStreamWriter(vectorSchemaRoot, null, fileOutputStream.getChannel())
             ){
                 writer.start();
-                for (int i=0; i<10; i++){
-                    // All the data that is  going to write comes from the root and as we were not changing root data we are writing the same data 10x times
-                    writer.writeBatch();
-                }
-                System.out.println(writer.bytesWritten());
+                writer.writeBatch();
+                System.out.println("Number of rows written: " + vectorSchemaRoot.getRowCount());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -186,7 +178,7 @@ Write - Out to File
 
 .. testoutput::
 
-    2928
+    Number of rows written: 3
 
 Write - Out to Buffer
 ---------------------
@@ -223,16 +215,8 @@ Write - Out to Buffer
                  ArrowStreamWriter writer = new ArrowStreamWriter(vectorSchemaRoot, null, Channels.newChannel(out))
             ){
                 writer.start();
-                for (int i=0; i<10; i++){
-                    nameVector.set(0, ("New-"+(i+1)).getBytes());
-                    nameVector.set(1, ("New-"+(i+1)).getBytes());
-                    nameVector.set(2, ("New-"+(i+1)).getBytes());
-                    ageVector.set(0, (i+2)*10);
-                    ageVector.set(1, (i+2)*20);
-                    ageVector.set(2, (i+2)*30);
-                    writer.writeBatch();
-                }
-                System.out.println(writer.bytesWritten());
+                writer.writeBatch();
+                System.out.println("Number of rows written: " + vectorSchemaRoot.getRowCount());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -241,7 +225,7 @@ Write - Out to Buffer
 
 .. testoutput::
 
-    2936
+    Number of rows written: 3
 
 Reading
 =======
