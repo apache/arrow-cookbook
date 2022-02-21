@@ -142,7 +142,6 @@ Query Data Content For File
 
 .. testcode::
 
-    import com.google.common.collect.Streams;
     import org.apache.arrow.dataset.file.FileFormat;
     import org.apache.arrow.dataset.file.FileSystemDatasetFactory;
     import org.apache.arrow.dataset.jni.NativeMemoryPool;
@@ -153,7 +152,6 @@ Query Data Content For File
     import org.apache.arrow.memory.RootAllocator;
     import org.apache.arrow.vector.VectorLoader;
     import org.apache.arrow.vector.VectorSchemaRoot;
-    import org.apache.arrow.vector.ipc.message.ArrowRecordBatch;
 
     import java.util.stream.Stream;
 
@@ -165,9 +163,8 @@ Query Data Content For File
         try(Scanner scanner = dataset.newScan(options);
             VectorSchemaRoot vsr = VectorSchemaRoot.create(scanner.schema(), rootAllocator)){
             scanner.scan().forEach(scanTask-> {
-                Stream<ArrowRecordBatch> stream = Streams.stream(scanTask.execute());
                 VectorLoader loader = new VectorLoader(vsr);
-                stream.forEach(arrowRecordBatch -> {
+                scanTask.execute().forEachRemaining(arrowRecordBatch -> {
                     loader.load(arrowRecordBatch);
                     System.out.print(vsr.contentToTSVString());
                     arrowRecordBatch.close();
@@ -190,7 +187,6 @@ Consider that we have these files: data1: 3 rows, data2: 3 rows and data3: 250 r
 
 .. testcode::
 
-    import com.google.common.collect.Streams;
     import org.apache.arrow.dataset.file.FileFormat;
     import org.apache.arrow.dataset.file.FileSystemDatasetFactory;
     import org.apache.arrow.dataset.jni.NativeMemoryPool;
@@ -199,16 +195,10 @@ Consider that we have these files: data1: 3 rows, data2: 3 rows and data3: 250 r
     import org.apache.arrow.dataset.source.Dataset;
     import org.apache.arrow.dataset.source.DatasetFactory;
     import org.apache.arrow.memory.RootAllocator;
-    import org.apache.arrow.util.AutoCloseables;
-    import org.apache.arrow.vector.FieldVector;
     import org.apache.arrow.vector.VectorLoader;
     import org.apache.arrow.vector.VectorSchemaRoot;
-    import org.apache.arrow.vector.ipc.message.ArrowRecordBatch;
-    import org.apache.arrow.vector.types.pojo.Schema;
 
-    import java.util.List;
-    import java.util.stream.Collectors;
-    import java.util.stream.StreamSupport;
+    import java.util.stream.Stream;
 
     String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/";
     try(RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
@@ -218,10 +208,9 @@ Consider that we have these files: data1: 3 rows, data2: 3 rows and data3: 250 r
         try(Scanner scanner = dataset.newScan(options);
             VectorSchemaRoot vsr = VectorSchemaRoot.create(scanner.schema(), rootAllocator)){
             scanner.scan().forEach(scanTask-> {
-                Stream<ArrowRecordBatch> stream = Streams.stream(scanTask.execute());
                 VectorLoader loader = new VectorLoader(vsr);
                 final int[] count = {1};
-                stream.forEach(arrowRecordBatch -> {
+                scanTask.execute().forEachRemaining(arrowRecordBatch -> {
                     loader.load(arrowRecordBatch);
                     System.out.println("Batch: " + count[0]++ + ", RowCount: " + vsr.getRowCount());
                     arrowRecordBatch.close();
@@ -245,7 +234,6 @@ In case we need to project only certain columns we could configure ScanOptions w
 
 .. testcode::
 
-    import com.google.common.collect.Streams;
     import org.apache.arrow.dataset.file.FileFormat;
     import org.apache.arrow.dataset.file.FileSystemDatasetFactory;
     import org.apache.arrow.dataset.jni.NativeMemoryPool;
@@ -254,17 +242,10 @@ In case we need to project only certain columns we could configure ScanOptions w
     import org.apache.arrow.dataset.source.Dataset;
     import org.apache.arrow.dataset.source.DatasetFactory;
     import org.apache.arrow.memory.RootAllocator;
-    import org.apache.arrow.util.AutoCloseables;
-    import org.apache.arrow.vector.FieldVector;
     import org.apache.arrow.vector.VectorLoader;
     import org.apache.arrow.vector.VectorSchemaRoot;
-    import org.apache.arrow.vector.ipc.message.ArrowRecordBatch;
-    import org.apache.arrow.vector.types.pojo.Schema;
 
-    import java.util.List;
     import java.util.Optional;
-    import java.util.stream.Collectors;
-    import java.util.stream.StreamSupport;
 
     String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data1.parquet";
     try(RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
@@ -275,9 +256,8 @@ In case we need to project only certain columns we could configure ScanOptions w
         try(Scanner scanner = dataset.newScan(options);
             VectorSchemaRoot vsr = VectorSchemaRoot.create(scanner.schema(), rootAllocator)){
             scanner.scan().forEach(scanTask-> {
-                Stream<ArrowRecordBatch> stream = Streams.stream(scanTask.execute());
                 VectorLoader loader = new VectorLoader(vsr);
-                stream.forEach(arrowRecordBatch -> {
+                scanTask.execute().forEachRemaining(arrowRecordBatch -> {
                     loader.load(arrowRecordBatch);
                     System.out.print(vsr.contentToTSVString());
                     arrowRecordBatch.close();
