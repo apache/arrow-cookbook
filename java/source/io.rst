@@ -208,8 +208,14 @@ Write - Out to Buffer
         try(VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator)){
             VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
             nameVector.allocateNew(3);
+            nameVector.set(0, "David".getBytes());
+            nameVector.set(1, "Gladis".getBytes());
+            nameVector.set(2, "Juan".getBytes());
             IntVector ageVector = (IntVector) vectorSchemaRoot.getVector("age");
             ageVector.allocateNew(3);
+            ageVector.set(0, 10);
+            ageVector.set(1, 20);
+            ageVector.set(2, 30);
             vectorSchemaRoot.setRowCount(3);
             try (ByteArrayOutputStream out = new ByteArrayOutputStream();
                  ArrowStreamWriter writer = new ArrowStreamWriter(vectorSchemaRoot, null, Channels.newChannel(out))
@@ -418,109 +424,3 @@ Reading Parquet File
 ********************
 
 Please check :doc:`Dataset <./dataset>`
-
-Writing Fresh Data
-==================
-
-Write Update Data With VectorLoader
-***********************************
-
-.. testcode::
-
-    import org.apache.arrow.memory.RootAllocator;
-    import org.apache.arrow.vector.VarCharVector;
-    import org.apache.arrow.vector.IntVector;
-    import org.apache.arrow.vector.VectorLoader;
-    import org.apache.arrow.vector.VectorUnloader;
-    import org.apache.arrow.vector.ipc.ArrowFileReader;
-    import org.apache.arrow.vector.ipc.message.ArrowBlock;
-    import org.apache.arrow.vector.ipc.message.ArrowRecordBatch;
-    import org.apache.arrow.vector.types.pojo.Field;
-    import org.apache.arrow.vector.types.pojo.FieldType;
-    import org.apache.arrow.vector.types.pojo.ArrowType;
-    import org.apache.arrow.vector.types.pojo.Schema;
-    import org.apache.arrow.vector.VectorSchemaRoot;
-    import static java.util.Arrays.asList;
-    import org.apache.arrow.vector.ipc.ArrowFileWriter;
-
-    import java.io.File;
-    import java.io.FileInputStream;
-    import java.io.FileOutputStream;
-    import java.io.IOException;
-
-    try (RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE)) {
-        Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
-        Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
-        Schema schema = new Schema(asList(name, age));
-        try (VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schema, rootAllocator)) {
-            VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
-            nameVector.allocateNew(3);
-            nameVector.set(0, "Raul".getBytes());
-            nameVector.set(1, "Johao".getBytes());
-            nameVector.set(2, "Rafael".getBytes());
-            IntVector ageVector = (IntVector) vectorSchemaRoot.getVector("age");
-            ageVector.allocateNew(3);
-            ageVector.set(0, 10);
-            ageVector.set(1, 20);
-            ageVector.set(2, 30);
-            vectorSchemaRoot.setRowCount(3);
-            File fileWrite = new File("randon_access_to_file_loadunload.arrow");
-            try (FileOutputStream fileOutputStream = new FileOutputStream(fileWrite);
-                 ArrowFileWriter writer = new ArrowFileWriter(vectorSchemaRoot, null, fileOutputStream.getChannel())
-            ) {
-                writer.start();
-                writer.writeBatch();
-                // Update data with VectorLoader
-                try (FileInputStream fileInputStream = new FileInputStream(new File("./thirdpartydeps/arrowfiles/random_access.arrow"));
-                     ArrowFileReader reader = new ArrowFileReader(fileInputStream.getChannel(), rootAllocator)
-                ){
-                    for (ArrowBlock arrowBlock : reader.getRecordBlocks()) {
-                        reader.loadRecordBatch(arrowBlock);
-                        try(VectorSchemaRoot vectorSchemaRootRecover = reader.getVectorSchemaRoot()){
-                            VectorUnloader vectorUnloader = new VectorUnloader(vectorSchemaRootRecover);
-                            try(ArrowRecordBatch arrowRecordBatch = vectorUnloader.getRecordBatch()){
-                                VectorLoader vectorLoader = new VectorLoader(vectorSchemaRoot);
-                                vectorLoader.load(arrowRecordBatch);
-                                // Write fresh data recovered
-                                writer.writeBatch();
-                            }
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            try (FileInputStream fileInputStream = new FileInputStream(fileWrite);
-                 ArrowFileReader reader = new ArrowFileReader(fileInputStream.getChannel(), rootAllocator)
-            ) {
-                System.out.println("Record batches in file: " + reader.getRecordBlocks().size());
-                for (ArrowBlock arrowBlock : reader.getRecordBlocks()) {
-                    reader.loadRecordBatch(arrowBlock);
-                    VectorSchemaRoot vectorSchemaRootRecover = reader.getVectorSchemaRoot();
-                    System.out.print(vectorSchemaRootRecover.contentToTSVString());
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-.. testoutput::
-
-    Record batches in file: 4
-    name    age
-    Raul    10
-    Johao    20
-    Rafael    30
-    name    age
-    David    10
-    Gladis    20
-    Juan    30
-    name    age
-    Nidia    15
-    Alexa    20
-    Mara    15
-    name    age
-    Raul    34
-    Jhon    29
-    Thomy    33
