@@ -217,21 +217,21 @@ Consider that we have these files: data1: 3 rows, data2: 3 rows and data3: 250 r
         ScanOptions options = new ScanOptions(/*batchSize*/ 100);
         try(Scanner scanner = dataset.newScan(options);
             VectorSchemaRoot vsr = VectorSchemaRoot.create(scanner.schema(), rootAllocator)){
-            List<ArrowRecordBatch> batches = StreamSupport.stream(scanner.scan().spliterator(), false).flatMap(t -> Streams.stream(t.execute())).collect(Collectors.toList());
-            VectorLoader loader = new VectorLoader(vsr);
-            System.out.println("Batch Size: " + batches.size());
-            int count = 1;
-            for (ArrowRecordBatch batch : batches) {
-                loader.load(batch);
-                System.out.println("Batch: " + count++ + ", RowCount: " + vsr.getRowCount());
-                batch.close();
-            }
+            scanner.scan().forEach(scanTask-> {
+                Stream<ArrowRecordBatch> stream = Streams.stream(scanTask.execute());
+                VectorLoader loader = new VectorLoader(vsr);
+                final int[] count = {1};
+                stream.forEach(arrowRecordBatch -> {
+                    loader.load(arrowRecordBatch);
+                    System.out.println("Batch: " + count[0]++ + ", RowCount: " + vsr.getRowCount());
+                    arrowRecordBatch.close();
+                });
+            });
         }
     }
 
 .. testoutput::
 
-    Batch Size: 5
     Batch: 1, RowCount: 3
     Batch: 2, RowCount: 3
     Batch: 3, RowCount: 100
@@ -272,17 +272,17 @@ In case we need to project only certain columns we could configure ScanOptions w
         Dataset dataset = datasetFactory.finish()){
         String[] projection = new String[] {"name"};
         ScanOptions options = new ScanOptions(/*batchSize*/ 100, Optional.of(projection));
-        try(Scanner scanner = dataset.newScan(options)){
-            Schema schema = scanner.schema();
-            List<ArrowRecordBatch> batches = StreamSupport.stream(scanner.scan().spliterator(), false).flatMap(t -> Streams.stream(t.execute())).collect(Collectors.toList());
-            try (VectorSchemaRoot vsr = VectorSchemaRoot.create(schema, rootAllocator)) {
+        try(Scanner scanner = dataset.newScan(options);
+            VectorSchemaRoot vsr = VectorSchemaRoot.create(scanner.schema(), rootAllocator)){
+            scanner.scan().forEach(scanTask-> {
+                Stream<ArrowRecordBatch> stream = Streams.stream(scanTask.execute());
                 VectorLoader loader = new VectorLoader(vsr);
-                for (ArrowRecordBatch batch : batches) {
-                    loader.load(batch);
+                stream.forEach(arrowRecordBatch -> {
+                    loader.load(arrowRecordBatch);
                     System.out.print(vsr.contentToTSVString());
-                    batch.close();
-                }
-            }
+                    arrowRecordBatch.close();
+                });
+            });
         }
     }
 
