@@ -28,7 +28,8 @@ author = 'The Apache Software Foundation'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    "javadoctest"
+    "javadoctest",
+    "sphinx.ext.intersphinx"
 ]
 
 # Add any paths that contain templates here, relative to this directory.
