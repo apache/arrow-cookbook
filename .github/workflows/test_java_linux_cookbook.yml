@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Test Java Cookbook
+name: Test Java Cookbook On Linux
 
 on:
   pull_request:
@@ -23,15 +23,15 @@ on:
        - main
     paths:
      - "java/**"
-     - ".github/workflows/test_java_cookbook.yml"
+     - ".github/workflows/test_java_linux_cookbook.yml"
      
 concurrency:
   group: ${{ github.repository }}-${{ github.ref }}-${{ github.workflow }}
   cancel-in-progress: true
 
 jobs:
-  test_py:
-    name: "Test Java Cookbook"
+  test_java_linux:
+    name: "Test Java Cookbook On Linux"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1

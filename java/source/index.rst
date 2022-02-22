@@ -14,6 +14,7 @@ Welcome to java arrow's documentation!
    io
    schema
    data
+   dataset
 
 Indices and tables
 ==================
