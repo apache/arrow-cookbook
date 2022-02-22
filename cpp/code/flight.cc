@@ -291,4 +291,41 @@ arrow::Status TestPutGetDelete() {
   return arrow::Status::OK();
 }
 
+arrow::Status TestClientOptions() {
+  auto fs = std::make_shared<arrow::fs::LocalFileSystem>();
+  ARROW_RETURN_NOT_OK(fs->CreateDir("./flight_datasets/"));
+  ARROW_RETURN_NOT_OK(fs->DeleteDirContents("./flight_datasets/"));
+  auto root = std::make_shared<arrow::fs::SubTreeFileSystem>("./flight_datasets/", fs);
+
+  arrow::flight::Location server_location;
+  ARROW_RETURN_NOT_OK(
+      arrow::flight::Location::ForGrpcTcp("0.0.0.0", 0, &server_location));
+
+  arrow::flight::FlightServerOptions options(server_location);
+  auto server = std::unique_ptr<arrow::flight::FlightServerBase>(
+      new ParquetStorageService(std::move(root)));
+  ARROW_RETURN_NOT_OK(server->Init(options));
+  rout << "Listening on port " << server->port() << std::endl;
+
+  StartRecipe("TestClientOptions::Connect");
+  auto options = FlightClientOptions::Defaults();
+  // Set a very low limit at the gRPC layer to fail all calls
+  options.generic_options.emplace_back(GRPC_ARG_MAX_SEND_MESSAGE_LENGTH, 32);
+
+  arrow::flight::Location location;
+  ARROW_RETURN_NOT_OK(
+      arrow::flight::Location::ForGrpcTcp("localhost", server->port(), &location));
+
+  std::unique_ptr<arrow::flight::FlightClient> client;
+  ARROW_RETURN_NOT_OK(arrow::flight::FlightClient::Connect(location, options, &client));
+  rout << "Connected to " << location.ToString() << std::endl;
+  EndRecipe("TestClientOptions::Connect");
+
+  std::unique_ptr<arrow::flight::FlightInfo> flight_info;
+  auto status = client->GetFlightInfo(descriptor, &flight_info));
+  ASSERT_RAISES(Invalid, status);
+  ASSERT_THAT(status.message(), ::testing::HasSubstr("resource exhausted"));
+}
+
 TEST(ParquetStorageServiceTest, PutGetDelete) { ASSERT_OK(TestPutGetDelete()); }
+TEST(ParquetStorageServiceTest, TestClientOptions) { ASSERT_OK(TestClientOptions()); }

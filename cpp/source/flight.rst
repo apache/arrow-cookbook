@@ -83,3 +83,28 @@ Finally, we'll stop our server:
 
 .. recipe:: ../code/flight.cc ParquetStorageService::StopServer
    :dedent: 2
+
+
+Setting gRPC client options
+===========================
+
+Options for gRPC can be passed in using the ``generic_options`` field of
+:cpp:class:`arrow::flight::FlightClientOptions`. There is a list of available
+options at https://grpc.github.io/grpc/cpp/group__grpc__arg__keys.html
+
+For example, you can increase the keep-alive time of a client with:
+
+.. recipe:: ../code/flight.cc TestClientOptions::Connect
+   :dedent: 2
+
+
+
+Flight Service with other gRPC endpoints
+========================================
+
+If you are using the gRPC backend, you can add other gRPC endpoints to the service.
+Note that flight clients themselves won't recognize these endpoints.
+
+
+https://arrow.apache.org/docs/cpp/build_system.html#a-note-on-linking
+
