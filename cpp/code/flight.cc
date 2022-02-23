@@ -25,7 +25,11 @@
 #include <arrow/status.h>
 #include <arrow/table.h>
 #include <arrow/type.h>
+#include <gmock/gmock.h>
+#include <grpc++/grpc++.h>
 #include <gtest/gtest.h>
+#include <helloworld.grpc.pb.h>
+#include <helloworld.pb.h>
 #include <parquet/arrow/reader.h>
 #include <parquet/arrow/writer.h>
 
@@ -173,6 +177,18 @@ class ParquetStorageService : public arrow::flight::FlightServerBase {
   std::shared_ptr<arrow::fs::FileSystem> root_;
 };  // end ParquetStorageService
 
+class HelloWorldServiceImpl : public HelloWorldService::Service {
+  grpc::Status SayHello([[maybe_unused]] grpc::ServerContext* ctx,
+                        const HelloRequest* request, HelloResponse* reply) override {
+    const std::string& name = request->name();
+    if (name.empty()) {
+      return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Must provide a name!");
+    }
+    reply->set_reply("Hello, " + name);
+    return grpc::Status::OK;
+  }
+};  // end HelloWorldServiceImpl
+
 arrow::Status TestPutGetDelete() {
   StartRecipe("ParquetStorageService::StartServer");
   auto fs = std::make_shared<arrow::fs::LocalFileSystem>();
@@ -308,24 +324,63 @@ arrow::Status TestClientOptions() {
   rout << "Listening on port " << server->port() << std::endl;
 
   StartRecipe("TestClientOptions::Connect");
-  auto options = FlightClientOptions::Defaults();
+  auto client_options = arrow::flight::FlightClientOptions::Defaults();
   // Set a very low limit at the gRPC layer to fail all calls
-  options.generic_options.emplace_back(GRPC_ARG_MAX_SEND_MESSAGE_LENGTH, 32);
+  client_options.generic_options.emplace_back(GRPC_ARG_MAX_SEND_MESSAGE_LENGTH, 2);
 
   arrow::flight::Location location;
   ARROW_RETURN_NOT_OK(
       arrow::flight::Location::ForGrpcTcp("localhost", server->port(), &location));
 
   std::unique_ptr<arrow::flight::FlightClient> client;
-  ARROW_RETURN_NOT_OK(arrow::flight::FlightClient::Connect(location, options, &client));
+  ARROW_RETURN_NOT_OK(
+      arrow::flight::FlightClient::Connect(location, client_options, &client));
   rout << "Connected to " << location.ToString() << std::endl;
   EndRecipe("TestClientOptions::Connect");
 
+  auto descriptor = arrow::flight::FlightDescriptor::Path({"airquality.parquet"});
   std::unique_ptr<arrow::flight::FlightInfo> flight_info;
-  auto status = client->GetFlightInfo(descriptor, &flight_info));
-  ASSERT_RAISES(Invalid, status);
-  ASSERT_THAT(status.message(), ::testing::HasSubstr("resource exhausted"));
+  return client->GetFlightInfo(descriptor, &flight_info);
+}
+
+arrow::Status TestCustomGrpcImpl() {
+  StartRecipe("CustomGrpcImpl::StartServer");
+  // Build flight service as usual
+  auto fs = std::make_shared<arrow::fs::LocalFileSystem>();
+  ARROW_RETURN_NOT_OK(fs->CreateDir("./flight_datasets/"));
+  ARROW_RETURN_NOT_OK(fs->DeleteDirContents("./flight_datasets/"));
+  auto root = std::make_shared<arrow::fs::SubTreeFileSystem>("./flight_datasets/", fs);
+
+  arrow::flight::Location server_location;
+  ARROW_RETURN_NOT_OK(
+      arrow::flight::Location::ForGrpcTcp("0.0.0.0", 0, &server_location));
+
+  arrow::flight::FlightServerOptions options(server_location);
+  auto server = std::unique_ptr<arrow::flight::FlightServerBase>(
+      new ParquetStorageService(std::move(root)));
+
+  // Create hello world service
+  HelloWorldServiceImpl grpc_service;
+  // Both services will be available on both ports
+  int hello_world_port = 0;
+
+  options.builder_hook = [&](void* raw_builder) {
+    auto* builder = reinterpret_cast<grpc::ServerBuilder*>(raw_builder);
+    builder->AddListeningPort("0.0.0.0:0", grpc::InsecureServerCredentials(),
+                              &hello_world_port);
+    builder->RegisterService(&grpc_service);
+  };
+
+  ARROW_RETURN_NOT_OK(server->Init(options));
+  rout << "Listening on port " << server->port() << std::endl;
+  EndRecipe("CustomGrpcImpl::StartServer");
+  return arrow::Status::OK();
 }
 
 TEST(ParquetStorageServiceTest, PutGetDelete) { ASSERT_OK(TestPutGetDelete()); }
-TEST(ParquetStorageServiceTest, TestClientOptions) { ASSERT_OK(TestClientOptions()); }
+TEST(ParquetStorageServiceTest, TestClientOptions) {
+  auto status = TestClientOptions();
+  ASSERT_EQ(status.code(), arrow::StatusCode::Invalid);
+  ASSERT_THAT(status.message(), testing::HasSubstr("resource exhausted"));
+}
+TEST(ParquetStorageServiceTest, TestCustomGrpcImpl) { ASSERT_OK(TestCustomGrpcImpl()); }

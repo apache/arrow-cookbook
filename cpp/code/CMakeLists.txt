@@ -32,6 +32,7 @@ function(RECIPE TARGET)
             arrow_flight
             parquet
             gtest
+            myproto
     )
     if (MSVC)
         target_compile_options(${TARGET} PRIVATE /W4 /WX)
@@ -46,3 +47,6 @@ recipe(basic_arrow)
 recipe(creating_arrow_objects)
 recipe(datasets)
 recipe(flight)
+
+# Add proto transpilation for Flight gRPC example
+add_subdirectory(protos)
