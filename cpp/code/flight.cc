@@ -47,9 +47,9 @@ class ParquetStorageService : public arrow::flight::FlightServerBase {
   explicit ParquetStorageService(std::shared_ptr<arrow::fs::FileSystem> root)
       : root_(std::move(root)) {}
 
-  arrow::Status ListFlights(const arrow::flight::ServerCallContext&,
-                            const arrow::flight::Criteria*,
-                            std::unique_ptr<arrow::flight::FlightListing>* listings) override {
+  arrow::Status ListFlights(
+      const arrow::flight::ServerCallContext&, const arrow::flight::Criteria*,
+      std::unique_ptr<arrow::flight::FlightListing>* listings) override {
     arrow::fs::FileSelector selector;
     selector.base_dir = "/";
     ARROW_ASSIGN_OR_RAISE(auto listing, root_->GetFileInfo(selector));
@@ -189,7 +189,29 @@ class HelloWorldServiceImpl : public HelloWorldService::Service {
   }
 };  // end HelloWorldServiceImpl
 
-arrow::Status TestPutGetDelete() {
+class HelloWorldClient {
+ public:
+  HelloWorldClient(std::shared_ptr<grpc::Channel> channel)
+      : stub_(HelloWorldService::NewStub(channel)) {}
+
+  arrow::Result<std::string> HelloWorld(std::string name) {
+    grpc::ClientContext context;
+    HelloRequest request;
+    request.set_name(name);
+    HelloResponse response;
+    grpc::Status status = stub_->SayHello(&context, request, &response);
+    if (!status.ok()) {
+      return arrow::Status::IOError(status.error_message());
+    }
+    return response.reply();
+  }
+
+  protected:
+    std::unique_ptr<HelloWorldService::Stub> stub_;
+};  // end HelloWorldClient
+
+arrow::Status
+TestPutGetDelete() {
   StartRecipe("ParquetStorageService::StartServer");
   auto fs = std::make_shared<arrow::fs::LocalFileSystem>();
   ARROW_RETURN_NOT_OK(fs->CreateDir("./flight_datasets/"));
@@ -333,7 +355,7 @@ arrow::Status TestClientOptions() {
       arrow::flight::Location::ForGrpcTcp("localhost", server->port(), &location));
 
   std::unique_ptr<arrow::flight::FlightClient> client;
-  ARROW_RETURN_NOT_OK(
+  ARROW_RETURN_NOT_OK(  // pass client_options into Connect()
       arrow::flight::FlightClient::Connect(location, client_options, &client));
   rout << "Connected to " << location.ToString() << std::endl;
   EndRecipe("TestClientOptions::Connect");
@@ -362,7 +384,7 @@ arrow::Status TestCustomGrpcImpl() {
   // Create hello world service
   HelloWorldServiceImpl grpc_service;
   // Both services will be available on both ports
-  int hello_world_port = 0;
+  int hello_world_port = 8000;
 
   options.builder_hook = [&](void* raw_builder) {
     auto* builder = reinterpret_cast<grpc::ServerBuilder*>(raw_builder);
@@ -372,8 +394,20 @@ arrow::Status TestCustomGrpcImpl() {
   };
 
   ARROW_RETURN_NOT_OK(server->Init(options));
-  rout << "Listening on port " << server->port() << std::endl;
+  std::cout << "Listening on ports " << server->port() << " and " << hello_world_port
+            << std::endl;
   EndRecipe("CustomGrpcImpl::StartServer");
+
+  StartRecipe("CustomGrpcImpl::CreateClient");
+  auto client_channel =
+      grpc::CreateChannel("0.0.0.0:0", grpc::InsecureChannelCredentials());
+  
+  HelloWorldClient client(client_channel);
+
+  ARROW_ASSIGN_OR_RAISE(auto greeting, client.HelloWorld("Arrow User"));
+  rout << greeting;
+
+  EndRecipe("CustomGrpcImpl::CreateClient");
   return arrow::Status::OK();
 }
 

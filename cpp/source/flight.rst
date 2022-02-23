@@ -88,33 +88,38 @@ Finally, we'll stop our server:
 Setting gRPC client options
 ===========================
 
-Options for gRPC can be passed in using the ``generic_options`` field of
+Options for gRPC clients can be passed in using the ``generic_options`` field of
 :cpp:class:`arrow::flight::FlightClientOptions`. There is a list of available
-options at https://grpc.github.io/grpc/cpp/group__grpc__arg__keys.html
+client options in the `gRPC API documentation <https://grpc.github.io/grpc/cpp/group__grpc__arg__keys.html>`_. 
 
-For example, you can change the keep-alive time of a client with:
+For example, you can change the maximum message length sent with:
 
 .. recipe:: ../code/flight.cc TestClientOptions::Connect
    :dedent: 2
 
 
-
 Flight Service with other gRPC endpoints
 ========================================
 
-If you are using the gRPC backend, you can add other gRPC endpoints to the service.
-Note that flight clients themselves won't recognize these endpoints.
+If you are using the gRPC backend, you can add other gRPC endpoints to the 
+flight server. While Flight clients won't recognize these endpoints, general
+gRPC clients will be able to.
 
-There are caveats to linking:
-https://arrow.apache.org/docs/cpp/build_system.html#a-note-on-linking
+.. note::
+   If statically linking Arrow Flight, Protobuf and gRPC must also be statically
+   linked, and the same goes for dynamic linking. Read more at
+   https://arrow.apache.org/docs/cpp/build_system.html#a-note-on-linking
 
-Define service using protobuf:
+To create a gRPC service, first define a service using protobuf.
 
-.. literalinclude:: ../code/helloworld.proto
+.. literalinclude:: ../code/protos/helloworld.proto
    :language: protobuf
    :linenos:
    :start-at: syntax = "proto3";
-   :caption: Parquet storage service, server implementation
+   :caption: Hello world protobuf specification
+
+Next, you'll need to compile that. If you are using CMake, consider the setup
+suggested by https://www.f-ax.de/dev/2020/11/08/grpc-plugin-cmake-support.html.
 
 Then write implementation:
 
@@ -122,11 +127,23 @@ Then write implementation:
    :language: cpp
    :linenos:
    :start-at: class HelloWorldServiceImpl
-   :end-at: }; // end HelloWorldServiceImpl
+   :end-at: };  // end HelloWorldServiceImpl
    :caption: Hello world gRPC service implementation
 
 Finally, use the ``builder_hook`` hook on :cpp:class:`arrow::flight::FlightServerOptions`
 to register the additional gRPC service.
 
 .. recipe:: ../code/flight.cc CustomGrpcImpl::StartServer
+   :dedent: 2
+
+
+.. literalinclude:: ../code/flight.cc
+   :language: cpp
+   :linenos:
+   :start-at: class HelloWorldClient
+   :end-at: };  // end HelloWorldClient
+   :caption: Hello world gRPC client implementation
+
+
+.. recipe:: ../code/flight.cc CustomGrpcImpl::CreateClient
    :dedent: 2
