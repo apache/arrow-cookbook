@@ -124,7 +124,7 @@ To create a gRPC service, first define a service using protobuf.
 Next, you'll need to compile that. If you are using CMake, consider the setup
 suggested by https://www.f-ax.de/dev/2020/11/08/grpc-plugin-cmake-support.html.
 
-Then write implementation:
+Then write an implementation for the gRPC service:
 
 .. literalinclude:: ../code/flight.cc
    :language: cpp

@@ -330,6 +330,7 @@ TestPutGetDelete() {
 }
 
 arrow::Status TestClientOptions() {
+  // Set up server as usual
   auto fs = std::make_shared<arrow::fs::LocalFileSystem>();
   ARROW_RETURN_NOT_OK(fs->CreateDir("./flight_datasets/"));
   ARROW_RETURN_NOT_OK(fs->DeleteDirContents("./flight_datasets/"));
@@ -343,7 +344,6 @@ arrow::Status TestClientOptions() {
   auto server = std::unique_ptr<arrow::flight::FlightServerBase>(
       new ParquetStorageService(std::move(root)));
   ARROW_RETURN_NOT_OK(server->Init(options));
-  rout << "Listening on port " << server->port() << std::endl;
 
   StartRecipe("TestClientOptions::Connect");
   auto client_options = arrow::flight::FlightClientOptions::Defaults();
