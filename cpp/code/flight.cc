@@ -375,7 +375,7 @@ arrow::Status TestCustomGrpcImpl() {
 
   arrow::flight::Location server_location;
   ARROW_RETURN_NOT_OK(
-      arrow::flight::Location::ForGrpcTcp("0.0.0.0", 0, &server_location));
+      arrow::flight::Location::ForGrpcTcp("0.0.0.0", 3000, &server_location));
 
   arrow::flight::FlightServerOptions options(server_location);
   auto server = std::unique_ptr<arrow::flight::FlightServerBase>(
@@ -384,23 +384,23 @@ arrow::Status TestCustomGrpcImpl() {
   // Create hello world service
   HelloWorldServiceImpl grpc_service;
   // Both services will be available on both ports
-  int hello_world_port = 8000;
+  int hello_world_port;
 
   options.builder_hook = [&](void* raw_builder) {
     auto* builder = reinterpret_cast<grpc::ServerBuilder*>(raw_builder);
-    builder->AddListeningPort("0.0.0.0:0", grpc::InsecureServerCredentials(),
+    builder->AddListeningPort("0.0.0.0:5000", grpc::InsecureServerCredentials(),
                               &hello_world_port);
     builder->RegisterService(&grpc_service);
   };
 
   ARROW_RETURN_NOT_OK(server->Init(options));
-  std::cout << "Listening on ports " << server->port() << " and " << hello_world_port
+  rout << "Listening on ports " << server->port() << " and " << hello_world_port
             << std::endl;
   EndRecipe("CustomGrpcImpl::StartServer");
 
   StartRecipe("CustomGrpcImpl::CreateClient");
   auto client_channel =
-      grpc::CreateChannel("0.0.0.0:0", grpc::InsecureChannelCredentials());
+      grpc::CreateChannel("0.0.0.0:5000", grpc::InsecureChannelCredentials());
   
   HelloWorldClient client(client_channel);
 

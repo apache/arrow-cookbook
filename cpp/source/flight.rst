@@ -110,6 +110,9 @@ gRPC clients will be able to.
    linked, and the same goes for dynamic linking. Read more at
    https://arrow.apache.org/docs/cpp/build_system.html#a-note-on-linking
 
+Creating the server
+-------------------
+
 To create a gRPC service, first define a service using protobuf.
 
 .. literalinclude:: ../code/protos/helloworld.proto
@@ -136,14 +139,23 @@ to register the additional gRPC service.
 .. recipe:: ../code/flight.cc CustomGrpcImpl::StartServer
    :dedent: 2
 
+Creating the client
+-------------------
+
+The Flight client implementation doesn't know about any custom gRPC services,
+so to call them you'll need to create a normal gRPC client. For the Hello World
+service, that just looks like a simple wrapper around the HelloWorldService stub,
+which is provided by the compiled protobuf definition.
 
 .. literalinclude:: ../code/flight.cc
    :language: cpp
    :linenos:
    :start-at: class HelloWorldClient
    :end-at: };  // end HelloWorldClient
-   :caption: Hello world gRPC client implementation
+   :caption: Hello World client wrapper
 
+Then we can create a client by passing into the channel. Note that we can 
+connect to either of the two ports exposed.
 
 .. recipe:: ../code/flight.cc CustomGrpcImpl::CreateClient
    :dedent: 2
