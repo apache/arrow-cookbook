@@ -382,12 +382,12 @@ A sample dataset can be formed as follows.
 
 .. testoutput::
 
-  pyarrow.Table
-  keys: string
-  values: int64
-  ----
-  keys: [["a","a","b","b","b","c","d","d","e","c"]]
-  values: [[null,20,3,4,5,6,10,1,4,null]]
+    pyarrow.Table
+    keys: string
+    values: int64
+    ----
+    keys: [["a","a","b","b","b","c","d","d","e","c"]]
+    values: [[null,20,3,4,5,6,10,1,4,null]]
 
 Let's apply an aggregation operation ``count`` with the option to exclude
 null values. 
@@ -426,12 +426,12 @@ We can sort a table as follows.
 
 .. testoutput::
 
-  pyarrow.Table
-  values_count: int64
-  keys: string
-  ----
-  values_count: [[1,1,1,2,3]]
-  keys: [["a","c","e","d","b"]]
+    pyarrow.Table
+    values_count: int64
+    keys: string
+    ----
+    values_count: [[1,1,1,2,3]]
+    keys: [["a","c","e","d","b"]]
 
 
 Searching for values matching a predicate in Arrays
