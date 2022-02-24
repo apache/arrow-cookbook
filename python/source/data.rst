@@ -242,14 +242,14 @@ nomination was won using :meth:`pyarrow.Table.append_column`
     wonyears: [[[1980,1983,2012],[1934,1968,1969,1982]]]
 
 
-Replacing a Column in an existing Table
+Replacing a column in an existing Table
 =======================================
 
-If you have a table it is possible to replace an existing column
+If you have a table it is possible to replace an existing column using
 :meth:`pyarrow.Table.set_column`
 
 Suppose we have a table with information about items sold at a supermarket
-in a particular day.
+on a particular day.
 
 .. testcode::
 
@@ -272,8 +272,8 @@ in a particular day.
     amount: [[21,12,10,30]]
 
 it's possible to replace the existing column `amount`
-in index `1` to update the sales for the 
-day using :meth:`pyarrow.Table.set_column`
+in index `1` to update the sales 
+using :meth:`pyarrow.Table.set_column`
 
 .. testcode::
 
