@@ -294,6 +294,145 @@ using :meth:`pyarrow.Table.set_column`
     item: [["Potato","Bean","Cucumber","Eggs"]]
     new_amount: [[30,20,15,40]]
 
+Group and Sort a Table
+======================
+
+If you have a table which needs to be grouped by a particular key, 
+you can use :meth:`pyarrow.Table.group_by` followed by an aggregation
+operation :meth:`pyarrow.TableGroupBy.aggregate`.
+
+For example, let’s say we have some data with a particular set of keys
+and values associated with that key. And we want to group the data by 
+those keys and apply an aggregate function like sum to evaluate
+how many items are for each unique key. 
+
+.. testcode::
+
+  import pyarrow as pa
+
+  table = pa.table([
+       pa.array(["a", "a", "b", "b", "c", "d", "e", "c"]),
+       pa.array([11, 20, 3, 4, 5, 1, 4, 10]),
+      ], names=["keys", "values"])
+
+  print(table)
+
+.. testoutput::
+
+    pyarrow.Table
+    keys: string
+    values: int64
+    ----
+    keys: [["a","a","b","b","c","d","e","c"]]
+    values: [[11,20,3,4,5,1,4,10]]
+
+Now we let's apply a groupby operation. Note that a groupby 
+operation returns a :class:`pyarrow.TableGroupBy` object which contains 
+the aggregate operator as :meth:`pyarrow.TableGroupBy.aggregate`. 
+
+.. testcode::
+
+  grouped_table = table.group_by("keys")
+
+  print(grouped_table)
+
+.. testoutput::
+
+    <pyarrow.lib.TableGroupBy object at 0x104f484f0>
+
+The output will look something similar to this. Now the table is 
+grouped by the field ``key`` and let's apply the aggregate operation
+``sum`` based on the values in the column ``values``. Note that, an 
+aggregation operation pairs with a column name. 
+
+.. testcode::
+
+  aggregated_table = grouped_table.aggregate([("values", "sum")])
+
+  print(aggregated_table)
+
+.. testoutput::
+
+    pyarrow.Table
+    values_sum: int64
+    keys: string
+    ----
+    values_sum: [[31,7,15,1,4]]
+    keys: [["a","b","c","d","e"]]
+
+If you observe carefully, the new table returns the aggregated column
+as ``values_sum`` which is formed by the column name and aggregation operation name. 
+
+Aggregation operations can be applied with options. Let's take a case where
+we have null values included in our dataset, but we want to take the 
+count of the unique groups excluding the null values. 
+
+A sample dataset can be formed as follows. 
+
+.. testcode::
+
+  import pyarrow as pa
+
+  table = pa.table([
+        pa.array(["a", "a", "b", "b", "b", "c", "d", "d", "e", "c"]),
+        pa.array([None, 20, 3, 4, 5, 6, 10, 1, 4, None]),
+        ], names=["keys", "values"])
+
+  print(table)
+
+.. testoutput::
+
+  pyarrow.Table
+  keys: string
+  values: int64
+  ----
+  keys: [["a","a","b","b","b","c","d","d","e","c"]]
+  values: [[null,20,3,4,5,6,10,1,4,null]]
+
+Let's apply an aggregation operation ``count`` with the option to exclude
+null values. 
+
+
+.. testcode::
+
+  import pyarrow.compute as pc
+
+  grouped_table = table.group_by("keys").aggregate(
+    [("values", 
+    "count",
+    pc.CountOptions(mode="only_valid"))]
+  )
+
+  print(grouped_table)
+
+.. testoutput::
+
+    pyarrow.Table
+    values_count: int64
+    keys: string
+    ----
+    values_count: [[1,3,1,2,1]]
+    keys: [["a","b","c","d","e"]]
+
+So far we discussed how we can apply the group by operation
+on a table. Another important operation on a grouped data 
+is sorting. Data can be either sorted ``ascending`` or ``descending``. 
+We can sort a table as follows.
+
+.. testcode::
+
+  grouped_table.sort_by([("values_count", "ascending")])
+
+.. testoutput::
+
+  pyarrow.Table
+  values_count: int64
+  keys: string
+  ----
+  values_count: [[1,1,1,2,3]]
+  keys: [["a","c","e","d","b"]]
+
+
 Searching for values matching a predicate in Arrays
 ===================================================
 
