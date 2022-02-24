@@ -392,7 +392,6 @@ A sample dataset can be formed as follows.
 Let's apply an aggregation operation ``count`` with the option to exclude
 null values. 
 
-
 .. testcode::
 
   import pyarrow.compute as pc
@@ -421,7 +420,9 @@ We can sort a table as follows.
 
 .. testcode::
 
-  grouped_table.sort_by([("values_count", "ascending")])
+  sorted_table = grouped_table.sort_by([("values_count", "ascending")])
+
+  print(sorted_table)
 
 .. testoutput::
 
