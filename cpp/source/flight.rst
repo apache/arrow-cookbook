@@ -121,8 +121,10 @@ To create a gRPC service, first define a service using protobuf.
    :start-at: syntax = "proto3";
    :caption: Hello world protobuf specification
 
-Next, you'll need to compile that. If you are using CMake, consider the setup
-suggested by https://www.f-ax.de/dev/2020/11/08/grpc-plugin-cmake-support.html.
+Next, you'll need to compile that to provide the protobuf and gRPC generated
+files. See gRPC's `generating client and server code 
+<https://grpc.io/docs/languages/cpp/basics/#generating-client-and-server-code>`_
+docs for details.
 
 Then write an implementation for the gRPC service:
 
@@ -144,18 +146,9 @@ Creating the client
 
 The Flight client implementation doesn't know about any custom gRPC services,
 so to call them you'll need to create a normal gRPC client. For the Hello World
-service, that just looks like a simple wrapper around the HelloWorldService stub,
-which is provided by the compiled protobuf definition.
-
-.. literalinclude:: ../code/flight.cc
-   :language: cpp
-   :linenos:
-   :start-at: class HelloWorldClient
-   :end-at: };  // end HelloWorldClient
-   :caption: Hello World client wrapper
-
-Then we can create a client by passing into the channel. Note that we can 
-connect to either of the two ports exposed.
+service, we use the HelloWorldService stub, which is provided by the compiled 
+protobuf definition. Note that we can connect to either of the two ports 
+exposed.
 
 .. recipe:: ../code/flight.cc CustomGrpcImpl::CreateClient
    :dedent: 2

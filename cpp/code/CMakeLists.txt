@@ -13,12 +13,21 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_CLANG_TIDY "clang-tidy")
 endif()
 
+# Add protobuf
+find_package(Protobuf REQUIRED)
+find_package(gRPC CONFIG REQUIRED)
+find_package(Threads)
+
+set(PROTO_FILES
+    protos/helloworld.proto
+)
+
 # Create test targets
 enable_testing()
 
 include(GoogleTest)
 
-function(RECIPE TARGET)
+function(RECIPE TARGET COMPILE_PROTOS)
     add_executable(
             ${TARGET}
             ${TARGET}.cc
@@ -32,7 +41,6 @@ function(RECIPE TARGET)
             arrow_flight
             parquet
             gtest
-            myproto
     )
     if (MSVC)
         target_compile_options(${TARGET} PRIVATE /W4 /WX)
@@ -40,13 +48,25 @@ function(RECIPE TARGET)
         target_compile_options(${TARGET} PRIVATE -Wall -Wextra -Wpedantic -Werror)
     endif ()
 
+    if (COMPILE_PROTOS)
+        target_link_libraries(${TARGET}
+            protobuf::libprotobuf
+            gRPC::grpc
+            gRPC::grpc++
+        )
+        target_include_directories(${TARGET} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+        get_target_property(grpc_cpp_plugin_location gRPC::grpc_cpp_plugin LOCATION)
+        protobuf_generate(TARGET ${TARGET} LANGUAGE cpp PROTOS ${PROTO_FILES})
+        protobuf_generate(TARGET ${TARGET} LANGUAGE grpc 
+                        GENERATE_EXTENSIONS .grpc.pb.h .grpc.pb.cc 
+                        PLUGIN "protoc-gen-grpc=${grpc_cpp_plugin_location}"
+                        PROTOS ${PROTO_FILES})
+    endif ()
+
     gtest_discover_tests(${TARGET})
 endfunction()
 
-recipe(basic_arrow)
-recipe(creating_arrow_objects)
-recipe(datasets)
-recipe(flight)
-
-# Add proto transpilation for Flight gRPC example
-add_subdirectory(protos)
+recipe(basic_arrow FALSE)
+recipe(creating_arrow_objects FALSE)
+recipe(datasets FALSE)
+recipe(flight TRUE)

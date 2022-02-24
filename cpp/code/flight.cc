@@ -28,10 +28,10 @@
 #include <gmock/gmock.h>
 #include <grpc++/grpc++.h>
 #include <gtest/gtest.h>
-#include <helloworld.grpc.pb.h>
-#include <helloworld.pb.h>
 #include <parquet/arrow/reader.h>
 #include <parquet/arrow/writer.h>
+#include <protos/helloworld.grpc.pb.h>
+#include <protos/helloworld.pb.h>
 
 #include <algorithm>
 #include <memory>
@@ -178,8 +178,8 @@ class ParquetStorageService : public arrow::flight::FlightServerBase {
 };  // end ParquetStorageService
 
 class HelloWorldServiceImpl : public HelloWorldService::Service {
-  grpc::Status SayHello([[maybe_unused]] grpc::ServerContext* ctx,
-                        const HelloRequest* request, HelloResponse* reply) override {
+  grpc::Status SayHello(grpc::ServerContext*, const HelloRequest* request,
+                        HelloResponse* reply) override {
     const std::string& name = request->name();
     if (name.empty()) {
       return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Must provide a name!");
@@ -189,29 +189,7 @@ class HelloWorldServiceImpl : public HelloWorldService::Service {
   }
 };  // end HelloWorldServiceImpl
 
-class HelloWorldClient {
- public:
-  HelloWorldClient(std::shared_ptr<grpc::Channel> channel)
-      : stub_(HelloWorldService::NewStub(channel)) {}
-
-  arrow::Result<std::string> HelloWorld(std::string name) {
-    grpc::ClientContext context;
-    HelloRequest request;
-    request.set_name(name);
-    HelloResponse response;
-    grpc::Status status = stub_->SayHello(&context, request, &response);
-    if (!status.ok()) {
-      return arrow::Status::IOError(status.error_message());
-    }
-    return response.reply();
-  }
-
-  protected:
-    std::unique_ptr<HelloWorldService::Stub> stub_;
-};  // end HelloWorldClient
-
-arrow::Status
-TestPutGetDelete() {
+arrow::Status TestPutGetDelete() {
   StartRecipe("ParquetStorageService::StartServer");
   auto fs = std::make_shared<arrow::fs::LocalFileSystem>();
   ARROW_RETURN_NOT_OK(fs->CreateDir("./flight_datasets/"));
@@ -395,17 +373,24 @@ arrow::Status TestCustomGrpcImpl() {
 
   ARROW_RETURN_NOT_OK(server->Init(options));
   rout << "Listening on ports " << server->port() << " and " << hello_world_port
-            << std::endl;
+       << std::endl;
   EndRecipe("CustomGrpcImpl::StartServer");
 
   StartRecipe("CustomGrpcImpl::CreateClient");
   auto client_channel =
       grpc::CreateChannel("0.0.0.0:5000", grpc::InsecureChannelCredentials());
-  
-  HelloWorldClient client(client_channel);
 
-  ARROW_ASSIGN_OR_RAISE(auto greeting, client.HelloWorld("Arrow User"));
-  rout << greeting;
+  auto stub = HelloWorldService::NewStub(client_channel);
+
+  grpc::ClientContext context;
+  HelloRequest request;
+  request.set_name("Arrow User");
+  HelloResponse response;
+  grpc::Status status = stub->SayHello(&context, request, &response);
+  if (!status.ok()) {
+    return arrow::Status::IOError(status.error_message());
+  }
+  rout << response.reply();
 
   EndRecipe("CustomGrpcImpl::CreateClient");
   return arrow::Status::OK();
