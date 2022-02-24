@@ -279,7 +279,7 @@ using :meth:`pyarrow.Table.set_column`
 
   new_sales_data = sales_data.set_column(
     1, 
-    "amount",
+    "new_amount",
     pa.array([30, 20, 15, 40])
   )
 
@@ -289,10 +289,10 @@ using :meth:`pyarrow.Table.set_column`
 
     pyarrow.Table
     item: string
-    amount: int64
+    new_amount: int64
     ----
     item: [["Potato","Bean","Cucumber","Eggs"]]
-    amount: [[30,20,15,40]]
+    new_amount: [[30,20,15,40]]
 
 Searching for values matching a predicate in Arrays
 ===================================================
