@@ -147,8 +147,7 @@ Creating the client
 The Flight client implementation doesn't know about any custom gRPC services,
 so to call them you'll need to create a normal gRPC client. For the Hello World
 service, we use the HelloWorldService stub, which is provided by the compiled 
-protobuf definition. Note that we can connect to either of the two ports 
-exposed.
+gRPC definition.
 
 .. recipe:: ../code/flight.cc CustomGrpcImpl::CreateClient
    :dedent: 2
