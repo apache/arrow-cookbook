@@ -334,11 +334,11 @@ the aggregate operator as :meth:`pyarrow.TableGroupBy.aggregate`.
 
   grouped_table = table.group_by("keys")
 
-  print(grouped_table)
+  print(type(grouped_table))
 
 .. testoutput::
 
-    <pyarrow.lib.TableGroupBy object at 0x104f484f0>
+    <class 'pyarrow.lib.TableGroupBy'>
 
 The output will look something similar to this. Now the table is 
 grouped by the field ``key`` and let's apply the aggregate operation
