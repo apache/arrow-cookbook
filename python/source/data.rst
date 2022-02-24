@@ -241,6 +241,59 @@ nomination was won using :meth:`pyarrow.Table.append_column`
     nominations: [[21,12]]
     wonyears: [[[1980,1983,2012],[1934,1968,1969,1982]]]
 
+
+Replacing a Column in an existing Table
+=======================================
+
+If you have a table it is possible to replace an existing column
+:meth:`pyarrow.Table.set_column`
+
+Suppose we have a table with information about items sold at a supermarket
+in a particular day.
+
+.. testcode::
+
+  import pyarrow as pa
+
+  sales_data = pa.table([
+    ["Potato", "Bean", "Cucumber", "Eggs"],
+    [21, 12, 10, 30]
+  ], names=["item", "amount"])
+
+  print(sales_data)
+
+.. testoutput::
+
+    pyarrow.Table
+    item: string
+    amount: int64
+    ----
+    item: [["Potato","Bean","Cucumber","Eggs"]]
+    amount: [[21,12,10,30]]
+
+it's possible to replace the existing column `amount`
+in index `1` to update the sales for the 
+day using :meth:`pyarrow.Table.set_column`
+
+.. testcode::
+
+  new_sales_data = sales_data.set_column(
+    1, 
+    "amount",
+    pa.array([30, 20, 15, 40])
+  )
+
+  print(new_sales_data)
+
+.. testoutput::
+
+    pyarrow.Table
+    item: string
+    amount: int64
+    ----
+    item: [["Potato","Bean","Cucumber","Eggs"]]
+    amount: [[30,20,15,40]]
+
 Searching for values matching a predicate in Arrays
 ===================================================
 
