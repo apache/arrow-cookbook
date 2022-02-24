@@ -344,16 +344,16 @@ arrow::Status TestClientOptions() {
 }
 
 arrow::Status TestCustomGrpcImpl() {
-  StartRecipe("CustomGrpcImpl::StartServer");
   // Build flight service as usual
   auto fs = std::make_shared<arrow::fs::LocalFileSystem>();
   ARROW_RETURN_NOT_OK(fs->CreateDir("./flight_datasets/"));
   ARROW_RETURN_NOT_OK(fs->DeleteDirContents("./flight_datasets/"));
   auto root = std::make_shared<arrow::fs::SubTreeFileSystem>("./flight_datasets/", fs);
 
+  StartRecipe("CustomGrpcImpl::StartServer");
   arrow::flight::Location server_location;
   ARROW_RETURN_NOT_OK(
-      arrow::flight::Location::ForGrpcTcp("0.0.0.0", 3000, &server_location));
+      arrow::flight::Location::ForGrpcTcp("0.0.0.0", 5000, &server_location));
 
   arrow::flight::FlightServerOptions options(server_location);
   auto server = std::unique_ptr<arrow::flight::FlightServerBase>(
@@ -361,19 +361,15 @@ arrow::Status TestCustomGrpcImpl() {
 
   // Create hello world service
   HelloWorldServiceImpl grpc_service;
-  // Both services will be available on both ports
-  int hello_world_port;
 
+  // Use builder_hook to register grpc service
   options.builder_hook = [&](void* raw_builder) {
     auto* builder = reinterpret_cast<grpc::ServerBuilder*>(raw_builder);
-    builder->AddListeningPort("0.0.0.0:5000", grpc::InsecureServerCredentials(),
-                              &hello_world_port);
     builder->RegisterService(&grpc_service);
   };
 
   ARROW_RETURN_NOT_OK(server->Init(options));
-  rout << "Listening on ports " << server->port() << " and " << hello_world_port
-       << std::endl;
+  rout << "Listening on port " << server->port() << std::endl;
   EndRecipe("CustomGrpcImpl::StartServer");
 
   StartRecipe("CustomGrpcImpl::CreateClient");

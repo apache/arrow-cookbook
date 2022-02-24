@@ -102,7 +102,7 @@ Flight Service with other gRPC endpoints
 ========================================
 
 If you are using the gRPC backend, you can add other gRPC endpoints to the 
-flight server. While Flight clients won't recognize these endpoints, general
+Flight server. While Flight clients won't recognize these endpoints, general
 gRPC clients will be able to.
 
 .. note::
