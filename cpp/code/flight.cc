@@ -25,9 +25,13 @@
 #include <arrow/status.h>
 #include <arrow/table.h>
 #include <arrow/type.h>
+#include <gmock/gmock.h>
+#include <grpc++/grpc++.h>
 #include <gtest/gtest.h>
 #include <parquet/arrow/reader.h>
 #include <parquet/arrow/writer.h>
+#include <protos/helloworld.grpc.pb.h>
+#include <protos/helloworld.pb.h>
 
 #include <algorithm>
 #include <memory>
@@ -43,9 +47,9 @@ class ParquetStorageService : public arrow::flight::FlightServerBase {
   explicit ParquetStorageService(std::shared_ptr<arrow::fs::FileSystem> root)
       : root_(std::move(root)) {}
 
-  arrow::Status ListFlights(const arrow::flight::ServerCallContext&,
-                            const arrow::flight::Criteria*,
-                            std::unique_ptr<arrow::flight::FlightListing>* listings) override {
+  arrow::Status ListFlights(
+      const arrow::flight::ServerCallContext&, const arrow::flight::Criteria*,
+      std::unique_ptr<arrow::flight::FlightListing>* listings) override {
     arrow::fs::FileSelector selector;
     selector.base_dir = "/";
     ARROW_ASSIGN_OR_RAISE(auto listing, root_->GetFileInfo(selector));
@@ -173,6 +177,18 @@ class ParquetStorageService : public arrow::flight::FlightServerBase {
   std::shared_ptr<arrow::fs::FileSystem> root_;
 };  // end ParquetStorageService
 
+class HelloWorldServiceImpl : public HelloWorldService::Service {
+  grpc::Status SayHello(grpc::ServerContext*, const HelloRequest* request,
+                        HelloResponse* reply) override {
+    const std::string& name = request->name();
+    if (name.empty()) {
+      return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Must provide a name!");
+    }
+    reply->set_reply("Hello, " + name);
+    return grpc::Status::OK;
+  }
+};  // end HelloWorldServiceImpl
+
 arrow::Status TestPutGetDelete() {
   StartRecipe("ParquetStorageService::StartServer");
   auto fs = std::make_shared<arrow::fs::LocalFileSystem>();
@@ -291,4 +307,95 @@ arrow::Status TestPutGetDelete() {
   return arrow::Status::OK();
 }
 
+arrow::Status TestClientOptions() {
+  // Set up server as usual
+  auto fs = std::make_shared<arrow::fs::LocalFileSystem>();
+  ARROW_RETURN_NOT_OK(fs->CreateDir("./flight_datasets/"));
+  ARROW_RETURN_NOT_OK(fs->DeleteDirContents("./flight_datasets/"));
+  auto root = std::make_shared<arrow::fs::SubTreeFileSystem>("./flight_datasets/", fs);
+
+  arrow::flight::Location server_location;
+  ARROW_RETURN_NOT_OK(
+      arrow::flight::Location::ForGrpcTcp("0.0.0.0", 0, &server_location));
+
+  arrow::flight::FlightServerOptions options(server_location);
+  auto server = std::unique_ptr<arrow::flight::FlightServerBase>(
+      new ParquetStorageService(std::move(root)));
+  ARROW_RETURN_NOT_OK(server->Init(options));
+
+  StartRecipe("TestClientOptions::Connect");
+  auto client_options = arrow::flight::FlightClientOptions::Defaults();
+  // Set a very low limit at the gRPC layer to fail all calls
+  client_options.generic_options.emplace_back(GRPC_ARG_MAX_SEND_MESSAGE_LENGTH, 2);
+
+  arrow::flight::Location location;
+  ARROW_RETURN_NOT_OK(
+      arrow::flight::Location::ForGrpcTcp("localhost", server->port(), &location));
+
+  std::unique_ptr<arrow::flight::FlightClient> client;
+  ARROW_RETURN_NOT_OK(  // pass client_options into Connect()
+      arrow::flight::FlightClient::Connect(location, client_options, &client));
+  rout << "Connected to " << location.ToString() << std::endl;
+  EndRecipe("TestClientOptions::Connect");
+
+  auto descriptor = arrow::flight::FlightDescriptor::Path({"airquality.parquet"});
+  std::unique_ptr<arrow::flight::FlightInfo> flight_info;
+  return client->GetFlightInfo(descriptor, &flight_info);
+}
+
+arrow::Status TestCustomGrpcImpl() {
+  // Build flight service as usual
+  auto fs = std::make_shared<arrow::fs::LocalFileSystem>();
+  ARROW_RETURN_NOT_OK(fs->CreateDir("./flight_datasets/"));
+  ARROW_RETURN_NOT_OK(fs->DeleteDirContents("./flight_datasets/"));
+  auto root = std::make_shared<arrow::fs::SubTreeFileSystem>("./flight_datasets/", fs);
+
+  StartRecipe("CustomGrpcImpl::StartServer");
+  arrow::flight::Location server_location;
+  ARROW_RETURN_NOT_OK(
+      arrow::flight::Location::ForGrpcTcp("0.0.0.0", 5000, &server_location));
+
+  arrow::flight::FlightServerOptions options(server_location);
+  auto server = std::unique_ptr<arrow::flight::FlightServerBase>(
+      new ParquetStorageService(std::move(root)));
+
+  // Create hello world service
+  HelloWorldServiceImpl grpc_service;
+
+  // Use builder_hook to register grpc service
+  options.builder_hook = [&](void* raw_builder) {
+    auto* builder = reinterpret_cast<grpc::ServerBuilder*>(raw_builder);
+    builder->RegisterService(&grpc_service);
+  };
+
+  ARROW_RETURN_NOT_OK(server->Init(options));
+  rout << "Listening on port " << server->port() << std::endl;
+  EndRecipe("CustomGrpcImpl::StartServer");
+
+  StartRecipe("CustomGrpcImpl::CreateClient");
+  auto client_channel =
+      grpc::CreateChannel("0.0.0.0:5000", grpc::InsecureChannelCredentials());
+
+  auto stub = HelloWorldService::NewStub(client_channel);
+
+  grpc::ClientContext context;
+  HelloRequest request;
+  request.set_name("Arrow User");
+  HelloResponse response;
+  grpc::Status status = stub->SayHello(&context, request, &response);
+  if (!status.ok()) {
+    return arrow::Status::IOError(status.error_message());
+  }
+  rout << response.reply();
+
+  EndRecipe("CustomGrpcImpl::CreateClient");
+  return arrow::Status::OK();
+}
+
 TEST(ParquetStorageServiceTest, PutGetDelete) { ASSERT_OK(TestPutGetDelete()); }
+TEST(ParquetStorageServiceTest, TestClientOptions) {
+  auto status = TestClientOptions();
+  ASSERT_EQ(status.code(), arrow::StatusCode::Invalid);
+  ASSERT_THAT(status.message(), testing::HasSubstr("resource exhausted"));
+}
+TEST(ParquetStorageServiceTest, TestCustomGrpcImpl) { ASSERT_OK(TestCustomGrpcImpl()); }
