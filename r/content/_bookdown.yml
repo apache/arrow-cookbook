@@ -12,6 +12,7 @@ rmd_files: [
   "specify_data_types_and_schemas.Rmd",
   "arrays.Rmd",
   "tables.Rmd",
+  "datasets.Rmd",
   "python.Rmd",
   "flight.Rmd"
 ]
