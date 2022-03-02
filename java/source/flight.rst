@@ -37,6 +37,7 @@ Flight Client and Server
 
     import org.apache.arrow.flight.Action;
     import org.apache.arrow.flight.AsyncPutListener;
+    import org.apache.arrow.flight.CallStatus;
     import org.apache.arrow.flight.Criteria;
     import org.apache.arrow.flight.FlightClient;
     import org.apache.arrow.flight.FlightDescriptor;
@@ -65,16 +66,16 @@ Flight Client and Server
     import java.util.ArrayList;
     import java.util.Arrays;
     import java.util.Collections;
-    import java.util.HashMap;
     import java.util.Iterator;
     import java.util.List;
     import java.util.Map;
+    import java.util.concurrent.ConcurrentHashMap;
 
     class DataInMemory {
         private List<ArrowRecordBatch> listArrowRecordBatch;
         private Schema schema;
-        private Long rows;
-        public DataInMemory(List<ArrowRecordBatch> listArrowRecordBatch, Schema schema, Long rows) {
+        private long rows;
+        public DataInMemory(List<ArrowRecordBatch> listArrowRecordBatch, Schema schema, long rows) {
             this.listArrowRecordBatch = listArrowRecordBatch;
             this.schema = schema;
             this.rows = rows;
@@ -85,18 +86,17 @@ Flight Client and Server
         public Schema getSchema() {
             return schema;
         }
-        public Long getRows() {
+        public long getRows() {
             return rows;
         }
     }
 
     // Server
     Location location = Location.forGrpcInsecure("0.0.0.0", 33333);
-    Map<FlightDescriptor, DataInMemory> dataInMemory = new HashMap<>();
-    Map<String, DataInMemory> mapPojoFlightDataInMemory = new HashMap<>();
+    Map<FlightDescriptor, DataInMemory> dataInMemory = new ConcurrentHashMap<>();
     List<ArrowRecordBatch> listArrowRecordBatch = new ArrayList<>();
     try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE)){
-        FlightServer flightServer = FlightServer.builder(allocator, location, new NoOpFlightProducer(){
+        class CookbookProducer extends NoOpFlightProducer {
             @Override
             public Runnable acceptPut(CallContext context, FlightStream flightStream, StreamListener<PutResult> ackStream) {
                 return () -> {
@@ -104,13 +104,11 @@ Flight Client and Server
                     while (flightStream.next()) {
                         VectorUnloader unloader = new VectorUnloader(flightStream.getRoot());
                         try (final ArrowRecordBatch arb = unloader.getRecordBatch()) {
-                            // Retain data information
                             listArrowRecordBatch.add(arb);
-                            rows = rows + flightStream.getRoot().getRowCount();
+                            rows += flightStream.getRoot().getRowCount();
                         }
                     }
-                    long finalRows = rows;
-                    DataInMemory pojoFlightDataInMemory = new DataInMemory(listArrowRecordBatch, flightStream.getSchema(), finalRows);
+                    DataInMemory pojoFlightDataInMemory = new DataInMemory(listArrowRecordBatch, flightStream.getSchema(), rows);
                     dataInMemory.put(flightStream.getDescriptor(), pojoFlightDataInMemory);
                     ackStream.onCompleted();
                 };
@@ -123,12 +121,10 @@ Flight Client and Server
                     VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(dataInMemory.get(flightDescriptor).getSchema(), allocator);
                     listener.start(vectorSchemaRoot);
                     for(ArrowRecordBatch arrowRecordBatch : dataInMemory.get(flightDescriptor).getListArrowRecordBatch()){
-                        vectorSchemaRoot.allocateNew();
                         VectorLoader loader = new VectorLoader(vectorSchemaRoot);
                         loader.load(arrowRecordBatch.cloneWithTransfer(allocator));
                         listener.putNext();
                     }
-                    vectorSchemaRoot.clear();
                     listener.completed();
                 }
             }
@@ -150,13 +146,13 @@ Flight Client and Server
             @Override
             public FlightInfo getFlightInfo(CallContext context, FlightDescriptor descriptor) {
                 if(!dataInMemory.containsKey(descriptor)){
-                    throw new IllegalStateException("Unknown descriptor.");
+                    throw CallStatus.NOT_FOUND.withDescription("Unknown descriptor").toRuntimeException();
                 }
                 return new FlightInfo(
                         dataInMemory.get(descriptor).getSchema(),
                         descriptor,
                         Collections.singletonList(new FlightEndpoint(new Ticket(descriptor.getPath().get(0).getBytes(StandardCharsets.UTF_8)), location)), // Configure a key to map back and forward your data using Ticket argument
-                        allocator.getAllocatedMemory(),
+                        -1,
                         dataInMemory.get(descriptor).getRows()
                 );
             }
@@ -170,7 +166,9 @@ Flight Client and Server
                 );
                 listener.onCompleted();
             }
-        }).build();
+        }
+
+        FlightServer flightServer = FlightServer.builder(allocator, location, new CookbookProducer()).build();
         try {
             flightServer.start();
         } catch (IOException e) {
@@ -179,30 +177,30 @@ Flight Client and Server
     }
 
     // Client
-    try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE)){
+    Schema schema = new Schema(Arrays.asList( new Field("name", FieldType.nullable(new ArrowType.Utf8()), null)));
+    try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE);
+         VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schema, allocator)){
         // Populate data
         FlightClient flightClient = FlightClient.builder(allocator, location).build();
-        Schema schema = new Schema(Arrays.asList( new Field("name", FieldType.nullable(new ArrowType.Utf8()), null)));
-        VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schema, allocator);
         VarCharVector varCharVector = (VarCharVector) vectorSchemaRoot.getVector("name");
         varCharVector.allocateNew(3);
         varCharVector.set(0, "Ronald".getBytes());
         varCharVector.set(1, "David".getBytes());
         varCharVector.set(2, "Francisco".getBytes());
-        varCharVector.setValueCount(3);
         vectorSchemaRoot.setRowCount(3);
         FlightClient.ClientStreamListener listener = flightClient.startPut(FlightDescriptor.path("profiles"), vectorSchemaRoot, new AsyncPutListener());
         listener.putNext();
-        vectorSchemaRoot.allocateNew();
         varCharVector.set(0, "Manuel".getBytes());
         varCharVector.set(1, "Felipe".getBytes());
         varCharVector.set(2, "JJ".getBytes());
-        varCharVector.setValueCount(3);
         vectorSchemaRoot.setRowCount(3);
         listener.putNext();
-        vectorSchemaRoot.clear();
         listener.completed();
         listener.getResult();
+
+        // Get metadata information
+        FlightInfo flightInfo = flightClient.getInfo(FlightDescriptor.path("profiles"));
+        System.out.println(flightInfo);
 
         // Get all metadata information
         Iterable<FlightInfo> flightInfosBefore = flightClient.listFlights(Criteria.ALL);
@@ -212,12 +210,12 @@ Flight Client and Server
         // Get data information
         FlightStream flightStream = flightClient.getStream(new Ticket(FlightDescriptor.path("profiles").getPath().get(0).getBytes(StandardCharsets.UTF_8)));
         int batch = 0;
-        VectorSchemaRoot vectorSchemaRootReceived = flightStream.getRoot();
-        while(flightStream.next()){
-            batch++;
-            System.out.println("Received batch #" + batch + ", Data:");
-            System.out.print(vectorSchemaRootReceived.contentToTSVString());
-            vectorSchemaRootReceived.clear();
+        try (VectorSchemaRoot vectorSchemaRootReceived = flightStream.getRoot()) {
+            while (flightStream.next()) {
+                batch++;
+                System.out.println("Received batch #" + batch + ", Data:");
+                System.out.print(vectorSchemaRootReceived.contentToTSVString());
+            }
         }
 
         // Do delete action
@@ -323,15 +321,15 @@ memory by the server.
     import java.io.IOException;
     import java.util.ArrayList;
     import java.util.Arrays;
-    import java.util.HashMap;
     import java.util.List;
     import java.util.Map;
+    import java.util.concurrent.ConcurrentHashMap;
 
     class DataInMemory {
         private List<ArrowRecordBatch> listArrowRecordBatch;
         private Schema schema;
-        private Long rows;
-        public DataInMemory(List<ArrowRecordBatch> listArrowRecordBatch, Schema schema, Long rows) {
+        private long rows;
+        public DataInMemory(List<ArrowRecordBatch> listArrowRecordBatch, Schema schema, long rows) {
             this.listArrowRecordBatch = listArrowRecordBatch;
             this.schema = schema;
             this.rows = rows;
@@ -342,18 +340,17 @@ memory by the server.
         public Schema getSchema() {
             return schema;
         }
-        public Long getRows() {
+        public long getRows() {
             return rows;
         }
     }
 
     // Server
     Location location = Location.forGrpcInsecure("0.0.0.0", 33333);
-    Map<FlightDescriptor, DataInMemory> dataInMemory = new HashMap<>();
-    Map<String, DataInMemory> mapPojoFlightDataInMemory = new HashMap<>();
+    Map<FlightDescriptor, DataInMemory> dataInMemory = new ConcurrentHashMap<>();
     List<ArrowRecordBatch> listArrowRecordBatch = new ArrayList<>();
     try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE)){
-        FlightServer flightServer = FlightServer.builder(allocator, location, new NoOpFlightProducer(){
+        class CookbookProducer extends NoOpFlightProducer {
             @Override
             public Runnable acceptPut(CallContext context, FlightStream flightStream, StreamListener<PutResult> ackStream) {
                 return () -> {
@@ -361,18 +358,18 @@ memory by the server.
                     while (flightStream.next()) {
                         VectorUnloader unloader = new VectorUnloader(flightStream.getRoot());
                         try (final ArrowRecordBatch arb = unloader.getRecordBatch()) {
-                            // Retain data information
                             listArrowRecordBatch.add(arb);
-                            rows = rows + flightStream.getRoot().getRowCount();
+                            rows += flightStream.getRoot().getRowCount();
                         }
                     }
-                    long finalRows = rows;
-                    DataInMemory pojoFlightDataInMemory = new DataInMemory(listArrowRecordBatch, flightStream.getSchema(), finalRows);
+                    DataInMemory pojoFlightDataInMemory = new DataInMemory(listArrowRecordBatch, flightStream.getSchema(), rows);
                     dataInMemory.put(flightStream.getDescriptor(), pojoFlightDataInMemory);
                     ackStream.onCompleted();
                 };
             }
-        }).build();
+        }
+
+        FlightServer flightServer = FlightServer.builder(allocator, location, new CookbookProducer()).build();
         try {
             flightServer.start();
         } catch (IOException e) {
@@ -381,28 +378,24 @@ memory by the server.
     }
 
     // Client
-    try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE)){
+    Schema schema = new Schema(Arrays.asList( new Field("name", FieldType.nullable(new ArrowType.Utf8()), null)));
+    try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE);
+         VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schema, allocator)){
         // Populate data
         FlightClient flightClient = FlightClient.builder(allocator, location).build();
-        Schema schema = new Schema(Arrays.asList( new Field("name", FieldType.nullable(new ArrowType.Utf8()), null)));
-        VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schema, allocator);
         VarCharVector varCharVector = (VarCharVector) vectorSchemaRoot.getVector("name");
         varCharVector.allocateNew(3);
         varCharVector.set(0, "Ronald".getBytes());
         varCharVector.set(1, "David".getBytes());
         varCharVector.set(2, "Francisco".getBytes());
-        varCharVector.setValueCount(3);
         vectorSchemaRoot.setRowCount(3);
         FlightClient.ClientStreamListener listener = flightClient.startPut(FlightDescriptor.path("profiles"), vectorSchemaRoot, new AsyncPutListener());
         listener.putNext();
-        vectorSchemaRoot.allocateNew();
         varCharVector.set(0, "Manuel".getBytes());
         varCharVector.set(1, "Felipe".getBytes());
         varCharVector.set(2, "JJ".getBytes());
-        varCharVector.setValueCount(3);
         vectorSchemaRoot.setRowCount(3);
         listener.putNext();
-        vectorSchemaRoot.clear();
         listener.completed();
         listener.getResult();
     }
@@ -421,6 +414,7 @@ Once we do so, we can retrieve the metadata for that dataset.
 .. testcode::
 
     import org.apache.arrow.flight.AsyncPutListener;
+    import org.apache.arrow.flight.CallStatus;
     import org.apache.arrow.flight.FlightClient;
     import org.apache.arrow.flight.FlightDescriptor;
     import org.apache.arrow.flight.FlightEndpoint;
@@ -446,15 +440,15 @@ Once we do so, we can retrieve the metadata for that dataset.
     import java.util.ArrayList;
     import java.util.Arrays;
     import java.util.Collections;
-    import java.util.HashMap;
     import java.util.List;
     import java.util.Map;
+    import java.util.concurrent.ConcurrentHashMap;
 
     class DataInMemory {
         private List<ArrowRecordBatch> listArrowRecordBatch;
         private Schema schema;
-        private Long rows;
-        public DataInMemory(List<ArrowRecordBatch> listArrowRecordBatch, Schema schema, Long rows) {
+        private long rows;
+        public DataInMemory(List<ArrowRecordBatch> listArrowRecordBatch, Schema schema, long rows) {
             this.listArrowRecordBatch = listArrowRecordBatch;
             this.schema = schema;
             this.rows = rows;
@@ -465,18 +459,17 @@ Once we do so, we can retrieve the metadata for that dataset.
         public Schema getSchema() {
             return schema;
         }
-        public Long getRows() {
+        public long getRows() {
             return rows;
         }
     }
 
     // Server
     Location location = Location.forGrpcInsecure("0.0.0.0", 33333);
-    Map<FlightDescriptor, DataInMemory> dataInMemory = new HashMap<>();
-    Map<String, DataInMemory> mapPojoFlightDataInMemory = new HashMap<>();
+    Map<FlightDescriptor, DataInMemory> dataInMemory = new ConcurrentHashMap<>();
     List<ArrowRecordBatch> listArrowRecordBatch = new ArrayList<>();
     try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE)){
-        FlightServer flightServer = FlightServer.builder(allocator, location, new NoOpFlightProducer(){
+        class CookbookProducer extends NoOpFlightProducer {
             @Override
             public Runnable acceptPut(CallContext context, FlightStream flightStream, StreamListener<PutResult> ackStream) {
                 return () -> {
@@ -484,13 +477,11 @@ Once we do so, we can retrieve the metadata for that dataset.
                     while (flightStream.next()) {
                         VectorUnloader unloader = new VectorUnloader(flightStream.getRoot());
                         try (final ArrowRecordBatch arb = unloader.getRecordBatch()) {
-                            // Retain data information
                             listArrowRecordBatch.add(arb);
-                            rows = rows + flightStream.getRoot().getRowCount();
+                            rows += flightStream.getRoot().getRowCount();
                         }
                     }
-                    long finalRows = rows;
-                    DataInMemory pojoFlightDataInMemory = new DataInMemory(listArrowRecordBatch, flightStream.getSchema(), finalRows);
+                    DataInMemory pojoFlightDataInMemory = new DataInMemory(listArrowRecordBatch, flightStream.getSchema(), rows);
                     dataInMemory.put(flightStream.getDescriptor(), pojoFlightDataInMemory);
                     ackStream.onCompleted();
                 };
@@ -499,17 +490,20 @@ Once we do so, we can retrieve the metadata for that dataset.
             @Override
             public FlightInfo getFlightInfo(CallContext context, FlightDescriptor descriptor) {
                 if(!dataInMemory.containsKey(descriptor)){
-                    throw new IllegalStateException("Unknown descriptor.");
+                    throw CallStatus.NOT_FOUND.withDescription("Unknown descriptor").toRuntimeException();
                 }
                 return new FlightInfo(
                         dataInMemory.get(descriptor).getSchema(),
                         descriptor,
                         Collections.singletonList(new FlightEndpoint(new Ticket(descriptor.getPath().get(0).getBytes(StandardCharsets.UTF_8)), location)), // Configure a key to map back and forward your data using Ticket argument
-                        allocator.getAllocatedMemory(),
+                        -1,
                         dataInMemory.get(descriptor).getRows()
                 );
             }
-        }).build();
+
+        }
+
+        FlightServer flightServer = FlightServer.builder(allocator, location, new CookbookProducer()).build();
         try {
             flightServer.start();
         } catch (IOException e) {
@@ -518,28 +512,24 @@ Once we do so, we can retrieve the metadata for that dataset.
     }
 
     // Client
-    try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE)){
+    Schema schema = new Schema(Arrays.asList( new Field("name", FieldType.nullable(new ArrowType.Utf8()), null)));
+    try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE);
+         VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schema, allocator)){
         // Populate data
         FlightClient flightClient = FlightClient.builder(allocator, location).build();
-        Schema schema = new Schema(Arrays.asList( new Field("name", FieldType.nullable(new ArrowType.Utf8()), null)));
-        VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schema, allocator);
         VarCharVector varCharVector = (VarCharVector) vectorSchemaRoot.getVector("name");
         varCharVector.allocateNew(3);
         varCharVector.set(0, "Ronald".getBytes());
         varCharVector.set(1, "David".getBytes());
         varCharVector.set(2, "Francisco".getBytes());
-        varCharVector.setValueCount(3);
         vectorSchemaRoot.setRowCount(3);
         FlightClient.ClientStreamListener listener = flightClient.startPut(FlightDescriptor.path("profiles"), vectorSchemaRoot, new AsyncPutListener());
         listener.putNext();
-        vectorSchemaRoot.allocateNew();
         varCharVector.set(0, "Manuel".getBytes());
         varCharVector.set(1, "Felipe".getBytes());
         varCharVector.set(2, "JJ".getBytes());
-        varCharVector.setValueCount(3);
         vectorSchemaRoot.setRowCount(3);
         listener.putNext();
-        vectorSchemaRoot.clear();
         listener.completed();
         listener.getResult();
 
@@ -550,7 +540,7 @@ Once we do so, we can retrieve the metadata for that dataset.
 
 .. testoutput::
 
-    FlightInfo{schema=Schema<name: Utf8>, descriptor=profiles, endpoints=[FlightEndpoint{locations=[Location{uri=grpc+tcp://0.0.0.0:33333}], ticket=org.apache.arrow.flight.Ticket@58871b0a}], bytes=0, records=6}
+    FlightInfo{schema=Schema<name: Utf8>, descriptor=profiles, endpoints=[FlightEndpoint{locations=[Location{uri=grpc+tcp://0.0.0.0:33333}], ticket=org.apache.arrow.flight.Ticket@58871b0a}], bytes=-1, records=6}
 
 Get Data
 ********
@@ -583,15 +573,15 @@ And get the data back:
     import java.nio.charset.StandardCharsets;
     import java.util.ArrayList;
     import java.util.Arrays;
-    import java.util.HashMap;
     import java.util.List;
     import java.util.Map;
+    import java.util.concurrent.ConcurrentHashMap;
 
     class DataInMemory {
         private List<ArrowRecordBatch> listArrowRecordBatch;
         private Schema schema;
-        private Long rows;
-        public DataInMemory(List<ArrowRecordBatch> listArrowRecordBatch, Schema schema, Long rows) {
+        private long rows;
+        public DataInMemory(List<ArrowRecordBatch> listArrowRecordBatch, Schema schema, long rows) {
             this.listArrowRecordBatch = listArrowRecordBatch;
             this.schema = schema;
             this.rows = rows;
@@ -602,18 +592,17 @@ And get the data back:
         public Schema getSchema() {
             return schema;
         }
-        public Long getRows() {
+        public long getRows() {
             return rows;
         }
     }
 
     // Server
     Location location = Location.forGrpcInsecure("0.0.0.0", 33333);
-    Map<FlightDescriptor, DataInMemory> dataInMemory = new HashMap<>();
-    Map<String, DataInMemory> mapPojoFlightDataInMemory = new HashMap<>();
+    Map<FlightDescriptor, DataInMemory> dataInMemory = new ConcurrentHashMap<>();
     List<ArrowRecordBatch> listArrowRecordBatch = new ArrayList<>();
     try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE)){
-        FlightServer flightServer = FlightServer.builder(allocator, location, new NoOpFlightProducer(){
+        class CookbookProducer extends NoOpFlightProducer {
             @Override
             public Runnable acceptPut(CallContext context, FlightStream flightStream, StreamListener<PutResult> ackStream) {
                 return () -> {
@@ -621,13 +610,11 @@ And get the data back:
                     while (flightStream.next()) {
                         VectorUnloader unloader = new VectorUnloader(flightStream.getRoot());
                         try (final ArrowRecordBatch arb = unloader.getRecordBatch()) {
-                            // Retain data information
                             listArrowRecordBatch.add(arb);
-                            rows = rows + flightStream.getRoot().getRowCount();
+                            rows += flightStream.getRoot().getRowCount();
                         }
                     }
-                    long finalRows = rows;
-                    DataInMemory pojoFlightDataInMemory = new DataInMemory(listArrowRecordBatch, flightStream.getSchema(), finalRows);
+                    DataInMemory pojoFlightDataInMemory = new DataInMemory(listArrowRecordBatch, flightStream.getSchema(), rows);
                     dataInMemory.put(flightStream.getDescriptor(), pojoFlightDataInMemory);
                     ackStream.onCompleted();
                 };
@@ -640,16 +627,16 @@ And get the data back:
                     VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(dataInMemory.get(flightDescriptor).getSchema(), allocator);
                     listener.start(vectorSchemaRoot);
                     for(ArrowRecordBatch arrowRecordBatch : dataInMemory.get(flightDescriptor).getListArrowRecordBatch()){
-                        vectorSchemaRoot.allocateNew();
                         VectorLoader loader = new VectorLoader(vectorSchemaRoot);
                         loader.load(arrowRecordBatch.cloneWithTransfer(allocator));
                         listener.putNext();
                     }
-                    vectorSchemaRoot.clear();
                     listener.completed();
                 }
             }
-        }).build();
+        }
+
+        FlightServer flightServer = FlightServer.builder(allocator, location, new CookbookProducer()).build();
         try {
             flightServer.start();
         } catch (IOException e) {
@@ -658,40 +645,36 @@ And get the data back:
     }
 
     // Client
-    try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE)){
+    Schema schema = new Schema(Arrays.asList( new Field("name", FieldType.nullable(new ArrowType.Utf8()), null)));
+    try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE);
+         VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schema, allocator)){
         // Populate data
         FlightClient flightClient = FlightClient.builder(allocator, location).build();
-        Schema schema = new Schema(Arrays.asList( new Field("name", FieldType.nullable(new ArrowType.Utf8()), null)));
-        VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schema, allocator);
         VarCharVector varCharVector = (VarCharVector) vectorSchemaRoot.getVector("name");
         varCharVector.allocateNew(3);
         varCharVector.set(0, "Ronald".getBytes());
         varCharVector.set(1, "David".getBytes());
         varCharVector.set(2, "Francisco".getBytes());
-        varCharVector.setValueCount(3);
         vectorSchemaRoot.setRowCount(3);
         FlightClient.ClientStreamListener listener = flightClient.startPut(FlightDescriptor.path("profiles"), vectorSchemaRoot, new AsyncPutListener());
         listener.putNext();
-        vectorSchemaRoot.allocateNew();
         varCharVector.set(0, "Manuel".getBytes());
         varCharVector.set(1, "Felipe".getBytes());
         varCharVector.set(2, "JJ".getBytes());
-        varCharVector.setValueCount(3);
         vectorSchemaRoot.setRowCount(3);
         listener.putNext();
-        vectorSchemaRoot.clear();
         listener.completed();
         listener.getResult();
 
         // Get data information
         FlightStream flightStream = flightClient.getStream(new Ticket(FlightDescriptor.path("profiles").getPath().get(0).getBytes(StandardCharsets.UTF_8)));
         int batch = 0;
-        VectorSchemaRoot vectorSchemaRootReceived = flightStream.getRoot();
-        while(flightStream.next()){
-            batch++;
-            System.out.println("Received batch #" + batch + ", Data:");
-            System.out.print(vectorSchemaRootReceived.contentToTSVString());
-            vectorSchemaRootReceived.clear();
+        try (VectorSchemaRoot vectorSchemaRootReceived = flightStream.getRoot()) {
+            while (flightStream.next()) {
+                batch++;
+                System.out.println("Received batch #" + batch + ", Data:");
+                System.out.print(vectorSchemaRootReceived.contentToTSVString());
+            }
         }
     }
 
@@ -717,6 +700,7 @@ Then, we'll delete the dataset:
 
     import org.apache.arrow.flight.Action;
     import org.apache.arrow.flight.AsyncPutListener;
+    import org.apache.arrow.flight.CallStatus;
     import org.apache.arrow.flight.Criteria;
     import org.apache.arrow.flight.FlightClient;
     import org.apache.arrow.flight.FlightDescriptor;
@@ -744,16 +728,16 @@ Then, we'll delete the dataset:
     import java.util.ArrayList;
     import java.util.Arrays;
     import java.util.Collections;
-    import java.util.HashMap;
     import java.util.Iterator;
     import java.util.List;
     import java.util.Map;
+    import java.util.concurrent.ConcurrentHashMap;
 
     class DataInMemory {
         private List<ArrowRecordBatch> listArrowRecordBatch;
         private Schema schema;
-        private Long rows;
-        public DataInMemory(List<ArrowRecordBatch> listArrowRecordBatch, Schema schema, Long rows) {
+        private long rows;
+        public DataInMemory(List<ArrowRecordBatch> listArrowRecordBatch, Schema schema, long rows) {
             this.listArrowRecordBatch = listArrowRecordBatch;
             this.schema = schema;
             this.rows = rows;
@@ -764,18 +748,17 @@ Then, we'll delete the dataset:
         public Schema getSchema() {
             return schema;
         }
-        public Long getRows() {
+        public long getRows() {
             return rows;
         }
     }
 
     // Server
     Location location = Location.forGrpcInsecure("0.0.0.0", 33333);
-    Map<FlightDescriptor, DataInMemory> dataInMemory = new HashMap<>();
-    Map<String, DataInMemory> mapPojoFlightDataInMemory = new HashMap<>();
+    Map<FlightDescriptor, DataInMemory> dataInMemory = new ConcurrentHashMap<>();
     List<ArrowRecordBatch> listArrowRecordBatch = new ArrayList<>();
     try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE)){
-        FlightServer flightServer = FlightServer.builder(allocator, location, new NoOpFlightProducer(){
+        class CookbookProducer extends NoOpFlightProducer {
             @Override
             public Runnable acceptPut(CallContext context, FlightStream flightStream, StreamListener<PutResult> ackStream) {
                 return () -> {
@@ -783,13 +766,11 @@ Then, we'll delete the dataset:
                     while (flightStream.next()) {
                         VectorUnloader unloader = new VectorUnloader(flightStream.getRoot());
                         try (final ArrowRecordBatch arb = unloader.getRecordBatch()) {
-                            // Retain data information
                             listArrowRecordBatch.add(arb);
-                            rows = rows + flightStream.getRoot().getRowCount();
+                            rows += flightStream.getRoot().getRowCount();
                         }
                     }
-                    long finalRows = rows;
-                    DataInMemory pojoFlightDataInMemory = new DataInMemory(listArrowRecordBatch, flightStream.getSchema(), finalRows);
+                    DataInMemory pojoFlightDataInMemory = new DataInMemory(listArrowRecordBatch, flightStream.getSchema(), rows);
                     dataInMemory.put(flightStream.getDescriptor(), pojoFlightDataInMemory);
                     ackStream.onCompleted();
                 };
@@ -812,13 +793,13 @@ Then, we'll delete the dataset:
             @Override
             public FlightInfo getFlightInfo(CallContext context, FlightDescriptor descriptor) {
                 if(!dataInMemory.containsKey(descriptor)){
-                    throw new IllegalStateException("Unknown descriptor.");
+                    throw CallStatus.NOT_FOUND.withDescription("Unknown descriptor").toRuntimeException();
                 }
                 return new FlightInfo(
                         dataInMemory.get(descriptor).getSchema(),
                         descriptor,
                         Collections.singletonList(new FlightEndpoint(new Ticket(descriptor.getPath().get(0).getBytes(StandardCharsets.UTF_8)), location)), // Configure a key to map back and forward your data using Ticket argument
-                        allocator.getAllocatedMemory(),
+                        -1,
                         dataInMemory.get(descriptor).getRows()
                 );
             }
@@ -826,13 +807,15 @@ Then, we'll delete the dataset:
             @Override
             public void listFlights(CallContext context, Criteria criteria, StreamListener<FlightInfo> listener) {
                 dataInMemory.forEach((k, v) -> {
-                    FlightInfo flightInfo = getFlightInfo(null, k);
-                    listener.onNext(flightInfo);
-                    }
+                            FlightInfo flightInfo = getFlightInfo(null, k);
+                            listener.onNext(flightInfo);
+                        }
                 );
                 listener.onCompleted();
             }
-        }).build();
+        }
+
+        FlightServer flightServer = FlightServer.builder(allocator, location, new CookbookProducer()).build();
         try {
             flightServer.start();
         } catch (IOException e) {
@@ -841,28 +824,24 @@ Then, we'll delete the dataset:
     }
 
     // Client
-    try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE)){
+    Schema schema = new Schema(Arrays.asList( new Field("name", FieldType.nullable(new ArrowType.Utf8()), null)));
+    try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE);
+         VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schema, allocator)){
         // Populate data
         FlightClient flightClient = FlightClient.builder(allocator, location).build();
-        Schema schema = new Schema(Arrays.asList( new Field("name", FieldType.nullable(new ArrowType.Utf8()), null)));
-        VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schema, allocator);
         VarCharVector varCharVector = (VarCharVector) vectorSchemaRoot.getVector("name");
         varCharVector.allocateNew(3);
         varCharVector.set(0, "Ronald".getBytes());
         varCharVector.set(1, "David".getBytes());
         varCharVector.set(2, "Francisco".getBytes());
-        varCharVector.setValueCount(3);
         vectorSchemaRoot.setRowCount(3);
         FlightClient.ClientStreamListener listener = flightClient.startPut(FlightDescriptor.path("profiles"), vectorSchemaRoot, new AsyncPutListener());
         listener.putNext();
-        vectorSchemaRoot.allocateNew();
         varCharVector.set(0, "Manuel".getBytes());
         varCharVector.set(1, "Felipe".getBytes());
         varCharVector.set(2, "JJ".getBytes());
-        varCharVector.setValueCount(3);
         vectorSchemaRoot.setRowCount(3);
         listener.putNext();
-        vectorSchemaRoot.clear();
         listener.completed();
         listener.getResult();
 
@@ -870,6 +849,9 @@ Then, we'll delete the dataset:
         Iterable<FlightInfo> flightInfosBefore = flightClient.listFlights(Criteria.ALL);
         System.out.print("List Flights Info: ");
         flightInfosBefore.forEach(t -> System.out.println(t));
+        for(FlightInfo flightInfo : flightInfosBefore){
+            System.out.println(flightInfo);
+        }
 
         // Do delete action
         Iterator<Result> deleteActionResult = flightClient.doAction(new Action("DELETE", FlightDescriptor.path("profiles").getPath().get(0).getBytes(StandardCharsets.UTF_8) ));
@@ -881,7 +863,7 @@ Then, we'll delete the dataset:
 
 .. testoutput::
 
-    List Flights Info: FlightInfo{schema=Schema<name: Utf8>, descriptor=profiles, endpoints=[FlightEndpoint{locations=[Location{uri=grpc+tcp://0.0.0.0:33333}], ticket=org.apache.arrow.flight.Ticket@58871b0a}], bytes=0, records=6}
+    List Flights Info: FlightInfo{schema=Schema<name: Utf8>, descriptor=profiles, endpoints=[FlightEndpoint{locations=[Location{uri=grpc+tcp://0.0.0.0:33333}], ticket=org.apache.arrow.flight.Ticket@58871b0a}], bytes=-1, records=6}
     Do Delete Action: Delete completed
 
 Validate Delete Data
@@ -893,6 +875,7 @@ And confirm that it's been deleted:
 
     import org.apache.arrow.flight.Action;
     import org.apache.arrow.flight.AsyncPutListener;
+    import org.apache.arrow.flight.CallStatus;
     import org.apache.arrow.flight.Criteria;
     import org.apache.arrow.flight.FlightClient;
     import org.apache.arrow.flight.FlightDescriptor;
@@ -920,16 +903,16 @@ And confirm that it's been deleted:
     import java.util.ArrayList;
     import java.util.Arrays;
     import java.util.Collections;
-    import java.util.HashMap;
     import java.util.Iterator;
     import java.util.List;
     import java.util.Map;
+    import java.util.concurrent.ConcurrentHashMap;
 
     class DataInMemory {
         private List<ArrowRecordBatch> listArrowRecordBatch;
         private Schema schema;
-        private Long rows;
-        public DataInMemory(List<ArrowRecordBatch> listArrowRecordBatch, Schema schema, Long rows) {
+        private long rows;
+        public DataInMemory(List<ArrowRecordBatch> listArrowRecordBatch, Schema schema, long rows) {
             this.listArrowRecordBatch = listArrowRecordBatch;
             this.schema = schema;
             this.rows = rows;
@@ -940,18 +923,17 @@ And confirm that it's been deleted:
         public Schema getSchema() {
             return schema;
         }
-        public Long getRows() {
+        public long getRows() {
             return rows;
         }
     }
 
     // Server
     Location location = Location.forGrpcInsecure("0.0.0.0", 33333);
-    Map<FlightDescriptor, DataInMemory> dataInMemory = new HashMap<>();
-    Map<String, DataInMemory> mapPojoFlightDataInMemory = new HashMap<>();
+    Map<FlightDescriptor, DataInMemory> dataInMemory = new ConcurrentHashMap<>();
     List<ArrowRecordBatch> listArrowRecordBatch = new ArrayList<>();
     try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE)){
-        FlightServer flightServer = FlightServer.builder(allocator, location, new NoOpFlightProducer(){
+        class CookbookProducer extends NoOpFlightProducer {
             @Override
             public Runnable acceptPut(CallContext context, FlightStream flightStream, StreamListener<PutResult> ackStream) {
                 return () -> {
@@ -959,13 +941,11 @@ And confirm that it's been deleted:
                     while (flightStream.next()) {
                         VectorUnloader unloader = new VectorUnloader(flightStream.getRoot());
                         try (final ArrowRecordBatch arb = unloader.getRecordBatch()) {
-                            // Retain data information
                             listArrowRecordBatch.add(arb);
-                            rows = rows + flightStream.getRoot().getRowCount();
+                            rows += flightStream.getRoot().getRowCount();
                         }
                     }
-                    long finalRows = rows;
-                    DataInMemory pojoFlightDataInMemory = new DataInMemory(listArrowRecordBatch, flightStream.getSchema(), finalRows);
+                    DataInMemory pojoFlightDataInMemory = new DataInMemory(listArrowRecordBatch, flightStream.getSchema(), rows);
                     dataInMemory.put(flightStream.getDescriptor(), pojoFlightDataInMemory);
                     ackStream.onCompleted();
                 };
@@ -988,13 +968,13 @@ And confirm that it's been deleted:
             @Override
             public FlightInfo getFlightInfo(CallContext context, FlightDescriptor descriptor) {
                 if(!dataInMemory.containsKey(descriptor)){
-                    throw new IllegalStateException("Unknown descriptor.");
+                    throw CallStatus.NOT_FOUND.withDescription("Unknown descriptor").toRuntimeException();
                 }
                 return new FlightInfo(
                         dataInMemory.get(descriptor).getSchema(),
                         descriptor,
                         Collections.singletonList(new FlightEndpoint(new Ticket(descriptor.getPath().get(0).getBytes(StandardCharsets.UTF_8)), location)), // Configure a key to map back and forward your data using Ticket argument
-                        allocator.getAllocatedMemory(),
+                        -1,
                         dataInMemory.get(descriptor).getRows()
                 );
             }
@@ -1002,13 +982,15 @@ And confirm that it's been deleted:
             @Override
             public void listFlights(CallContext context, Criteria criteria, StreamListener<FlightInfo> listener) {
                 dataInMemory.forEach((k, v) -> {
-                    FlightInfo flightInfo = getFlightInfo(null, k);
-                    listener.onNext(flightInfo);
-                    }
+                            FlightInfo flightInfo = getFlightInfo(null, k);
+                            listener.onNext(flightInfo);
+                        }
                 );
                 listener.onCompleted();
             }
-        }).build();
+        }
+
+        FlightServer flightServer = FlightServer.builder(allocator, location, new CookbookProducer()).build();
         try {
             flightServer.start();
         } catch (IOException e) {
@@ -1017,30 +999,34 @@ And confirm that it's been deleted:
     }
 
     // Client
-    try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE)){
+    Schema schema = new Schema(Arrays.asList( new Field("name", FieldType.nullable(new ArrowType.Utf8()), null)));
+    try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE);
+         VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schema, allocator)){
         // Populate data
         FlightClient flightClient = FlightClient.builder(allocator, location).build();
-        Schema schema = new Schema(Arrays.asList( new Field("name", FieldType.nullable(new ArrowType.Utf8()), null)));
-        VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schema, allocator);
         VarCharVector varCharVector = (VarCharVector) vectorSchemaRoot.getVector("name");
         varCharVector.allocateNew(3);
         varCharVector.set(0, "Ronald".getBytes());
         varCharVector.set(1, "David".getBytes());
         varCharVector.set(2, "Francisco".getBytes());
-        varCharVector.setValueCount(3);
         vectorSchemaRoot.setRowCount(3);
         FlightClient.ClientStreamListener listener = flightClient.startPut(FlightDescriptor.path("profiles"), vectorSchemaRoot, new AsyncPutListener());
         listener.putNext();
-        vectorSchemaRoot.allocateNew();
         varCharVector.set(0, "Manuel".getBytes());
         varCharVector.set(1, "Felipe".getBytes());
         varCharVector.set(2, "JJ".getBytes());
-        varCharVector.setValueCount(3);
         vectorSchemaRoot.setRowCount(3);
         listener.putNext();
-        vectorSchemaRoot.clear();
         listener.completed();
         listener.getResult();
+
+        // Get all metadata information
+        Iterable<FlightInfo> flightInfosBefore = flightClient.listFlights(Criteria.ALL);
+        System.out.print("List Flights Info: ");
+        flightInfosBefore.forEach(t -> System.out.println(t));
+        for(FlightInfo flightInfo : flightInfosBefore){
+            System.out.println(flightInfo);
+        }
 
         // Do delete action
         Iterator<Result> deleteActionResult = flightClient.doAction(new Action("DELETE", FlightDescriptor.path("profiles").getPath().get(0).getBytes(StandardCharsets.UTF_8) ));
@@ -1049,7 +1035,7 @@ And confirm that it's been deleted:
             System.out.println("Do Delete Action: " + new String(result.getBody(), StandardCharsets.UTF_8));
         }
 
-        // Get all metadata information
+        // Get all metadata information (to validate detele action)
         Iterable<FlightInfo> flightInfos = flightClient.listFlights(Criteria.ALL);
         flightInfos.forEach(t -> System.out.println(t));
         System.out.println("List Flights Info (after delete): No records");
@@ -1057,6 +1043,7 @@ And confirm that it's been deleted:
 
 .. testoutput::
 
+    List Flights Info: FlightInfo{schema=Schema<name: Utf8>, descriptor=profiles, endpoints=[FlightEndpoint{locations=[Location{uri=grpc+tcp://0.0.0.0:33333}], ticket=org.apache.arrow.flight.Ticket@58871b0a}], bytes=-1, records=6}
     Do Delete Action: Delete completed
     List Flights Info (after delete): No records
 

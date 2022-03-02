@@ -37,7 +37,7 @@ a custom `recipe` directive that can be used like so:
   :dedent: 4
 ```
 
-Each `recipe` directive has two requried arguments. The first is
+Each `recipe` directive has two required arguments. The first is
 a path to the file containing the source file containing the snippet
 and the second is the name of the snippet and must correspond to a
 set of CreateRecipe/EndRecipe calls in the source file.
@@ -120,7 +120,21 @@ If you are using conda then there is file `cpp/requirements.yml` which can be
 used to create an environment for recipe development with the command:
 
 ```
-conda env create -n cookbook-cpp --file cpp/requirements.yml
+conda env create -f cpp/environment.yml
+```
+
+There may be a conda-lock file available for your platform. Use this instead to
+avoid having to perform the dependency resolution solve.
+
+```
+conda create -n cookbook-cpp --file cpp/conda-osx-arm64.lock
+```
+
+To update dependencies modify `cpp/requirements.yml` and then run
+
+```
+cd cpp
+conda-lock --file environment.yml --kind explicit -p linux-aarch64 -p linux-64 -p osx-arm64
 ```
 
 # Development Philosophy
