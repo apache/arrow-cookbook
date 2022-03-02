@@ -94,11 +94,11 @@ Flight Client and Server
     // Server
     Location location = Location.forGrpcInsecure("0.0.0.0", 33333);
     Map<FlightDescriptor, DataInMemory> dataInMemory = new ConcurrentHashMap<>();
-    List<ArrowRecordBatch> listArrowRecordBatch = new ArrayList<>();
     try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE)){
         class CookbookProducer extends NoOpFlightProducer {
             @Override
             public Runnable acceptPut(CallContext context, FlightStream flightStream, StreamListener<PutResult> ackStream) {
+                List<ArrowRecordBatch> listArrowRecordBatch = new ArrayList<>();
                 return () -> {
                     long rows = 0;
                     while (flightStream.next()) {
@@ -348,11 +348,11 @@ memory by the server.
     // Server
     Location location = Location.forGrpcInsecure("0.0.0.0", 33333);
     Map<FlightDescriptor, DataInMemory> dataInMemory = new ConcurrentHashMap<>();
-    List<ArrowRecordBatch> listArrowRecordBatch = new ArrayList<>();
     try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE)){
         class CookbookProducer extends NoOpFlightProducer {
             @Override
             public Runnable acceptPut(CallContext context, FlightStream flightStream, StreamListener<PutResult> ackStream) {
+                List<ArrowRecordBatch> listArrowRecordBatch = new ArrayList<>();
                 return () -> {
                     long rows = 0;
                     while (flightStream.next()) {
@@ -467,11 +467,11 @@ Once we do so, we can retrieve the metadata for that dataset.
     // Server
     Location location = Location.forGrpcInsecure("0.0.0.0", 33333);
     Map<FlightDescriptor, DataInMemory> dataInMemory = new ConcurrentHashMap<>();
-    List<ArrowRecordBatch> listArrowRecordBatch = new ArrayList<>();
     try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE)){
         class CookbookProducer extends NoOpFlightProducer {
             @Override
             public Runnable acceptPut(CallContext context, FlightStream flightStream, StreamListener<PutResult> ackStream) {
+                List<ArrowRecordBatch> listArrowRecordBatch = new ArrayList<>();
                 return () -> {
                     long rows = 0;
                     while (flightStream.next()) {
@@ -600,11 +600,11 @@ And get the data back:
     // Server
     Location location = Location.forGrpcInsecure("0.0.0.0", 33333);
     Map<FlightDescriptor, DataInMemory> dataInMemory = new ConcurrentHashMap<>();
-    List<ArrowRecordBatch> listArrowRecordBatch = new ArrayList<>();
     try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE)){
         class CookbookProducer extends NoOpFlightProducer {
             @Override
             public Runnable acceptPut(CallContext context, FlightStream flightStream, StreamListener<PutResult> ackStream) {
+                List<ArrowRecordBatch> listArrowRecordBatch = new ArrayList<>();
                 return () -> {
                     long rows = 0;
                     while (flightStream.next()) {
@@ -756,11 +756,11 @@ Then, we'll delete the dataset:
     // Server
     Location location = Location.forGrpcInsecure("0.0.0.0", 33333);
     Map<FlightDescriptor, DataInMemory> dataInMemory = new ConcurrentHashMap<>();
-    List<ArrowRecordBatch> listArrowRecordBatch = new ArrayList<>();
     try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE)){
         class CookbookProducer extends NoOpFlightProducer {
             @Override
             public Runnable acceptPut(CallContext context, FlightStream flightStream, StreamListener<PutResult> ackStream) {
+                List<ArrowRecordBatch> listArrowRecordBatch = new ArrayList<>();
                 return () -> {
                     long rows = 0;
                     while (flightStream.next()) {
@@ -931,11 +931,11 @@ And confirm that it's been deleted:
     // Server
     Location location = Location.forGrpcInsecure("0.0.0.0", 33333);
     Map<FlightDescriptor, DataInMemory> dataInMemory = new ConcurrentHashMap<>();
-    List<ArrowRecordBatch> listArrowRecordBatch = new ArrayList<>();
     try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE)){
         class CookbookProducer extends NoOpFlightProducer {
             @Override
             public Runnable acceptPut(CallContext context, FlightStream flightStream, StreamListener<PutResult> ackStream) {
+                List<ArrowRecordBatch> listArrowRecordBatch = new ArrayList<>();
                 return () -> {
                     long rows = 0;
                     while (flightStream.next()) {
