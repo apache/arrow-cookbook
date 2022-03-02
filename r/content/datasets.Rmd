@@ -21,7 +21,6 @@ You want to write a dataset to disk in a single Parquet file.
 ### Solution
 
 ```{r, write_dataset_basic}
-library(dplyr)
 write_dataset(dataset = starwars, path = "starwars_data")
 ```
 
@@ -107,6 +106,7 @@ There are two different ways to specify variables to use for partitioning -
 either via the `partitioning` variable as above, or by using `dplyr::group_by()` on your data - the group variables will form the partitions.
 
 ```{r, write_dataset_partitioned_groupby}
+library(dplyr)
 write_dataset(dataset = group_by(starwars, homeworld, species), path = "starwars_groupby")
 ```
 
@@ -132,7 +132,6 @@ You want to write a dataset to disk in a single Feather file.
 ### Solution
 
 ```{r, write_dataset_feather}
-library(dplyr)
 write_dataset(dataset = starwars, path = "starwars_data_feather", format = "feather")
 ```
 
@@ -154,11 +153,10 @@ You want to write a dataset to disk in a single CSV file.
 ### Solution
 
 ```{r, write_dataset_csv}
-library(dplyr)
 write_dataset(dataset = starwars, path = "starwars_data_csv", format = "csv")
 ```
 
-```{r, test_write_dataset_feather, opts.label = "test"}
+```{r, test_write_dataset_csv, opts.label = "test"}
 
 test_that("write_dataset_csv works as expected", {
   
