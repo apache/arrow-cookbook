@@ -12,9 +12,9 @@ read in the necessary files.
 It's possible to have datasets in Parquet, Feather (aka Arrow), and CSV (or 
 other text-delimited formats).  If you are choosing a dataset format, we 
 recommend Parquet or Feather, which will likely lead to improved performance 
-when compared to CSVs due to their capaibilties around metadata and compression.
+when compared to CSVs due to their capabilities around metadata and compression.
 
-## Write a dataset to disk
+## Write a dataset to disk (Parquet)
 
 You want to write a dataset to disk in a single Parquet file.
 
@@ -38,17 +38,18 @@ test_that("write_dataset_basic works as expected", {
 
 ### Discussion
 
-The default behaviour is to write a single Parquet file.
+The default format for `open_dataset()` is Parquet. 
 
-## Write a dataset to disk - multiple files
+## Write a dataset to disk - partitioned based on a variable
 
 You want to write a dataset to disk partitioned across multiple files.
 
 ### Solution
 
 ```{r, write_dataset_partitioned}
-write_dataset(dataset = group_by(starwars, homeworld), path = "starwars_data_partitioned")
+write_dataset(dataset = starwars, path = "starwars_data_partitioned", partitioning = "homeworld")
 ```
+
 
 ```{r, test_write_dataset_partitioned, opts.label = "test"}
 
@@ -76,12 +77,13 @@ Note that in the example above, when there was an `NA` value in the `homeworld`
 column, these values are written to the `homeworld=__HIVE_DEFAULT_PARTITION__`
 directory.
 
-You can specify multiple grouping variables to add extra layers of partitioning.
+You can specify multiple partitioning variables to add extra layers of partitioning.
 
 ```{r, write_dataset_partitioned_deeper}
 write_dataset(
-  dataset = group_by(starwars, homeworld, species),
-  path = "starwars_partitioned_twice"
+  dataset = starwars,
+  path = "starwars_partitioned_twice",
+  partitioning = c("homeworld", "species")
 )
 ```
 
@@ -96,12 +98,33 @@ test_that("write_dataset_partitioned_deeper works as expected", {
 
 ```
 
-
 ```{r}
 # Take a look at the files in this directory
 list.files("starwars_partitioned_twice", recursive = TRUE)
 ```
 
+There are two different ways to specify variables to use for partitioning - 
+either via the `partitioning` variable as above, or by using `dplyr::group_by()` on your data - the group variables will form the partitions.
+
+```{r, write_dataset_partitioned_groupby}
+write_dataset(dataset = group_by(starwars, homeworld, species), path = "starwars_groupby")
+```
+
+```{r, test_write_dataset_partitioned_groupby, opts.label = "test"}
+
+test_that("write_dataset_partitioned_groupby works as expected", {
+  
+  expect_true(file.exists("starwars_groupby"))
+  expect_length(list.files("starwars_groupby", recursive = TRUE), 58)
+  
+})
+
+```
+
+```{r}
+# Take a look at the files in this directory
+list.files("starwars_groupby", recursive = TRUE)
+```
 ## Write a dataset to disk - Feather format
 
 You want to write a dataset to disk in a single Feather file.
