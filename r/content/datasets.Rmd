@@ -2,6 +2,18 @@
 
 ## Introduction
 
+While Arrow allows you to work with single files imported as Tables, you can 
+also work with Datasets.  These differ from tables as they can be split across 
+multiple files/folders via partitioning, which means that you avoid problems 
+associated with storing all your data in a single file.  This can provide 
+further advantages to using Arrow, as you can now conduct analyses which only 
+read in the necessary files.
+
+It's possible to have datasets in Parquet, Feather (aka Arrow), and CSV (or 
+other text-delimited formats).  If you are choosing a dataset format, we 
+recommend Parquet or Feather, which will likely lead to improved performance 
+when compared to CSVs due to their capaibilties around metadata and compression.
+
 ## Write a dataset to disk
 
 You want to write a dataset to disk in a single Parquet file.
