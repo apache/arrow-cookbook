@@ -19,15 +19,16 @@
 Arrow Flight
 ============
 
-This section contains a number of recipes for working with Arrow
-Flight. For moreb about Flight.
+This section contains a number of recipes for working with Arrow Flight.
+For more detail about Flight please take a look at `Arrow Flight RPC`_.
 
 .. contents::
 
-Simple VectorSchemaRoot storage service with Arrow Flight
-=========================================================
+Simple Key-Value Storage Service with Arrow Flight
+==================================================
 
-We'll implement a service to transfer batches flow through VectorSchemaRoot.
+We'll implement a service that provides a key-value store for data, using Flight to handle uploads/requests
+and data in memory to store the actual data.
 
 Flight Client and Server
 ************************
@@ -1059,3 +1060,4 @@ And confirm that it's been deleted:
     Do Delete Action: Delete completed
     List Flights Info (after delete): No records
 
+_`Arrow Flight RPC`: https://arrow.apache.org/docs/format/Flight.html
