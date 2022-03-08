@@ -166,9 +166,6 @@ Flight Client and Server
 
         @Override
         public FlightInfo getFlightInfo(CallContext context, FlightDescriptor descriptor) {
-            if(!dataInMemory.containsKey(descriptor)){
-                throw CallStatus.NOT_FOUND.withDescription("Unknown descriptor").toRuntimeException();
-            }
             FlightEndpoint flightEndpoint = new FlightEndpoint(new Ticket(descriptor.getPath().get(0).getBytes(StandardCharsets.UTF_8)), location);
             return new FlightInfo(
                     dataInMemory.get(descriptor).getSchema(),
@@ -381,9 +378,6 @@ Once we do so, we can retrieve the metadata for that dataset.
 
     // Server
     public FlightInfo getFlightInfo(CallContext context, FlightDescriptor descriptor) {
-        if(!dataInMemory.containsKey(descriptor)){
-            throw CallStatus.NOT_FOUND.withDescription("Unknown descriptor").toRuntimeException();
-        }
         FlightEndpoint flightEndpoint = new FlightEndpoint(new Ticket(descriptor.getPath().get(0).getBytes(StandardCharsets.UTF_8)), location);
         return new FlightInfo(
                 dataInMemory.get(descriptor).getSchema(),
