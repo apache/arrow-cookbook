@@ -74,10 +74,17 @@ Flight Client and Server
         private List<ArrowRecordBatch> listArrowRecordBatch;
         private Schema schema;
         private long rows;
+        private NoOpFlightProducer cookbookProducer;
         public DataInMemory(List<ArrowRecordBatch> listArrowRecordBatch, Schema schema, long rows) {
             this.listArrowRecordBatch = listArrowRecordBatch;
             this.schema = schema;
             this.rows = rows;
+        }
+        public DataInMemory(List<ArrowRecordBatch> listArrowRecordBatch, Schema schema, long rows, NoOpFlightProducer cookbookProducer) {
+            this.listArrowRecordBatch = listArrowRecordBatch;
+            this.schema = schema;
+            this.rows = rows;
+            this.cookbookProducer = cookbookProducer;
         }
         public List<ArrowRecordBatch> getListArrowRecordBatch() {
             return listArrowRecordBatch;
@@ -88,86 +95,105 @@ Flight Client and Server
         public long getRows() {
             return rows;
         }
+        public NoOpFlightProducer getCookbookProducer() {
+            return cookbookProducer;
+        }
+        public void setCookbookProducer(NoOpFlightProducer cookbookProducer) {
+            this.cookbookProducer = cookbookProducer;
+        }
+    }
+    class CookbookProducer extends NoOpFlightProducer {
+        private RootAllocator allocator;
+        private Location location;
+
+        public CookbookProducer(RootAllocator allocator, Location location) {
+            this.allocator = allocator;
+            this.location = location;
+        }
+
+        ConcurrentHashMap<FlightDescriptor, DataInMemory> dataInMemory = new ConcurrentHashMap<>();
+        @Override
+        public Runnable acceptPut(CallContext context, FlightStream flightStream, StreamListener<PutResult> ackStream) {
+            List<ArrowRecordBatch> listArrowRecordBatch = new ArrayList<>();
+            return () -> {
+                long rows = 0;
+                while (flightStream.next()) {
+                    VectorUnloader unloader = new VectorUnloader(flightStream.getRoot());
+                    try (final ArrowRecordBatch arb = unloader.getRecordBatch()) {
+                        listArrowRecordBatch.add(arb);
+                        rows += flightStream.getRoot().getRowCount();
+                    }
+                }
+                DataInMemory pojoFlightDataInMemory = new DataInMemory(listArrowRecordBatch, flightStream.getSchema(), rows);
+                dataInMemory.put(flightStream.getDescriptor(), pojoFlightDataInMemory);
+                ackStream.onCompleted();
+            };
+        }
+
+        @Override
+        public void getStream(CallContext context, Ticket ticket, ServerStreamListener listener) {
+            FlightDescriptor flightDescriptor = FlightDescriptor.path(new String(ticket.getBytes(), StandardCharsets.UTF_8)); // Recover data for key configured
+            DataInMemory dataInMemory = this.dataInMemory.get(flightDescriptor);
+            if (dataInMemory == null) {
+                throw CallStatus.NOT_FOUND.withDescription("Unknown descriptor").toRuntimeException();
+            } else {
+                VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(this.dataInMemory.get(flightDescriptor).getSchema(), allocator);
+                listener.start(vectorSchemaRoot);
+                for (ArrowRecordBatch arrowRecordBatch : this.dataInMemory.get(flightDescriptor).getListArrowRecordBatch()) {
+                    VectorLoader loader = new VectorLoader(vectorSchemaRoot);
+                    loader.load(arrowRecordBatch.cloneWithTransfer(allocator));
+                    listener.putNext();
+                }
+                listener.completed();
+            }
+        }
+
+        @Override
+        public void doAction(CallContext context, Action action, StreamListener<Result> listener) {
+            FlightDescriptor flightDescriptor = FlightDescriptor.path(new String(action.getBody(), StandardCharsets.UTF_8)); // For recover data for key configured
+            switch (action.getType()) {
+                case "DELETE":
+                    if (dataInMemory.remove(flightDescriptor) != null) {
+                        Result result = new Result("Delete completed".getBytes(StandardCharsets.UTF_8));
+                        listener.onNext(result);
+                    } else {
+                        Result result = new Result("Delete not completed. Reason: Key did not exist.".getBytes(StandardCharsets.UTF_8));
+                        listener.onNext(result);
+                    }
+                    listener.onCompleted();
+            }
+        }
+
+        @Override
+        public FlightInfo getFlightInfo(CallContext context, FlightDescriptor descriptor) {
+            if(!dataInMemory.containsKey(descriptor)){
+                throw CallStatus.NOT_FOUND.withDescription("Unknown descriptor").toRuntimeException();
+            }
+            FlightEndpoint flightEndpoint = new FlightEndpoint(new Ticket(descriptor.getPath().get(0).getBytes(StandardCharsets.UTF_8)), location);
+            return new FlightInfo(
+                    dataInMemory.get(descriptor).getSchema(),
+                    descriptor,
+                    Collections.singletonList(flightEndpoint), // Configure a key to map back and forward your data using Ticket argument
+                    /*bytes=*/-1,
+                    dataInMemory.get(descriptor).getRows()
+            );
+        }
+
+        @Override
+        public void listFlights(CallContext context, Criteria criteria, StreamListener<FlightInfo> listener) {
+            dataInMemory.forEach((k, v) -> {
+                        FlightInfo flightInfo = getFlightInfo(null, k);
+                        listener.onNext(flightInfo);
+                    }
+            );
+            listener.onCompleted();
+        }
     }
 
     // Server
     Location location = Location.forGrpcInsecure("0.0.0.0", 33333);
     try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE)){
-        class CookbookProducer extends NoOpFlightProducer {
-            ConcurrentHashMap<FlightDescriptor, DataInMemory> dataInMemory = new ConcurrentHashMap<>();
-            @Override
-            public Runnable acceptPut(CallContext context, FlightStream flightStream, StreamListener<PutResult> ackStream) {
-                List<ArrowRecordBatch> listArrowRecordBatch = new ArrayList<>();
-                return () -> {
-                    long rows = 0;
-                    while (flightStream.next()) {
-                        VectorUnloader unloader = new VectorUnloader(flightStream.getRoot());
-                        try (final ArrowRecordBatch arb = unloader.getRecordBatch()) {
-                            listArrowRecordBatch.add(arb);
-                            rows += flightStream.getRoot().getRowCount();
-                        }
-                    }
-                    DataInMemory pojoFlightDataInMemory = new DataInMemory(listArrowRecordBatch, flightStream.getSchema(), rows);
-                    dataInMemory.put(flightStream.getDescriptor(), pojoFlightDataInMemory);
-                    ackStream.onCompleted();
-                };
-            }
-
-            @Override
-            public void getStream(CallContext context, Ticket ticket, ServerStreamListener listener) {
-                FlightDescriptor flightDescriptor = FlightDescriptor.path(new String(ticket.getBytes(), StandardCharsets.UTF_8)); // Recover data for key configured
-                if(dataInMemory.containsKey(flightDescriptor)){
-                    VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(dataInMemory.get(flightDescriptor).getSchema(), allocator);
-                    listener.start(vectorSchemaRoot);
-                    for(ArrowRecordBatch arrowRecordBatch : dataInMemory.get(flightDescriptor).getListArrowRecordBatch()){
-                        VectorLoader loader = new VectorLoader(vectorSchemaRoot);
-                        loader.load(arrowRecordBatch.cloneWithTransfer(allocator));
-                        listener.putNext();
-                    }
-                    listener.completed();
-                }
-            }
-
-            @Override
-            public void doAction(CallContext context, Action action, StreamListener<Result> listener) {
-                FlightDescriptor flightDescriptor = FlightDescriptor.path(new String(action.getBody(), StandardCharsets.UTF_8)); // For recover data for key configured
-                if(dataInMemory.containsKey(flightDescriptor)) {
-                    switch (action.getType()) {
-                        case "DELETE":
-                            dataInMemory.remove(flightDescriptor);
-                            Result result = new Result("Delete completed".getBytes(StandardCharsets.UTF_8));
-                            listener.onNext(result);
-                    }
-                    listener.onCompleted();
-                }
-            }
-
-            @Override
-            public FlightInfo getFlightInfo(CallContext context, FlightDescriptor descriptor) {
-                if(!dataInMemory.containsKey(descriptor)){
-                    throw CallStatus.NOT_FOUND.withDescription("Unknown descriptor").toRuntimeException();
-                }
-                return new FlightInfo(
-                        dataInMemory.get(descriptor).getSchema(),
-                        descriptor,
-                        Collections.singletonList(new FlightEndpoint(new Ticket(descriptor.getPath().get(0).getBytes(StandardCharsets.UTF_8)), location)), // Configure a key to map back and forward your data using Ticket argument
-                        -1,
-                        dataInMemory.get(descriptor).getRows()
-                );
-            }
-
-            @Override
-            public void listFlights(CallContext context, Criteria criteria, StreamListener<FlightInfo> listener) {
-                dataInMemory.forEach((k, v) -> {
-                            FlightInfo flightInfo = getFlightInfo(null, k);
-                            listener.onNext(flightInfo);
-                        }
-                );
-                listener.onCompleted();
-            }
-        }
-
-        FlightServer flightServer = FlightServer.builder(allocator, location, new CookbookProducer()).build();
+        FlightServer flightServer = FlightServer.builder(allocator, location, new CookbookProducer(allocator, location)).build();
         try {
             flightServer.start();
             System.out.println("S1: Server (Location): Listening on port " + flightServer.getPort());
@@ -226,7 +252,7 @@ Flight Client and Server
         flightInfosBefore.forEach(t -> System.out.println(t));
 
         // Do delete action
-        Iterator<Result> deleteActionResult = flightClient.doAction(new Action("DELETE", FlightDescriptor.path("profiles").getPath().get(0).getBytes(StandardCharsets.UTF_8) ));
+        Iterator<Result> deleteActionResult = flightClient.doAction(new Action("DELETE", FlightDescriptor.path("profiles").getPath().get(0).getBytes(StandardCharsets.UTF_8)));
         while(deleteActionResult.hasNext()){
             Result result = deleteActionResult.next();
             System.out.println("C6: Client (Do Delete Action): " + new String(result.getBody(), StandardCharsets.UTF_8));
@@ -358,10 +384,11 @@ Once we do so, we can retrieve the metadata for that dataset.
         if(!dataInMemory.containsKey(descriptor)){
             throw CallStatus.NOT_FOUND.withDescription("Unknown descriptor").toRuntimeException();
         }
+        FlightEndpoint flightEndpoint = new FlightEndpoint(new Ticket(descriptor.getPath().get(0).getBytes(StandardCharsets.UTF_8)), location);
         return new FlightInfo(
                 dataInMemory.get(descriptor).getSchema(),
                 descriptor,
-                Collections.singletonList(new FlightEndpoint(new Ticket(descriptor.getPath().get(0).getBytes(StandardCharsets.UTF_8)), location)), // Configure a key to map back and forward your data using Ticket argument
+                Collections.singletonList(flightEndpoint), // Configure a key to map back and forward your data using Ticket argument
                 -1,
                 dataInMemory.get(descriptor).getRows()
         );

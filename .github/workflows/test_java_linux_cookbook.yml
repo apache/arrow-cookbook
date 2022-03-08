@@ -37,6 +37,14 @@ jobs:
       - uses: actions/checkout@v1
       - name: Install dependencies
         run: sudo apt install libcurl4-openssl-dev libssl-dev python3-pip openjdk-11-jdk maven
+      - name: Workaroind to install Flight Core 7.0.0 (ARROW-15746)
+        run: |
+          mkdir release-7.0.0-rc10-0-github-java-jars
+          cd release-7.0.0-rc10-0-github-java-jars
+          wget https://github.com/ursacomputing/crossbow/releases/download/release-7.0.0-rc10-0-github-java-jars/flight-core-7.0.0.jar
+          wget https://github.com/ursacomputing/crossbow/releases/download/release-7.0.0-rc10-0-github-java-jars/arrow-flight-7.0.0.pom
+          mvn install:install-file -Dfile="$(pwd)/flight-core-7.0.0.jar" -DgroupId=org.apache.arrow -DartifactId=flight-core -Dversion=7.0.0 -Dpackaging=jar -DcreateChecksum=true -Dgenerate.pom=true
+          mvn install:install-file -Dfile="$(pwd)/arrow-flight-7.0.0.pom" -DgroupId=org.apache.arrow -DartifactId=arrow-flight -Dversion=7.0.0 -Dpackaging=pom -DcreateChecksum=true -Dgenerate.pom=true
       - name: Run tests
         run: make javatest
       - name: Build cookbook
