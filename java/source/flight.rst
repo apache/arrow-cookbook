@@ -412,10 +412,13 @@ And get the data back:
     // Server
     public void getStream(CallContext context, Ticket ticket, ServerStreamListener listener) {
         FlightDescriptor flightDescriptor = FlightDescriptor.path(new String(ticket.getBytes(), StandardCharsets.UTF_8)); // Recover data for key configured
-        if(dataInMemory.containsKey(flightDescriptor)){
-            VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(dataInMemory.get(flightDescriptor).getSchema(), allocator);
+        DataInMemory dataInMemory = this.dataInMemory.get(flightDescriptor);
+        if (dataInMemory == null) {
+            throw CallStatus.NOT_FOUND.withDescription("Unknown descriptor").toRuntimeException();
+        } else {
+            VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(this.dataInMemory.get(flightDescriptor).getSchema(), allocator);
             listener.start(vectorSchemaRoot);
-            for(ArrowRecordBatch arrowRecordBatch : dataInMemory.get(flightDescriptor).getListArrowRecordBatch()){
+            for (ArrowRecordBatch arrowRecordBatch : this.dataInMemory.get(flightDescriptor).getListArrowRecordBatch()) {
                 VectorLoader loader = new VectorLoader(vectorSchemaRoot);
                 loader.load(arrowRecordBatch.cloneWithTransfer(allocator));
                 listener.putNext();
@@ -460,14 +463,16 @@ Then, we'll delete the dataset:
     // Server
     public void doAction(CallContext context, Action action, StreamListener<Result> listener) {
         FlightDescriptor flightDescriptor = FlightDescriptor.path(new String(action.getBody(), StandardCharsets.UTF_8)); // For recover data for key configured
-        if(dataInMemory.containsKey(flightDescriptor)) {
-            switch (action.getType()) {
-                case "DELETE":
-                    dataInMemory.remove(flightDescriptor);
+        switch (action.getType()) {
+            case "DELETE":
+                if (dataInMemory.remove(flightDescriptor) != null) {
                     Result result = new Result("Delete completed".getBytes(StandardCharsets.UTF_8));
                     listener.onNext(result);
-            }
-            listener.onCompleted();
+                } else {
+                    Result result = new Result("Delete not completed. Reason: Key did not exist.".getBytes(StandardCharsets.UTF_8));
+                    listener.onNext(result);
+                }
+                listener.onCompleted();
         }
     }
 
