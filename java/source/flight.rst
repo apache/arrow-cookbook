@@ -70,16 +70,16 @@ Flight Client and Server
     import java.util.List;
     import java.util.concurrent.ConcurrentHashMap;
 
-    class Datasets {
-        private List<ArrowRecordBatch> batches;
-        private Schema schema;
-        private long rows;
-        public Datasets(List<ArrowRecordBatch> batches, Schema schema, long rows) {
+    class Dataset {
+        private final List<ArrowRecordBatch> batches;
+        private final Schema schema;
+        private final long rows;
+        public Dataset(List<ArrowRecordBatch> batches, Schema schema, long rows) {
             this.batches = batches;
             this.schema = schema;
             this.rows = rows;
         }
-        public List<ArrowRecordBatch> getbatches() {
+        public List<ArrowRecordBatch> getBatches() {
             return batches;
         }
         public Schema getSchema() {
@@ -90,28 +90,28 @@ Flight Client and Server
         }
     }
     class CookbookProducer extends NoOpFlightProducer {
-        private RootAllocator allocator;
-        private Location location;
-
+        private final RootAllocator allocator;
+        private final Location location;
+        private final ConcurrentHashMap<FlightDescriptor, Dataset> datasets;
         public CookbookProducer(RootAllocator allocator, Location location) {
             this.allocator = allocator;
             this.location = location;
+            this.datasets = new ConcurrentHashMap<>();
         }
-
-        ConcurrentHashMap<FlightDescriptor, Datasets> datasets = new ConcurrentHashMap<>();
         @Override
         public Runnable acceptPut(CallContext context, FlightStream flightStream, StreamListener<PutResult> ackStream) {
             List<ArrowRecordBatch> batches = new ArrayList<>();
             return () -> {
                 long rows = 0;
+                VectorUnloader unloader;
                 while (flightStream.next()) {
-                    VectorUnloader unloader = new VectorUnloader(flightStream.getRoot());
+                    unloader = new VectorUnloader(flightStream.getRoot());
                     try (final ArrowRecordBatch arb = unloader.getRecordBatch()) {
                         batches.add(arb);
                         rows += flightStream.getRoot().getRowCount();
                     }
                 }
-                Datasets dataset = new Datasets(batches, flightStream.getSchema(), rows);
+                Dataset dataset = new Dataset(batches, flightStream.getSchema(), rows);
                 datasets.put(flightStream.getDescriptor(), dataset);
                 ackStream.onCompleted();
             };
@@ -121,14 +121,14 @@ Flight Client and Server
         public void getStream(CallContext context, Ticket ticket, ServerStreamListener listener) {
             FlightDescriptor flightDescriptor = FlightDescriptor.path(
                     new String(ticket.getBytes(), StandardCharsets.UTF_8));
-            Datasets datasets = this.datasets.get(flightDescriptor);
-            if (datasets == null) {
+            Dataset dataset = this.datasets.get(flightDescriptor);
+            if (dataset == null) {
                 throw CallStatus.NOT_FOUND.withDescription("Unknown descriptor").toRuntimeException();
             } else {
                 VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(
                         this.datasets.get(flightDescriptor).getSchema(), allocator);
                 listener.start(vectorSchemaRoot);
-                for (ArrowRecordBatch arrowRecordBatch : this.datasets.get(flightDescriptor).getbatches()) {
+                for (ArrowRecordBatch arrowRecordBatch : this.datasets.get(flightDescriptor).getBatches()) {
                     VectorLoader loader = new VectorLoader(vectorSchemaRoot);
                     loader.load(arrowRecordBatch.cloneWithTransfer(allocator));
                     listener.putNext();
@@ -175,8 +175,6 @@ Flight Client and Server
         }
     }
     Location location = Location.forGrpcInsecure("0.0.0.0", 33333);
-    Schema schema = new Schema(Arrays.asList(
-            new Field("name", FieldType.nullable(new ArrowType.Utf8()), null)));
     try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE)){
         // Server
         try(FlightServer flightServer = FlightServer.builder(allocator, location,
@@ -185,7 +183,7 @@ Flight Client and Server
                 flightServer.start();
                 System.out.println("S1: Server (Location): Listening on port " + flightServer.getPort());
             } catch (IOException e) {
-                e.printStackTrace();
+                System.exit(1);
             }
 
             // Client
@@ -193,6 +191,8 @@ Flight Client and Server
                 System.out.println("C1: Client (Location): Connected to " + location.getUri());
 
                 // Populate data
+                Schema schema = new Schema(Arrays.asList(
+                        new Field("name", FieldType.nullable(new ArrowType.Utf8()), null)));
                 try(VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schema, allocator);
                     VarCharVector varCharVector = (VarCharVector) vectorSchemaRoot.getVector("name")) {
                     varCharVector.allocateNew(3);
@@ -333,20 +333,23 @@ memory by the server.
         List<ArrowRecordBatch> batches = new ArrayList<>();
         return () -> {
             long rows = 0;
+            VectorUnloader unloader;
             while (flightStream.next()) {
-                VectorUnloader unloader = new VectorUnloader(flightStream.getRoot());
+                unloader = new VectorUnloader(flightStream.getRoot());
                 try (final ArrowRecordBatch arb = unloader.getRecordBatch()) {
                     batches.add(arb);
                     rows += flightStream.getRoot().getRowCount();
                 }
             }
-            Datasets dataset = new Datasets(batches, flightStream.getSchema(), rows);
+            Dataset dataset = new Dataset(batches, flightStream.getSchema(), rows);
             datasets.put(flightStream.getDescriptor(), dataset);
             ackStream.onCompleted();
         };
     }
 
     // Client
+    Schema schema = new Schema(Arrays.asList(
+            new Field("name", FieldType.nullable(new ArrowType.Utf8()), null)));
     try(VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schema, allocator);
         VarCharVector varCharVector = (VarCharVector) vectorSchemaRoot.getVector("name")) {
         varCharVector.allocateNew(3);
@@ -411,14 +414,14 @@ And get the data back:
     public void getStream(CallContext context, Ticket ticket, ServerStreamListener listener) {
         FlightDescriptor flightDescriptor = FlightDescriptor.path(
                 new String(ticket.getBytes(), StandardCharsets.UTF_8));
-        Datasets datasets = this.datasets.get(flightDescriptor);
-        if (datasets == null) {
+        Dataset dataset = this.datasets.get(flightDescriptor);
+        if (dataset == null) {
             throw CallStatus.NOT_FOUND.withDescription("Unknown descriptor").toRuntimeException();
         } else {
             VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(
                     this.datasets.get(flightDescriptor).getSchema(), allocator);
             listener.start(vectorSchemaRoot);
-            for (ArrowRecordBatch arrowRecordBatch : this.datasets.get(flightDescriptor).getbatches()) {
+            for (ArrowRecordBatch arrowRecordBatch : this.datasets.get(flightDescriptor).getBatches()) {
                 VectorLoader loader = new VectorLoader(vectorSchemaRoot);
                 loader.load(arrowRecordBatch.cloneWithTransfer(allocator));
                 listener.putNext();
@@ -481,7 +484,6 @@ Then, we'll delete the dataset:
                 listener.onCompleted();
         }
     }
-
 
     // Client
     Iterator<Result> deleteActionResult = flightClient.doAction(new Action("DELETE",
