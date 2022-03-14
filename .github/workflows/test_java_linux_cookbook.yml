@@ -35,8 +35,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: '11'
       - name: Install dependencies
-        run: sudo apt install libcurl4-openssl-dev libssl-dev python3-pip openjdk-11-jdk maven
+        run: sudo apt install libcurl4-openssl-dev libssl-dev python3-pip maven
       - name: Run tests
         run: make javatest
       - name: Build cookbook
