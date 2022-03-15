@@ -24,7 +24,7 @@ on:
     paths:
      - "java/**"
      - ".github/workflows/test_java_linux_cookbook.yml"
-     
+
 concurrency:
   group: ${{ github.repository }}-${{ github.ref }}-${{ github.workflow }}
   cancel-in-progress: true
@@ -40,9 +40,10 @@ jobs:
           distribution: 'temurin'
           java-version: '11'
       - name: Install dependencies
-        run: sudo apt install libcurl4-openssl-dev libssl-dev python3-pip maven
+        run: |
+          sudo apt update
+          sudo apt install libcurl4-openssl-dev libssl-dev python3-pip maven
       - name: Run tests
         run: make javatest
       - name: Build cookbook
         run: make java
-
