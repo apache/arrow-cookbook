@@ -16,7 +16,9 @@ jobs:
       - name: Setup pandoc
         uses: r-lib/actions/setup-pandoc@v1
       - name: Install dependencies
-        run: sudo apt install libcurl4-openssl-dev libssl-dev python3-pip openjdk-11-jdk maven
+        run: |
+          sudo apt update
+          sudo apt install libcurl4-openssl-dev libssl-dev python3-pip openjdk-11-jdk maven
       - name: Run tests
         run: make test
       - name: Build and render books
