@@ -56,37 +56,17 @@ Each snippet source file contains a set of
 [googletest](https://github.com/google/googletest) tests. Feel free to
 use any googletest features needed to help setup and verify your test.
 To reference a snippet you need to surround it in `BeginRecipe` and
-`EndRecipe` calls. All snippets should be included in a call to
-`StartRecipeCollection`. This allows you to use macros like
-`ARROW_RETURN_NOT_OK`. For example:
+`EndRecipe` calls. For example:
 
 ```
-StartRecipeCollection([] {
-  StartRecipe("CreatingArrays");
-  arrow::Int32Builder builder;
-  ARROW_RETURN_NOT_OK(builder.Append(1));
-  ARROW_RETURN_NOT_OK(builder.Append(2));
-  ARROW_RETURN_NOT_OK(builder.Append(3));
-  ARROW_ASSIGN_OR_RAISE(std::shared_ptr<arrow::Array> arr, builder.Finish())
-  rout << arr->ToString() << std::endl;
-  return EndRecipe("CreatingArrays");
-});
-```
-
-You may find yourself wanting to break a large recipe into several small
-snippets. Using the approach above can make that difficult if you want
-to share variables between your snippets. To solve this you can use
-place multiple recipes in a single call to `StartRecipeCollection`:
-
-```
-StartRecipeCollection([] () {
-  StartRecipe("SnippetOne");
-  // ...
-  ARROW_RETURN_NOT_OK(EndRecipe("SnippetOne"));
-  StartRecipe("SnippetTwo");
-  // ...
-  return EndRecipe("SnippetTwo");
-});
+StartRecipe("CreatingArrays");
+arrow::Int32Builder builder;
+ASSERT_OK(builder.Append(1));
+ASSERT_OK(builder.Append(2));
+ASSERT_OK(builder.Append(3));
+ASSERT_OK_AND_ASSIGN(shared_ptr<arrow::Array> arr, builder.Finish())
+rout << arr->ToString() << endl;
+EndRecipe("CreatingArrays");
 ```
 
 The variable `rout` is set to a `std::ostream` instance that is used to

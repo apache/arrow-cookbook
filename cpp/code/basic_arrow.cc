@@ -20,46 +20,46 @@
 
 #include "common.h"
 
-TEST(BasicArrow, ReturnNotOkNoMacro) {
-  StartRecipeCollection([] {
-    StartRecipe("ReturnNotOkNoMacro");
-    std::function<arrow::Status()> test_fn = [] {
-      arrow::NullBuilder builder;
-      arrow::Status st = builder.Reserve(2);
-      // Tedious return value check
-      if (!st.ok()) {
-        return st;
-      }
-      st = builder.AppendNulls(-1);
-      // Tedious return value check
-      if (!st.ok()) {
-        return st;
-      }
-      rout << "Appended -1 null values?" << std::endl;
-      return arrow::Status::OK();
-    };
-    arrow::Status st = test_fn();
-    rout << st << std::endl;
-    ARROW_RETURN_NOT_OK(EndRecipe("ReturnNotOkNoMacro"));
-    EXPECT_FALSE(st.ok());
+arrow::Status ReturnNotOkMacro() {
+  StartRecipe("ReturnNotOkNoMacro");
+  std::function<arrow::Status()> test_fn = [] {
+    arrow::NullBuilder builder;
+    arrow::Status st = builder.Reserve(2);
+    // Tedious return value check
+    if (!st.ok()) {
+      return st;
+    }
+    st = builder.AppendNulls(-1);
+    // Tedious return value check
+    if (!st.ok()) {
+      return st;
+    }
+    rout << "Appended -1 null values?" << std::endl;
     return arrow::Status::OK();
-  });
+  };
+  arrow::Status st = test_fn();
+  rout << st << std::endl;
+  EndRecipe("ReturnNotOkNoMacro");
+  EXPECT_FALSE(st.ok());
+  return arrow::Status::OK();
 }
 
-TEST(BasicArrow, ReturnNotOk) {
-  StartRecipeCollection([] {
-    StartRecipe("ReturnNotOk");
-    std::function<arrow::Status()> test_fn = [] {
-      arrow::NullBuilder builder;
-      ARROW_RETURN_NOT_OK(builder.Reserve(2));
-      ARROW_RETURN_NOT_OK(builder.AppendNulls(-1));
-      rout << "Appended -1 null values?" << std::endl;
-      return arrow::Status::OK();
-    };
-    arrow::Status st = test_fn();
-    rout << st << std::endl;
-    ARROW_RETURN_NOT_OK(EndRecipe("ReturnNotOk"));
-    EXPECT_FALSE(st.ok());
+arrow::Status ReturnNotOk() {
+  StartRecipe("ReturnNotOk");
+  std::function<arrow::Status()> test_fn = [] {
+    arrow::NullBuilder builder;
+    ARROW_RETURN_NOT_OK(builder.Reserve(2));
+    ARROW_RETURN_NOT_OK(builder.AppendNulls(-1));
+    rout << "Appended -1 null values?" << std::endl;
     return arrow::Status::OK();
-  });
+  };
+  arrow::Status st = test_fn();
+  rout << st << std::endl;
+  EndRecipe("ReturnNotOk");
+  EXPECT_FALSE(st.ok());
+  return arrow::Status::OK();
 }
+
+TEST(BasicArrow, ReturnNotOkNoMacro) { ASSERT_OK(ReturnNotOkMacro()); }
+
+TEST(BasicArrow, ReturnNotOk) { ASSERT_OK(ReturnNotOk()); }
