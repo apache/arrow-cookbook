@@ -48,3 +48,29 @@ boilerplate for you.  It will run the contained expression and check the resulti
 .. recipe:: ../code/basic_arrow.cc ReturnNotOk
   :caption: Using ARROW_RETURN_NOT_OK to check the status
   :dedent: 2
+
+
+Using the Visitor Pattern
+=========================
+
+Arrow classes like DataType, Scalar, and Array have specialized subclasses for
+each Arrow type. In order to work with them, use the visitor pattern. These 
+types provide an Accept method and have associated Visitor classes.
+
+As an example, below we implement a :cpp:class:`arrow::TypeVisitor` that counts
+the number of  primitive and nested types.
+
+To implement a TypeVisitor we have to implement a Visit method for every possible
+DataType we wish to handle. Fortunately, we can often use templates and type
+traits to make this less verbose.
+
+.. literalinclude:: ../code/basic_arrow.cc
+   :language: cpp
+   :linenos:
+   :start-at: class TypeCountVisitor
+   :end-at: };  // TypeCountVisitor
+   :caption: TypeVisitor that counts nested and non-nested types
+  
+
+.. recipe:: ../code/basic_arrow.cc TypeVisitorSimple
+   :dedent: 2

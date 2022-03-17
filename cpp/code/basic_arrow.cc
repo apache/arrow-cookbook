@@ -18,6 +18,9 @@
 #include <arrow/api.h>
 #include <gtest/gtest.h>
 
+#include "arrow/type.h"
+#include "arrow/type_traits.h"
+#include "arrow/visitor.h"
 #include "common.h"
 
 arrow::Status ReturnNotOkMacro() {
@@ -63,3 +66,54 @@ arrow::Status ReturnNotOk() {
 TEST(BasicArrow, ReturnNotOkNoMacro) { ASSERT_OK(ReturnNotOkMacro()); }
 
 TEST(BasicArrow, ReturnNotOk) { ASSERT_OK(ReturnNotOk()); }
+
+class TypeCountVisitor : public arrow::TypeVisitor {
+ public:
+  uint64_t nested_count;
+  uint64_t non_nested_count;
+
+  template <typename T>
+  arrow::enable_if_not_nested<T, arrow::Status> Visit(const T&) {
+    non_nested_count++;
+    return arrow::Status::OK();
+  }
+
+  template <typename T>
+  arrow::enable_if_list_type<T, arrow::Status> Visit(const T& type) {
+    nested_count++;
+    ARROW_RETURN_NOT_OK(type.value_type()->Accept(this));
+    return arrow::Status::OK();
+  }
+
+  arrow::Status Visit(const arrow::StructType& type) {
+    nested_count++;
+    for (auto field : type.fields()) {
+      ARROW_RETURN_NOT_OK(field->type()->Accept(this));
+    }
+    return arrow::Status::OK();
+  }
+};  // TypeCountVisitor
+
+arrow::Status CountTypes() {
+  StartRecipe("TypeVisitorSimple");
+  // Create a schema
+  std::shared_ptr<arrow::Schema> schema =
+      arrow::schema({arrow::field("a", arrow::int8())});
+
+  TypeCountVisitor counter;
+
+  for (auto field : schema->fields()) {
+    ARROW_RETURN_NOT_OK(field->type()->Accept(&counter));
+  }
+
+  rout << "Found " << counter.nested_count << " nested types and "
+       << counter.non_nested_count << " non-nested types.";
+
+  EndRecipe("TypeVisitorSimple");
+
+  EXPECT_EQ(counter.nested_count, 3);
+  EXPECT_EQ(counter.non_nested_count, 6);
+  return arrow::Status::OK();
+}
+
+TEST(BasicArrow, CountTypes) { ASSERT_OK(CountTypes()); }
