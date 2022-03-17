@@ -20,7 +20,7 @@
 
 #include "common.h"
 
-TEST(BasicArrow, ReturnNotOkNoMacro) {
+arrow::Status ReturnNotOkMacro() {
   StartRecipe("ReturnNotOkNoMacro");
   std::function<arrow::Status()> test_fn = [] {
     arrow::NullBuilder builder;
@@ -40,10 +40,11 @@ TEST(BasicArrow, ReturnNotOkNoMacro) {
   arrow::Status st = test_fn();
   rout << st << std::endl;
   EndRecipe("ReturnNotOkNoMacro");
-  ASSERT_FALSE(st.ok());
+  EXPECT_FALSE(st.ok());
+  return arrow::Status::OK();
 }
 
-TEST(BasicArrow, ReturnNotOk) {
+arrow::Status ReturnNotOk() {
   StartRecipe("ReturnNotOk");
   std::function<arrow::Status()> test_fn = [] {
     arrow::NullBuilder builder;
@@ -55,5 +56,10 @@ TEST(BasicArrow, ReturnNotOk) {
   arrow::Status st = test_fn();
   rout << st << std::endl;
   EndRecipe("ReturnNotOk");
-  ASSERT_FALSE(st.ok());
+  EXPECT_FALSE(st.ok());
+  return arrow::Status::OK();
 }
+
+TEST(BasicArrow, ReturnNotOkNoMacro) { ASSERT_OK(ReturnNotOkMacro()); }
+
+TEST(BasicArrow, ReturnNotOk) { ASSERT_OK(ReturnNotOk()); }
