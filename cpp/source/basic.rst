@@ -67,10 +67,10 @@ traits to make this less verbose.
 .. literalinclude:: ../code/basic_arrow.cc
    :language: cpp
    :linenos:
-   :start-at: class TypeCountVisitor
-   :end-at: };  // TypeCountVisitor
-   :caption: TypeVisitor that counts nested and non-nested types
+   :start-at: class TableSummation
+   :end-at: };  // TableSummation
+   :caption: Using visitor pattern that can compute sum of table with any numeric type
   
 
-.. recipe:: ../code/basic_arrow.cc TypeVisitorSimple
+.. recipe:: ../code/basic_arrow.cc VisitorSummationExample
    :dedent: 2

@@ -18,9 +18,10 @@
 #include <arrow/api.h>
 #include <gtest/gtest.h>
 
+#include "arrow/array.h"
 #include "arrow/type.h"
 #include "arrow/type_traits.h"
-#include "arrow/visitor.h"
+#include "arrow/visit_array_inline.h"
 #include "common.h"
 
 arrow::Status ReturnNotOkMacro() {
@@ -67,53 +68,76 @@ TEST(BasicArrow, ReturnNotOkNoMacro) { ASSERT_OK(ReturnNotOkMacro()); }
 
 TEST(BasicArrow, ReturnNotOk) { ASSERT_OK(ReturnNotOk()); }
 
-class TypeCountVisitor : public arrow::TypeVisitor {
+class TableSummation {
  public:
-  uint64_t nested_count;
-  uint64_t non_nested_count;
+  double partial;
 
-  template <typename T>
-  arrow::enable_if_not_nested<T, arrow::Status> Visit(const T&) {
-    non_nested_count++;
-    return arrow::Status::OK();
+  arrow::Result<double> Compute(std::shared_ptr<arrow::RecordBatch> batch) {
+    for (auto array : batch->columns()) {
+      ARROW_RETURN_NOT_OK(arrow::VisitArrayInline(*array, this));
+    }
+    return partial;
   }
 
-  template <typename T>
-  arrow::enable_if_list_type<T, arrow::Status> Visit(const T& type) {
-    nested_count++;
-    ARROW_RETURN_NOT_OK(type.value_type()->Accept(this));
-    return arrow::Status::OK();
+  // Providing a default implementation is optional, but provides an opportunity
+  // to generate a more specific error messsage
+  arrow::Status Visit(const arrow::Array& array) {
+    return arrow::Status::NotImplemented("Can not compute sum for array of type ",
+                                         array.type()->ToString());
   }
 
-  arrow::Status Visit(const arrow::StructType& type) {
-    nested_count++;
-    for (auto field : type.fields()) {
-      ARROW_RETURN_NOT_OK(field->type()->Accept(this));
+  template <typename ArrayType, typename T = typename ArrayType::TypeClass>
+  arrow::enable_if_number<T, arrow::Status> Visit(
+      const ArrayType& array) {
+    for (auto value : array) {
+      if (value.has_value()) {
+        partial += (double)value.value();
+      } 
     }
     return arrow::Status::OK();
   }
-};  // TypeCountVisitor
+};  // TableSummation
 
-arrow::Status CountTypes() {
-  StartRecipe("TypeVisitorSimple");
-  // Create a schema
-  std::shared_ptr<arrow::Schema> schema =
-      arrow::schema({arrow::field("a", arrow::int8())});
+arrow::Status VisitorSummationExample() {
+  StartRecipe("VisitorSummationExample");
+  std::shared_ptr<arrow::Schema> schema = arrow::schema({
+      arrow::field("a", arrow::int32()),
+      arrow::field("b", arrow::int64()),
+      arrow::field("c", arrow::float64()),
+  });
+  int64_t num_rows = 3;
+  std::vector<std::shared_ptr<arrow::Array>> columns;
 
-  TypeCountVisitor counter;
+  arrow::Int32Builder a_builder = arrow::Int32Builder();
+  std::vector<int32_t> a_vals = {1, 2, 3};
+  ARROW_RETURN_NOT_OK(a_builder.AppendValues(a_vals));
+  ARROW_ASSIGN_OR_RAISE(auto a_arr, a_builder.Finish());
+  columns.push_back(a_arr);
 
-  for (auto field : schema->fields()) {
-    ARROW_RETURN_NOT_OK(field->type()->Accept(&counter));
-  }
+  arrow::Int64Builder b_builder = arrow::Int64Builder();
+  std::vector<int64_t> b_vals = {4, 5, 6};
+  ARROW_RETURN_NOT_OK(b_builder.AppendValues(b_vals));
+  ARROW_ASSIGN_OR_RAISE(auto b_arr, b_builder.Finish());
+  columns.push_back(b_arr);
 
-  rout << "Found " << counter.nested_count << " nested types and "
-       << counter.non_nested_count << " non-nested types.";
+  arrow::DoubleBuilder c_builder = arrow::DoubleBuilder();
+  std::vector<double> c_vals = {7.0, 8.0, 9.0};
+  ARROW_RETURN_NOT_OK(c_builder.AppendValues(c_vals));
+  ARROW_ASSIGN_OR_RAISE(auto c_arr, c_builder.Finish());
+  columns.push_back(c_arr);
 
-  EndRecipe("TypeVisitorSimple");
+  auto batch = arrow::RecordBatch::Make(schema, num_rows, columns);
 
-  EXPECT_EQ(counter.nested_count, 3);
-  EXPECT_EQ(counter.non_nested_count, 6);
+  // Call
+  TableSummation summation;
+  ARROW_ASSIGN_OR_RAISE(auto total, summation.Compute(batch));
+
+  rout << "Total is " << total;
+
+  EndRecipe("VisitorSummationExample");
+
+  EXPECT_EQ(total, 45.0);
   return arrow::Status::OK();
 }
 
-TEST(BasicArrow, CountTypes) { ASSERT_OK(CountTypes()); }
+TEST(BasicArrow, VisitorSummationExample) { ASSERT_OK(VisitorSummationExample()); }
