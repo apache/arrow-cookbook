@@ -7,6 +7,13 @@ from sphinx.ext.doctest import (Any, Dict, DocTestBuilder, TestcodeDirective,
 from sphinx.locale import __
 
 
+class JavaTestcodeDirective(TestcodeDirective):
+    def run(self):
+        node_list = super().run()
+        node_list[0]["language"] = "java"
+        return node_list
+
+
 class JavaDocTestBuilder(DocTestBuilder):
     """
     Runs java test snippets in the documentation.
@@ -76,7 +83,7 @@ class JavaDocTestBuilder(DocTestBuilder):
         return output
 
 def setup(app) -> Dict[str, Any]:
-    app.add_directive("testcode", TestcodeDirective)
+    app.add_directive("testcode", JavaTestcodeDirective)
     app.add_directive("testoutput", TestoutputDirective)
     app.add_builder(JavaDocTestBuilder)
     # this config value adds to sys.path
