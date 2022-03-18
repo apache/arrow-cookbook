@@ -18,6 +18,8 @@
 #include <arrow/api.h>
 #include <gtest/gtest.h>
 
+#include <random>
+
 #include "arrow/array.h"
 #include "arrow/type.h"
 #include "arrow/type_traits.h"
@@ -68,6 +70,93 @@ TEST(BasicArrow, ReturnNotOkNoMacro) { ASSERT_OK(ReturnNotOkMacro()); }
 
 TEST(BasicArrow, ReturnNotOk) { ASSERT_OK(ReturnNotOk()); }
 
+class RandomBatchGenerator {
+ public:
+  std::shared_ptr<arrow::Schema> schema;
+
+  RandomBatchGenerator(std::shared_ptr<arrow::Schema> schema) : schema(schema){};
+
+  arrow::Result<std::shared_ptr<arrow::RecordBatch>> Generate(int32_t num_rows) {
+    num_rows_ = num_rows;
+    for (auto field : schema->fields()) {
+      ARROW_RETURN_NOT_OK(arrow::VisitTypeInline(*field->type(), this));
+    }
+
+    return arrow::RecordBatch::Make(schema, num_rows, arrays_);
+  }
+
+  // Default implementation
+  arrow::Status Visit(const arrow::DataType& type) {
+    return arrow::Status::NotImplemented("Generating data for", type.ToString());
+  }
+
+  arrow::Status Visit(const arrow::DoubleType&) {
+    auto builder = arrow::DoubleBuilder();
+    std::normal_distribution<> d{5, 2};
+    for (int i = 0; i < num_rows_; ++i) {
+      builder.Append(d(gen_));
+    }
+    ARROW_ASSIGN_OR_RAISE(auto array, builder.Finish());
+    arrays_.push_back(array);
+    return arrow::Status::OK();
+  }
+
+  arrow::Status Visit(const arrow::ListType& type) {
+    // Generate offsets first, which determines number of values in sub-array
+    std::poisson_distribution<> d{4};
+    auto builder = arrow::Int32Builder();
+    builder.Append(0);
+    int32_t last_val = 0;
+    for (int i = 0; i < num_rows_; ++i) {
+      last_val += d(gen_);
+      builder.Append(last_val);
+    }
+    ARROW_ASSIGN_OR_RAISE(auto offsets, builder.Finish());
+
+    // Generate values as if we had that number of values
+    int64_t previous_num_rows = num_rows_;
+    num_rows_ = last_val;
+    ARROW_RETURN_NOT_OK(arrow::VisitTypeInline(*type.value_type(), this));
+    auto values = arrays_.back();
+    arrays_.pop_back();
+    num_rows_ = previous_num_rows;
+
+    ARROW_ASSIGN_OR_RAISE(auto array,
+                          arrow::ListArray::FromArrays(*offsets.get(), *values.get()));
+    arrays_.push_back(array);
+
+    return arrow::Status::OK();
+  }
+
+ protected:
+  std::random_device rd_{};
+  std::mt19937 gen_{rd_()};
+  std::vector<std::shared_ptr<arrow::Array>> arrays_;
+  int64_t num_rows_;
+};  // RandomBatchGenerator
+
+arrow::Status GenerateRandomData() {
+  StartRecipe("GenerateRandomData");
+  std::shared_ptr<arrow::Schema> schema =
+      arrow::schema({arrow::field("x", arrow::float64()),
+                     arrow::field("y", arrow::list(arrow::float64()))});
+
+  RandomBatchGenerator generator(schema);
+  ARROW_ASSIGN_OR_RAISE(std::shared_ptr<arrow::RecordBatch> batch, generator.Generate(5));
+
+  rout << "Created batch: \n" << batch;
+
+  // Consider using ValidateFull to check correctness
+  ARROW_RETURN_NOT_OK(batch->ValidateFull());
+
+  EndRecipe("GenerateRandomData");
+  EXPECT_EQ(batch->num_rows(), 5);
+
+  return arrow::Status::OK();
+}
+
+TEST(BasicArrow, GenerateRandomData) { ASSERT_OK(GenerateRandomData()); }
+
 class TableSummation {
  public:
   double partial;
@@ -79,20 +168,18 @@ class TableSummation {
     return partial;
   }
 
-  // Providing a default implementation is optional, but provides an opportunity
-  // to generate a more specific error messsage
+  // Default implementation
   arrow::Status Visit(const arrow::Array& array) {
     return arrow::Status::NotImplemented("Can not compute sum for array of type ",
                                          array.type()->ToString());
   }
 
   template <typename ArrayType, typename T = typename ArrayType::TypeClass>
-  arrow::enable_if_number<T, arrow::Status> Visit(
-      const ArrayType& array) {
+  arrow::enable_if_number<T, arrow::Status> Visit(const ArrayType& array) {
     for (auto value : array) {
       if (value.has_value()) {
         partial += (double)value.value();
-      } 
+      }
     }
     return arrow::Status::OK();
   }

@@ -53,16 +53,45 @@ boilerplate for you.  It will run the contained expression and check the resulti
 Using the Visitor Pattern
 =========================
 
-Arrow classes like DataType, Scalar, and Array have specialized subclasses for
-each Arrow type. In order to work with them, use the visitor pattern. These 
-types provide an Accept method and have associated Visitor classes.
+Arrow classes DataType, Scalar, and Array have specialized subclasses for
+each Arrow type. In order to specialize logic for each subclass, you the visitor
+pattern. Arrow provides the macros:
 
-As an example, below we implement a :cpp:class:`arrow::TypeVisitor` that counts
-the number of  primitive and nested types.
+ * `arrow::VisitTypeInline`
+ * `arrow::VisitScalarInline`
+ * `arrow::VisitArrayInline`
 
 To implement a TypeVisitor we have to implement a Visit method for every possible
 DataType we wish to handle. Fortunately, we can often use templates and type
 traits to make this less verbose.
+
+Generate Random Data for Given Schema
+-------------------------------------
+
+To generate random data for a given schema, a type visitor is helpful.
+
+
+.. literalinclude:: ../code/basic_arrow.cc
+   :language: cpp
+   :linenos:
+   :start-at: class RandomBatchGenerator
+   :end-at: };  // RandomBatchGenerator
+   :caption: Using visitor pattern to generate random record batches
+  
+
+.. recipe:: ../code/basic_arrow.cc GenerateRandomData
+   :dedent: 2
+
+
+Convert Arbitrary Scalars to Variants
+-------------------------------------
+
+.. TODO: Implement converter from rows to values
+
+
+Generalize Computations Across Arrow Types
+------------------------------------------
+
 
 .. literalinclude:: ../code/basic_arrow.cc
    :language: cpp
