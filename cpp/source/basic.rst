@@ -53,45 +53,32 @@ boilerplate for you.  It will run the contained expression and check the resulti
 Using the Visitor Pattern
 =========================
 
-Arrow classes DataType, Scalar, and Array have specialized subclasses for
-each Arrow type. In order to specialize logic for each subclass, you the visitor
-pattern. Arrow provides the macros:
+Arrow classes :cpp:class:`arrow::DataType`, :cpp:class:`arrow::Scalar`, and
+:cpp:class:`arrow::Array` have specialized subclasses for each Arrow type. In 
+order to specialize logic for each subclass, you can use the visitor pattern. 
+Arrow provides inline template functions that allow you to call visitors 
+efficiently:
 
- * `arrow::VisitTypeInline`
- * `arrow::VisitScalarInline`
- * `arrow::VisitArrayInline`
+ * :cpp:func:`arrow::VisitTypeInline`
+ * :cpp:func:`arrow::VisitScalarInline`
+ * :cpp:func:`arrow::VisitArrayInline`
 
-To implement a TypeVisitor we have to implement a Visit method for every possible
-DataType we wish to handle. Fortunately, we can often use templates and type
-traits to make this less verbose.
+Generate Random Data
+--------------------
 
-Generate Random Data for Given Schema
--------------------------------------
-
-To generate random data for a given schema, a type visitor is helpful.
-
-
-.. literalinclude:: ../code/basic_arrow.cc
-   :language: cpp
-   :linenos:
-   :start-at: class RandomBatchGenerator
-   :end-at: };  // RandomBatchGenerator
-   :caption: Using visitor pattern to generate random record batches
-  
-
-.. recipe:: ../code/basic_arrow.cc GenerateRandomData
-   :dedent: 2
-
-
-Convert Arbitrary Scalars to Variants
--------------------------------------
-
-.. TODO: Implement converter from rows to values
+See example at :ref:`Generate Random Data for a Given Schema`.
 
 
 Generalize Computations Across Arrow Types
 ------------------------------------------
 
+Array visitors can be useful when writing functions that can handle multiple
+array types. However, implementing a visitor for each type individually can be
+excessively verbose. Fortunately, Arrow provides type traits that allow you to
+write templated functions to handle subsets of types. The example below
+demonstrates a table sum function that can handle any integer or floating point 
+array with only a single visitor implementation by leveraging
+:cpp:type:`arrow::enable_if_number`.
 
 .. literalinclude:: ../code/basic_arrow.cc
    :language: cpp
