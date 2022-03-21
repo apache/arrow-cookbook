@@ -92,7 +92,7 @@ class RandomBatchGenerator {
 
   arrow::Status Visit(const arrow::DoubleType&) {
     auto builder = arrow::DoubleBuilder();
-    std::normal_distribution<> d{5, 2};
+    std::normal_distribution<> d{mean=5.0, stddev=2.0};
     for (int i = 0; i < num_rows_; ++i) {
       builder.Append(d(gen_));
     }
@@ -103,7 +103,7 @@ class RandomBatchGenerator {
 
   arrow::Status Visit(const arrow::ListType& type) {
     // Generate offsets first, which determines number of values in sub-array
-    std::poisson_distribution<> d{4};
+    std::poisson_distribution<> d{mean=4};
     auto builder = arrow::Int32Builder();
     builder.Append(0);
     int32_t last_val = 0;
@@ -178,7 +178,7 @@ class TableSummation {
   arrow::enable_if_number<T, arrow::Status> Visit(const ArrayType& array) {
     for (auto value : array) {
       if (value.has_value()) {
-        partial += (double)value.value();
+        partial += static_cast<double>(value.value());
       }
     }
     return arrow::Status::OK();
