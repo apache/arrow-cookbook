@@ -66,7 +66,7 @@ efficiently:
 Generate Random Data
 --------------------
 
-See example at :ref:`Generate Random Data for a Given Schema`.
+See example at :ref:`Generate Random Data Example`.
 
 
 Generalize Computations Across Arrow Types

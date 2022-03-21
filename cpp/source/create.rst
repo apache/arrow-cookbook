@@ -49,6 +49,8 @@ Builders can also consume standard C++ containers:
     Builders will not take ownership of data in containers and will make a
     copy of the underlying data.
 
+.. _Generate Random Data Example:
+
 Generate Random Data for a Given Schema
 =======================================
 

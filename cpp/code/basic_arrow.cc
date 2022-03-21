@@ -65,6 +65,9 @@ TEST(BasicArrow, ReturnNotOkNoMacro) { ASSERT_OK(ReturnNotOkMacro()); }
 
 TEST(BasicArrow, ReturnNotOk) { ASSERT_OK(ReturnNotOk()); }
 
+/// \brief Sum numeric values across columns
+///
+/// Only supports floating point and integral types. Does not support decimals.
 class TableSummation {
  public:
   double partial;
@@ -84,7 +87,7 @@ class TableSummation {
 
   template <typename ArrayType, typename T = typename ArrayType::TypeClass>
   arrow::enable_if_number<T, arrow::Status> Visit(const ArrayType& array) {
-    for (auto value : array) {
+    for (arrow::util::optional<typename T::c_type> value : array) {
       if (value.has_value()) {
         partial += static_cast<double>(value.value());
       }
