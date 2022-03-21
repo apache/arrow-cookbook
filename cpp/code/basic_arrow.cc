@@ -20,9 +20,6 @@
 
 #include <random>
 
-#include "arrow/array.h"
-#include "arrow/type.h"
-#include "arrow/type_traits.h"
 #include "arrow/visit_array_inline.h"
 #include "common.h"
 
@@ -70,6 +67,9 @@ TEST(BasicArrow, ReturnNotOkNoMacro) { ASSERT_OK(ReturnNotOkMacro()); }
 
 TEST(BasicArrow, ReturnNotOk) { ASSERT_OK(ReturnNotOk()); }
 
+/// \brief Generate random record batches for a given schema
+///
+/// For demonstration purposes, this only covers DoubleType and ListType
 class RandomBatchGenerator {
  public:
   std::shared_ptr<arrow::Schema> schema;
@@ -92,8 +92,8 @@ class RandomBatchGenerator {
 
   arrow::Status Visit(const arrow::DoubleType&) {
     auto builder = arrow::DoubleBuilder();
-    std::normal_distribution<> d{mean=5.0, stddev=2.0};
-    for (int i = 0; i < num_rows_; ++i) {
+    std::normal_distribution<> d{/*mean=*/5.0, /*stddev=*/2.0};
+    for (int64_t i = 0; i < num_rows_; ++i) {
       builder.Append(d(gen_));
     }
     ARROW_ASSIGN_OR_RAISE(auto array, builder.Finish());
@@ -103,23 +103,21 @@ class RandomBatchGenerator {
 
   arrow::Status Visit(const arrow::ListType& type) {
     // Generate offsets first, which determines number of values in sub-array
-    std::poisson_distribution<> d{mean=4};
+    std::poisson_distribution<> d{/*mean=*/4};
     auto builder = arrow::Int32Builder();
     builder.Append(0);
     int32_t last_val = 0;
-    for (int i = 0; i < num_rows_; ++i) {
+    for (int64_t i = 0; i < num_rows_; ++i) {
       last_val += d(gen_);
       builder.Append(last_val);
     }
     ARROW_ASSIGN_OR_RAISE(auto offsets, builder.Finish());
 
-    // Generate values as if we had that number of values
-    int64_t previous_num_rows = num_rows_;
-    num_rows_ = last_val;
-    ARROW_RETURN_NOT_OK(arrow::VisitTypeInline(*type.value_type(), this));
-    auto values = arrays_.back();
-    arrays_.pop_back();
-    num_rows_ = previous_num_rows;
+    // Since children of list has a new length, will use a new generator
+    RandomBatchGenerator value_gen(arrow::schema({arrow::field("x", type.value_type())}));
+    // Last index from the offsets array becomes the length of the sub-array
+    ARROW_ASSIGN_OR_RAISE(auto inner_batch, value_gen.Generate(last_val));
+    std::shared_ptr<arrow::Array> values = inner_batch->column(0);
 
     ARROW_ASSIGN_OR_RAISE(auto array,
                           arrow::ListArray::FromArrays(*offsets.get(), *values.get()));
@@ -189,8 +187,7 @@ arrow::Status VisitorSummationExample() {
   StartRecipe("VisitorSummationExample");
   std::shared_ptr<arrow::Schema> schema = arrow::schema({
       arrow::field("a", arrow::int32()),
-      arrow::field("b", arrow::int64()),
-      arrow::field("c", arrow::float64()),
+      arrow::field("b", arrow::float64()),
   });
   int64_t num_rows = 3;
   std::vector<std::shared_ptr<arrow::Array>> columns;
@@ -201,17 +198,11 @@ arrow::Status VisitorSummationExample() {
   ARROW_ASSIGN_OR_RAISE(auto a_arr, a_builder.Finish());
   columns.push_back(a_arr);
 
-  arrow::Int64Builder b_builder = arrow::Int64Builder();
-  std::vector<int64_t> b_vals = {4, 5, 6};
+  arrow::DoubleBuilder b_builder = arrow::DoubleBuilder();
+  std::vector<double> b_vals = {4.0, 5.0, 6.0};
   ARROW_RETURN_NOT_OK(b_builder.AppendValues(b_vals));
   ARROW_ASSIGN_OR_RAISE(auto b_arr, b_builder.Finish());
   columns.push_back(b_arr);
-
-  arrow::DoubleBuilder c_builder = arrow::DoubleBuilder();
-  std::vector<double> c_vals = {7.0, 8.0, 9.0};
-  ARROW_RETURN_NOT_OK(c_builder.AppendValues(c_vals));
-  ARROW_ASSIGN_OR_RAISE(auto c_arr, c_builder.Finish());
-  columns.push_back(c_arr);
 
   auto batch = arrow::RecordBatch::Make(schema, num_rows, columns);
 
@@ -223,7 +214,7 @@ arrow::Status VisitorSummationExample() {
 
   EndRecipe("VisitorSummationExample");
 
-  EXPECT_EQ(total, 45.0);
+  EXPECT_EQ(total, 21.0);
   return arrow::Status::OK();
 }
 
