@@ -16,9 +16,9 @@
 // under the License.
 
 #include <arrow/api.h>
+#include <arrow/visit_array_inline.h>
 #include <gtest/gtest.h>
 
-#include "arrow/visit_array_inline.h"
 #include "common.h"
 
 arrow::Status ReturnNotOkMacro() {
@@ -73,7 +73,7 @@ class TableSummation {
   double partial;
 
   arrow::Result<double> Compute(std::shared_ptr<arrow::RecordBatch> batch) {
-    for (auto array : batch->columns()) {
+    for (std::shared_ptr<arrow::Array> array : batch->columns()) {
       ARROW_RETURN_NOT_OK(arrow::VisitArrayInline(*array, this));
     }
     return partial;
@@ -102,7 +102,7 @@ arrow::Status VisitorSummationExample() {
       arrow::field("a", arrow::int32()),
       arrow::field("b", arrow::float64()),
   });
-  int64_t num_rows = 3;
+  int32_t num_rows = 3;
   std::vector<std::shared_ptr<arrow::Array>> columns;
 
   arrow::Int32Builder a_builder = arrow::Int32Builder();

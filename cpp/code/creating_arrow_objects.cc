@@ -71,7 +71,7 @@ class RandomBatchGenerator {
 
   arrow::Result<std::shared_ptr<arrow::RecordBatch>> Generate(int32_t num_rows) {
     num_rows_ = num_rows;
-    for (auto field : schema->fields()) {
+    for (std::shared_ptr<arrow::Field> field : schema->fields()) {
       ARROW_RETURN_NOT_OK(arrow::VisitTypeInline(*field->type(), this));
     }
 
@@ -86,7 +86,7 @@ class RandomBatchGenerator {
   arrow::Status Visit(const arrow::DoubleType&) {
     auto builder = arrow::DoubleBuilder();
     std::normal_distribution<> d{/*mean=*/5.0, /*stddev=*/2.0};
-    for (int64_t i = 0; i < num_rows_; ++i) {
+    for (int32_t i = 0; i < num_rows_; ++i) {
       builder.Append(d(gen_));
     }
     ARROW_ASSIGN_OR_RAISE(auto array, builder.Finish());
@@ -100,7 +100,7 @@ class RandomBatchGenerator {
     auto builder = arrow::Int32Builder();
     builder.Append(0);
     int32_t last_val = 0;
-    for (int64_t i = 0; i < num_rows_; ++i) {
+    for (int32_t i = 0; i < num_rows_; ++i) {
       last_val += d(gen_);
       builder.Append(last_val);
     }
@@ -123,7 +123,7 @@ class RandomBatchGenerator {
   std::random_device rd_{};
   std::mt19937 gen_{rd_()};
   std::vector<std::shared_ptr<arrow::Array>> arrays_;
-  int64_t num_rows_;
+  int32_t num_rows_;
 };  // RandomBatchGenerator
 
 arrow::Status GenerateRandomData() {
