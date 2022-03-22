@@ -148,4 +148,4 @@ arrow::Status GenerateRandomData() {
 
 TEST(CreatingArrowObjects, CreatingArraysTest) { ASSERT_OK(CreatingArrays()); }
 TEST(CreatingArrowObjects, CreatingArraysPtrTest) { ASSERT_OK(CreatingArraysPtr()); }
-TEST(BasicArrow, GenerateRandomData) { ASSERT_OK(GenerateRandomData()); }
+TEST(CreatingArrowObjects, GeneratingRandomData) { ASSERT_OK(GenerateRandomData()); }
