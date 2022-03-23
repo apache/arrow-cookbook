@@ -69,8 +69,8 @@ TEST(BasicArrow, ReturnNotOk) { ASSERT_OK(ReturnNotOk()); }
 ///
 /// Only supports floating point and integral types. Does not support decimals.
 class TableSummation {
+  double partial = 0.0;
  public:
-  double partial;
 
   arrow::Result<double> Compute(std::shared_ptr<arrow::RecordBatch> batch) {
     for (std::shared_ptr<arrow::Array> array : batch->columns()) {
