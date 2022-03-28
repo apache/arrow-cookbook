@@ -48,3 +48,45 @@ boilerplate for you.  It will run the contained expression and check the resulti
 .. recipe:: ../code/basic_arrow.cc ReturnNotOk
   :caption: Using ARROW_RETURN_NOT_OK to check the status
   :dedent: 2
+
+
+Using the Visitor Pattern
+=========================
+
+Arrow classes :cpp:class:`arrow::DataType`, :cpp:class:`arrow::Scalar`, and
+:cpp:class:`arrow::Array` have specialized subclasses for each Arrow type. In 
+order to specialize logic for each subclass, you can use the visitor pattern. 
+Arrow provides inline template functions that allow you to call visitors 
+efficiently:
+
+ * :cpp:func:`arrow::VisitTypeInline`
+ * :cpp:func:`arrow::VisitScalarInline`
+ * :cpp:func:`arrow::VisitArrayInline`
+
+Generate Random Data
+--------------------
+
+See example at :ref:`Generate Random Data Example`.
+
+
+Generalize Computations Across Arrow Types
+------------------------------------------
+
+Array visitors can be useful when writing functions that can handle multiple
+array types. However, implementing a visitor for each type individually can be
+excessively verbose. Fortunately, Arrow provides type traits that allow you to
+write templated functions to handle subsets of types. The example below
+demonstrates a table sum function that can handle any integer or floating point 
+array with only a single visitor implementation by leveraging
+:cpp:type:`arrow::enable_if_number`.
+
+.. literalinclude:: ../code/basic_arrow.cc
+   :language: cpp
+   :linenos:
+   :start-at: class TableSummation
+   :end-at: };  // TableSummation
+   :caption: Using visitor pattern that can compute sum of table with any numeric type
+  
+
+.. recipe:: ../code/basic_arrow.cc VisitorSummationExample
+   :dedent: 2

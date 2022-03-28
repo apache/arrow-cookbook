@@ -48,3 +48,25 @@ Builders can also consume standard C++ containers:
     
     Builders will not take ownership of data in containers and will make a
     copy of the underlying data.
+
+.. _Generate Random Data Example:
+
+Generate Random Data for a Given Schema
+=======================================
+
+To generate random data for a given schema, implementing a type visitor is a
+good idea. The following example only implements double arrays and list arrays,
+but could be easily extended to all types.
+
+
+.. literalinclude:: ../code/creating_arrow_objects.cc
+   :language: cpp
+   :linenos:
+   :start-at: class RandomBatchGenerator
+   :end-at: };  // RandomBatchGenerator
+   :caption: Using visitor pattern to generate random record batches
+  
+Given such a generator, you can create random test data for any supported schema:
+
+.. recipe:: ../code/creating_arrow_objects.cc GenerateRandomData
+   :dedent: 2
