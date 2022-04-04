@@ -1,4 +1,4 @@
-Bulding the Python Cookbook
+Building the Python Cookbook
 ===========================
 
 The python cookbook uses the Sphinx documentation system.
