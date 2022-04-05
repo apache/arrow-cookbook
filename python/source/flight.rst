@@ -605,3 +605,106 @@ Or if we use the wrong credentials on login, we also get an error:
     server.shutdown()
 
 .. _(HTTP) basic authentication: https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication#basic_authentication_scheme
+
+Authentication with certificates
+=================================
+
+Following on from the previous scenario where traffic to the server is managed via a username and password, 
+HTTPS (more specifically TLS) communication allows an additional layer of security by encrypting messages
+between the client and server. This is achieved using certificates. During development, the easiest 
+approach is developing with self-signed certificates. At startup, the server loads the public and private 
+key and the client client authenticates itself to the server with a public key.
+
+.. note:: In production environments it is recommended to make use of a certificate signed by a certificate authority.
+.. note:: This tutorial uses Windows to create a self-signed certificate. For Linux environments, other methods such as OpenSSL can be used.
+
+**Step 1 - Generating the Self Signed Certificate**  
+
+To generate a self-signed certificate, run command prompt as administrator and run the following commands.
+.. testcode::
+    dotnet dev-certs https --trust
+    dotnet dev-certs https -ep "<CertificateName>.pfx" -p <CertificatePassword>
+
+You will receive a prompt asking you confirm that you would like to trust this certificate, select yes. 
+You now have a self-signed certificate that your local environment trusts.
+
+**Step 2 - Converting the .pfx file into public and private keys** 
+
+Since `dotnet dev-certs` does not let you export Public and Private keys directly we need to convert the .pfx file. 
+There are several way to achieve this and this tutorial uses OpenSSL (using Windows Subsystem for Linux) 
+to perform the conversion as per this `IBM article`_.
+
+**Step 3 - Running a server with tls enabled**
+
+We're going to use the pyarrow server example available on the `GitHub repo`_. To run the server with TLS enabled, the python script should be 
+called with the path to the public and private keys.
+.. testcode::
+    python server.py --tls CERTFILE <PathToPublicCertificate> --tls KEYFILE <PathToPrivateKey>
+
+Assuming the path was valid, you should see the server being served on a port set in the code (or by you).
+
+.. testoutput::
+    
+    Serving on grpc+tls://localhost:5005
+
+**Step 4 - Securely Connecting a client to the Server**
+Suppose we want to connect to the client and push some data to it. The following code securely sends information to the server using TLS encryption. 
+There is also the option to use mutual TLS encryption using both the public and private key, but we will assume the client will likely only have 
+the public certificate.
+.. testcode::
+    import pyarrow
+    import pyarrow.flight
+    import pandas as pd
+    
+    # Assumes incoming data object is a Dataframe
+    def pushToServer(name, data, client):
+        objectToSend = pyarrow.Table.from_pandas(data)
+        writer, _ = client.do_put(pyarrow.flight.FlightDescriptor.for_path(name), objectToSend.schema)
+        writer.write_table(objectToSend)
+        writer.close()
+    
+    def getClient():
+        
+        return pyarrow.flight.FlightClient("grpc+tcp://localhost:5005")
+    
+    def _add_common_arguments(parser):
+        parser.add_argument('--tls', action='store_true',
+                            help='Enable transport-level security')
+        parser.add_argument('--tls-roots', default=None,
+                            help='Path to trusted TLS certificate(s)')
+        parser.add_argument("--mtls", nargs=2, default=None,
+                            metavar=('CERTFILE', 'KEYFILE'),
+                            help="Enable transport-level security")
+                            
+    def main():
+        parser = argparse.ArgumentParser()
+        args = parser.parse_args()
+        connection_args = {}
+        scheme = "grpc+tls"
+        
+        if args.tls:
+            
+            if args.tls_roots:
+                with open(args.tls_roots, "rb") as root_certs:
+                    connection_args["tls_root_certs"] = root_certs.read()
+        if args.mtls:
+            with open(args.mtls[0], "rb") as cert_file:
+                tls_cert_chain = cert_file.read()
+            with open(args.mtls[1], "rb") as key_file:
+                tls_private_key = key_file.read()
+            connection_args["cert_chain"] = tls_cert_chain
+            connection_args["private_key"] = tls_private_key
+        
+        client = pyarrow.flight.FlightClient(f"{scheme}://{host}:{port}", **connection_args)
+        data =  { 'Animal': ['Dog', 'Cat', 'Mouse'], 'Size': ['Big', 'Small', 'Tiny'] }    
+        df = pd.DataFrame(data, columns=['Animal', 'Size'])
+        pushToServer("AnimalData", df, client)
+        
+    if __name__ == '__main__':
+        try:
+            main()
+        except Exception as e:
+            print(e) 
+
+.. _IBM article: https://www.ibm.com/docs/en/arl/9.7?topic=certification-extracting-certificate-keys-from-pfx-file
+.. _GitHub repo: https://github.com/apache/arrow/blob/master/python/examples/flight/server.py

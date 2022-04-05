@@ -107,7 +107,7 @@ from numpy and pandas arrays and series, but it's also
 possible to create Arrow Arrays and Tables from 
 plain Python structures.
 
-the :func:`pyarrow.table` function allows creation of Tables
+The :func:`pyarrow.table` function allows creation of Tables
 from a variety of inputs, including plain python objects
 
 .. testcode::
