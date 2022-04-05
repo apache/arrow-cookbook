@@ -1,4 +1,4 @@
-Bulding the Java Cookbook
+Building the Java Cookbook
 =========================
 
 The Java cookbook uses the Sphinx documentation system.
