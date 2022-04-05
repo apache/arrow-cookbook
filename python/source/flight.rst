@@ -641,11 +641,7 @@ called with the path to the public and private keys.
 .. testcode::
     python server.py --tls CERTFILE <PathToPublicCertificate> --tls KEYFILE <PathToPrivateKey>
 
-Assuming the path was valid, you should see the server being served on a port set in the code (or by you).
-
-.. testoutput::
-    
-    Serving on grpc+tls://localhost:5005
+Assuming the path was valid, you should see ``Serving on grpc+tls://localhost:5005``. The server is now being served on a port set in the code (or by you).
 
 **Step 4 - Securely Connecting a client to the Server**
 Suppose we want to connect to the client and push some data to it. The following code securely sends information to the server using TLS encryption. 
