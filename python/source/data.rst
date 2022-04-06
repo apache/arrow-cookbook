@@ -13,7 +13,7 @@ Computing Mean/Min/Max values of an array
 =========================================
 
 Arrow provides compute functions that can be applied to arrays.
-Those compute functions are exposed through the :mod:`arrow.compute`
+Those compute functions are exposed through the :mod:`pyarrow.compute`
 module.
 
 .. testsetup::
@@ -33,7 +33,7 @@ Given an array with 100 numbers, from 0 to 99
 
   0 .. 99
 
-We can compute the ``mean`` using the :func:`arrow.compute.mean`
+We can compute the ``mean`` using the :func:`pyarrow.compute.mean`
 function
 
 .. testcode::
@@ -47,7 +47,7 @@ function
 
   49.5
 
-And the ``min`` and ``max`` using the :func:`arrow.compute.min_max`
+And the ``min`` and ``max`` using the :func:`pyarrow.compute.min_max`
 function
 
 .. testcode::
@@ -65,7 +65,7 @@ Counting Occurrences of Elements
 ================================
 
 Arrow provides compute functions that can be applied to arrays,
-those compute functions are exposed through the :mod:`arrow.compute`
+those compute functions are exposed through the :mod:`pyarrow.compute`
 module.
 
 .. testsetup::
@@ -84,8 +84,8 @@ Given an array with all numbers from 0 to 9 repeated 10 times
 
   LEN: 100, MIN/MAX: 0 .. 9
 
-We can count occurences of all entries in the array using the
-:func:`arrow.compute.value_counts` function
+We can count occurrences of all entries in the array using the
+:func:`pyarrow.compute.value_counts` function
 
 .. testcode::
 
@@ -111,7 +111,7 @@ We can count occurences of all entries in the array using the
 Applying arithmetic functions to arrays.
 =========================================
 
-The compute functions in :mod:`arrow.compute` also include
+The compute functions in :mod:`pyarrow.compute` also include
 common transformations such as arithmetic functions.
 
 Given an array with 100 numbers, from 0 to 99
@@ -124,7 +124,7 @@ Given an array with 100 numbers, from 0 to 99
 
   0 .. 99
 
-We can multiply all values by 2 using the :func:`arrow.compute.multiply`
+We can multiply all values by 2 using the :func:`pyarrow.compute.multiply`
 function
 
 .. testcode::
@@ -431,7 +431,7 @@ Prepare data;
     keys: [["a","a","b","b","b","c","d","d","e","c"]]
     values: [[15,20,3,4,5,6,10,1,14,123]]
 
-Then applying sort;
+Then applying sort with :meth:`pyarrow.Table.sort_by`;
 
 .. testcode::
 
@@ -453,12 +453,12 @@ Searching for values matching a predicate in Arrays
 ===================================================
 
 If you have to look for values matching a predicate in Arrow arrays
-the :mod:`arrow.compute` module provides several methods that
+the :mod:`pyarrow.compute` module provides several methods that
 can be used to find the values you are looking for.
 
 For example, given an array with numbers from 0 to 9, if we
 want to look only for those greater than 5 we could use the
-func:`arrow.compute.greater` method and get back the elements
+:func:`pyarrow.compute.greater` method and get back the elements
 that fit our predicate
 
 .. testcode::
@@ -487,7 +487,7 @@ that fit our predicate
   ]
 
 Furthermore we can filter the array to get only the entries
-that match our predicate
+that match our predicate with :func:`pyarrow.compute.filter`
 
 .. testcode::
 
