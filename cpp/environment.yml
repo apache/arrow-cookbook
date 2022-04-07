@@ -10,3 +10,4 @@ dependencies:
   - gmock
   - pyarrow >=7,<8
   - clang-tools
+  - ccache
