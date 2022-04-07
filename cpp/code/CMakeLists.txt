@@ -32,7 +32,7 @@ function(RECIPE TARGET)
     if (MSVC)
         target_compile_options(${TARGET} PRIVATE /W4 /WX)
     else ()
-        target_compile_options(${TARGET} PRIVATE -Wall -Wextra -Wpedantic -Werror -Wno-unused-parameter)
+        target_compile_options(${TARGET} PRIVATE -Wall -Wextra -Wpedantic -Werror)
     endif ()
 
     gtest_discover_tests(${TARGET})
