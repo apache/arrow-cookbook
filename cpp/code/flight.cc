@@ -353,7 +353,7 @@ arrow::Status TestCustomGrpcImpl() {
   StartRecipe("CustomGrpcImpl::StartServer");
   arrow::flight::Location server_location;
   ARROW_RETURN_NOT_OK(
-      arrow::flight::Location::ForGrpcTcp("0.0.0.0", 5000, &server_location));
+      arrow::flight::Location::ForGrpcTcp("0.0.0.0", 5001, &server_location));
 
   arrow::flight::FlightServerOptions options(server_location);
   auto server = std::unique_ptr<arrow::flight::FlightServerBase>(
@@ -374,7 +374,7 @@ arrow::Status TestCustomGrpcImpl() {
 
   StartRecipe("CustomGrpcImpl::CreateClient");
   auto client_channel =
-      grpc::CreateChannel("0.0.0.0:5000", grpc::InsecureChannelCredentials());
+      grpc::CreateChannel("0.0.0.0:5001", grpc::InsecureChannelCredentials());
 
   auto stub = HelloWorldService::NewStub(client_channel);
 
