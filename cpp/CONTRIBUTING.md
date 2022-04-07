@@ -156,6 +156,10 @@ This cookbook follows the same style rules as Arrow C++ which is the Google styl
 guide with a few exceptions described
 [here](https://arrow.apache.org/docs/developers/cpp/development.html#code-style-linting-and-ci)
 
+We do follow a stricter clang-tidy rule set than Arrow. In general, we use all 
+rules provided by clang-tidy and exclude ones that don't make sense for the
+project. See `cpp/code/.clang-tidy`.
+
 ## Simple
 
 The examples should be as simple as possible. If complex code (e.g. templates) can be

@@ -41,9 +41,8 @@
 #include "common.h"
 
 class ParquetStorageService : public arrow::flight::FlightServerBase {
- public:
   const arrow::flight::ActionType kActionDropDataset{"drop_dataset", "Delete a dataset."};
-
+ public:
   explicit ParquetStorageService(std::shared_ptr<arrow::fs::FileSystem> root)
       : root_(std::move(root)) {}
 
@@ -56,7 +55,9 @@ class ParquetStorageService : public arrow::flight::FlightServerBase {
 
     std::vector<arrow::flight::FlightInfo> flights;
     for (const auto& file_info : listing) {
-      if (!file_info.IsFile() || file_info.extension() != "parquet") continue;
+      if (!file_info.IsFile() || file_info.extension() != "parquet") {
+        continue;
+      }
       ARROW_ASSIGN_OR_RAISE(auto info, MakeFlightInfo(file_info));
       flights.push_back(std::move(info));
     }
@@ -71,8 +72,7 @@ class ParquetStorageService : public arrow::flight::FlightServerBase {
                               std::unique_ptr<arrow::flight::FlightInfo>* info) override {
     ARROW_ASSIGN_OR_RAISE(auto file_info, FileInfoFromDescriptor(descriptor));
     ARROW_ASSIGN_OR_RAISE(auto flight_info, MakeFlightInfo(file_info));
-    *info = std::unique_ptr<arrow::flight::FlightInfo>(
-        new arrow::flight::FlightInfo(std::move(flight_info)));
+    *info = std::make_unique<arrow::flight::FlightInfo>(std::move(flight_info));
     return arrow::Status::OK();
   }
 
@@ -163,7 +163,8 @@ class ParquetStorageService : public arrow::flight::FlightServerBase {
       const arrow::flight::FlightDescriptor& descriptor) {
     if (descriptor.type != arrow::flight::FlightDescriptor::PATH) {
       return arrow::Status::Invalid("Must provide PATH-type FlightDescriptor");
-    } else if (descriptor.path.size() != 1) {
+    }
+    if (descriptor.path.size() != 1) {
       return arrow::Status::Invalid(
           "Must provide PATH-type FlightDescriptor with one path component");
     }
@@ -244,7 +245,9 @@ arrow::Status TestPutGetDelete() {
   int64_t batches = 0;
   while (true) {
     ARROW_ASSIGN_OR_RAISE(auto batch, batch_reader->Next());
-    if (!batch) break;
+    if (!batch) {
+      break;
+    }
     ARROW_RETURN_NOT_OK(writer->WriteRecordBatch(*batch));
     batches++;
   }
@@ -270,7 +273,7 @@ arrow::Status TestPutGetDelete() {
   ARROW_RETURN_NOT_OK(client->DoGet(flight_info->endpoints()[0].ticket, &stream));
   std::shared_ptr<arrow::Table> table;
   ARROW_RETURN_NOT_OK(stream->ReadAll(&table));
-  arrow::PrettyPrintOptions print_options(/*indent=*/0, /*window=*/2);
+  arrow::PrettyPrintOptions print_options(/*indent_arg=*/0, /*window_arg=*/2);
   ARROW_RETURN_NOT_OK(arrow::PrettyPrint(*table, print_options, &rout));
   EndRecipe("ParquetStorageService::DoGet");
 
@@ -288,7 +291,9 @@ arrow::Status TestPutGetDelete() {
   while (true) {
     std::unique_ptr<arrow::flight::FlightInfo> flight_info;
     ARROW_RETURN_NOT_OK(listing->Next(&flight_info));
-    if (!flight_info) break;
+    if (!flight_info) {
+      break;
+    }
     rout << flight_info->descriptor().ToString() << std::endl;
     rout << "=== Schema ===" << std::endl;
     std::shared_ptr<arrow::Schema> info_schema;
