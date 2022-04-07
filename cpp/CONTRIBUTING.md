@@ -107,6 +107,11 @@ cmake --build .
 ctest
 ```
 
+(Tip: If you are using MacOS with Homebrew, you may need to `unset CPATH` to make
+sure the compiler finds the conda include path instead of the homebrew one. Otherwise
+you may encounter linking errors due to mismatches between header file and library
+versions.)
+
 Then you can rerun all of the tests with `ctest` and you can rebuild and
 rerun individual tests much more quickly with something like
 `cmake --build . --target creating_arrow_objects && ctest creating_arrow_objects`.
