@@ -65,17 +65,15 @@ arrow::Status CreatingArraysPtr() {
 /// For demonstration purposes, this only covers DoubleType and ListType
 class RandomBatchGenerator {
  public:
-  std::shared_ptr<arrow::Schema> schema;
-
-  RandomBatchGenerator(std::shared_ptr<arrow::Schema> schema) : schema(schema){};
+  explicit RandomBatchGenerator(std::shared_ptr<arrow::Schema> schema) : schema_(std::move(schema)), num_rows_(0) {};
 
   arrow::Result<std::shared_ptr<arrow::RecordBatch>> Generate(int32_t num_rows) {
     num_rows_ = num_rows;
-    for (std::shared_ptr<arrow::Field> field : schema->fields()) {
+    for (std::shared_ptr<arrow::Field> field : schema_->fields()) {
       ARROW_RETURN_NOT_OK(arrow::VisitTypeInline(*field->type(), this));
     }
 
-    return arrow::RecordBatch::Make(schema, num_rows, arrays_);
+    return arrow::RecordBatch::Make(schema_, num_rows, arrays_);
   }
 
   // Default implementation
@@ -87,7 +85,7 @@ class RandomBatchGenerator {
     auto builder = arrow::DoubleBuilder();
     std::normal_distribution<> d{/*mean=*/5.0, /*stddev=*/2.0};
     for (int32_t i = 0; i < num_rows_; ++i) {
-      builder.Append(d(gen_));
+      ARROW_RETURN_NOT_OK(builder.Append(d(gen_)));
     }
     ARROW_ASSIGN_OR_RAISE(auto array, builder.Finish());
     arrays_.push_back(array);
@@ -98,11 +96,11 @@ class RandomBatchGenerator {
     // Generate offsets first, which determines number of values in sub-array
     std::poisson_distribution<> d{/*mean=*/4};
     auto builder = arrow::Int32Builder();
-    builder.Append(0);
+    ARROW_RETURN_NOT_OK(builder.Append(0));
     int32_t last_val = 0;
     for (int32_t i = 0; i < num_rows_; ++i) {
       last_val += d(gen_);
-      builder.Append(last_val);
+      ARROW_RETURN_NOT_OK(builder.Append(last_val));
     }
     ARROW_ASSIGN_OR_RAISE(auto offsets, builder.Finish());
 
@@ -119,7 +117,8 @@ class RandomBatchGenerator {
     return arrow::Status::OK();
   }
 
- protected:
+ private:
+  std::shared_ptr<arrow::Schema> schema_;
   std::random_device rd_{};
   std::mt19937 gen_{rd_()};
   std::vector<std::shared_ptr<arrow::Array>> arrays_;
