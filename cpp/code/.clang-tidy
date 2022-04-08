@@ -22,3 +22,8 @@ Checks: '*,-llvmlibc*,-cert-err58-cpp,-modernize-use-trailing-return-type,-fuchs
   -altera-*'
 WarningsAsErrors: '*'
 FormatStyle: 'file'
+CheckOptions:
+  - key: performance-unnecessary-value-param.AllowedTypes
+    value: 'shared_ptr'
+  - key: performance-for-range-copy.AllowedTypes
+    value: 'shared_ptr'
