@@ -9,6 +9,6 @@ dependencies:
   - gtest
   - gmock
   - pyarrow >=7,<8
-  - clang
-  - clang-tools
+  - clang >=12,<13
+  - clang-tools >=12,<13
   - ccache
