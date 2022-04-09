@@ -630,6 +630,7 @@ One method to achieve this is openssl, please visit this `IBM article`_ for more
 The code below is a minimal working example of an Arrow server used to receive data with TLS. For a full server example, please visit the Arrow `GitHub repo`_. 
 
 .. testcode::
+    
     import argparse
     import pyarrow
     import pyarrow.flight
@@ -693,6 +694,7 @@ Suppose we want to connect to the client and push some data to it. The following
 The example below shows how one could  
 
 .. testcode::
+    
     import argparse
     import pyarrow
     import pyarrow.flight
