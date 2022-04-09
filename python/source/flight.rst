@@ -631,6 +631,7 @@ The code below is a minimal working example of an Arrow server used to receive d
 
 .. testcode::
     import argparse
+    import pyarrow
     import pyarrow.flight
     
     class FlightServer(pyarrow.flight.FlightServerBase):
