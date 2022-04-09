@@ -634,6 +634,7 @@ The code below is a minimal working example of an Arrow server used to receive d
     import pyarrow
     import pyarrow.flight
     
+    
     class FlightServer(pyarrow.flight.FlightServerBase):
         def __init__(self, host="localhost", location=None,
                      tls_certificates=None, verify_client=False,
@@ -655,6 +656,7 @@ The code below is a minimal working example of an Arrow server used to receive d
             print(key)
             self.flights[key] = reader.read_all()
             print(self.flights[key])
+    
     
     def main():
         parser = argparse.ArgumentParser()
