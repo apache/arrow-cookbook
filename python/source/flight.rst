@@ -690,6 +690,7 @@ Suppose we want to connect to the client and push some data to it. The following
 The example below shows how one could  
 
 .. testcode::
+    import argparse
     import pyarrow
     import pyarrow.flight
     import pandas as pd
