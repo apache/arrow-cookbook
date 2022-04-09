@@ -697,32 +697,32 @@ The example below shows how one could
     import pandas as pd
     
     # Assumes incoming data object is a Dataframe
-    def pushToServer(name, data, client):
+    def push_to_server(name, data, client):
         objectToSend = pyarrow.Table.from_pandas(data)
         writer, _ = client.do_put(pyarrow.flight.FlightDescriptor.for_path(name), objectToSend.schema)
         writer.write_table(objectToSend)
         writer.close()
     
-    def _add_common_arguments(parser):
-        parser.add_argument('--tls', action='store_true',
-                            help='Enable transport-level security')
-        parser.add_argument('--tls-roots', default=None,
-                            help='Path to trusted TLS certificate(s)')
-                    
     def main():
         parser = argparse.ArgumentParser()
+    
+        parser.add_argument('--tls-roots', default=None,
+                            help='Path to trusted TLS certificate(s)')
+        parser.add_argument('--host', default="localhost",
+                            help='Host endpoint')
+        parser.add_argument('--port', default=5005,
+                            help='Host port')
         args = parser.parse_args()
         connection_args = {}
-        scheme = "grpc+tls"
-        
+    
         with open(args.tls_roots, "rb") as root_certs:
             connection_args["tls_root_certs"] = root_certs.read()
-        
-        client = pyarrow.flight.FlightClient(f"{scheme}://{host}:{port}", **connection_args)
-        data =  { 'Animal': ['Dog', 'Cat', 'Mouse'], 'Size': ['Big', 'Small', 'Tiny'] }    
+    
+        client = pyarrow.flight.FlightClient(f"grpc+tls://{args.host}:{args.port}", **connection_args)
+        data = {'Animal': ['Dog', 'Cat', 'Mouse'], 'Size': ['Big', 'Small', 'Tiny']}
         df = pd.DataFrame(data, columns=['Animal', 'Size'])
         push_to_server("AnimalData", df, client)
-        
+    
     if __name__ == '__main__':
         try:
             main()
