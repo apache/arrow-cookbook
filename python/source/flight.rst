@@ -88,8 +88,8 @@ the information regarding a single specific data stream.
 Then we expose :meth:`pyarrow.flight.FlightServerBase.do_get` which is in charge
 of actually fetching the exposed data streams and sending them to the client.
 
-Allowing to list and dowload data streams would be pretty useless if we didn't
-expose a way to create them, this is the responsability of
+Allowing to list and download data streams would be pretty useless if we didn't
+expose a way to create them, this is the responsibility of
 :meth:`pyarrow.flight.FlightServerBase.do_put` which is in charge of receiving
 new data from the client and dealing with it (in this case saving it
 into a parquet file)
@@ -616,37 +616,77 @@ approach is developing with self-signed certificates. At startup, the server loa
 key and the client client authenticates itself to the server with a public key.
 
 .. note:: In production environments it is recommended to make use of a certificate signed by a certificate authority.
-.. note:: This tutorial uses Windows to create a self-signed certificate. For Linux environments, other methods such as OpenSSL can be used.
 
 **Step 1 - Generating the Self Signed Certificate**  
 
-To generate a self-signed certificate, run command prompt as administrator and run the following commands.
+Generate a self-signed certificate by using dotnet on `Windows`_, or `openssl`_ on Linux or MacOS. 
+Alternatively, the self-signed certificate from the `Arrow testing data repository`_ can be used. 
+Depending on the file generated, you may need to convert it to a .crt and .key file as required for the Arrow server. 
+One method to achieve this is openssl, please visit this `IBM article`_ for more info. 
+
+
+
+**Step 2 - Running a server with TLS enabled**
+
+The code below is a minimal working example of an Arrow server used to receive data with TLS. For a full server example, please visit the Arrow `GitHub repo`_. 
+
 .. testcode::
-    dotnet dev-certs https --trust
-    dotnet dev-certs https -ep "<CertificateName>.pfx" -p <CertificatePassword>
+    import pyarrow.flight
+    
+    class FlightServer(pyarrow.flight.FlightServerBase):
+        def __init__(self, host="localhost", location=None,
+                     tls_certificates=None, verify_client=False,
+                     root_certificates=None, auth_handler=None):
+            super(FlightServer, self).__init__(
+                location, auth_handler, tls_certificates, verify_client,
+                root_certificates)
+            self.flights = {}
+            self.host = host
+            self.tls_certificates = tls_certificates
+    
+        @classmethod
+        def descriptor_to_key(self, descriptor):
+            return (descriptor.descriptor_type.value, descriptor.command,
+                    tuple(descriptor.path or tuple()))
+    
+        def do_put(self, context, descriptor, reader, writer):
+            key = FlightServer.descriptor_to_key(descriptor)
+            print(key)
+            self.flights[key] = reader.read_all()
+            print(self.flights[key])
+    
+    def main():
+    
+        tls_certificates = []
+    
+        scheme = "grpc+tls"
+        host = "localhost"
+        port = "5005"
+        
+        with open(<Path to .crt File>, "rb") as cert_file:
+            tls_cert_chain = cert_file.read()
+        with open(<Path to .key File>, "rb") as key_file:
+            tls_private_key = key_file.read()
+    
+        tls_certificates.append((tls_cert_chain, tls_private_key))
+        
+        location = "{}://{}:{}".format(scheme, host, port)
+    
+        server = FlightServer(host, location,
+                              tls_certificates=tls_certificates)
+        print("Serving on", location)
+        server.serve()
+    
+    
+    if __name__ == '__main__':
+        main()
 
-You will receive a prompt asking you confirm that you would like to trust this certificate, select yes. 
-You now have a self-signed certificate that your local environment trusts.
+Running the server, you should see ``Serving on grpc+tls://localhost:5005``.
 
-**Step 2 - Converting the .pfx file into public and private keys** 
+**Step 3 - Securely Connecting to the Server**
+Suppose we want to connect to the client and push some data to it. The following code securely sends information to the server using TLS encryption.
+The example below shows how one could  
 
-Since `dotnet dev-certs` does not let you export Public and Private keys directly we need to convert the .pfx file. 
-There are several way to achieve this and this tutorial uses OpenSSL (using Windows Subsystem for Linux) 
-to perform the conversion as per this `IBM article`_.
-
-**Step 3 - Running a server with tls enabled**
-
-We're going to use the pyarrow server example available on the `GitHub repo`_. To run the server with TLS enabled, the python script should be 
-called with the path to the public and private keys.
-.. testcode::
-    python server.py --tls CERTFILE <PathToPublicCertificate> --tls KEYFILE <PathToPrivateKey>
-
-Assuming the path was valid, you should see ``Serving on grpc+tls://localhost:5005``. The server is now being served on a port set in the code (or by you).
-
-**Step 4 - Securely Connecting a client to the Server**
-Suppose we want to connect to the client and push some data to it. The following code securely sends information to the server using TLS encryption. 
-There is also the option to use mutual TLS encryption using both the public and private key, but we will assume the client will likely only have 
-the public certificate.
 .. testcode::
     import pyarrow
     import pyarrow.flight
@@ -659,48 +699,37 @@ the public certificate.
         writer.write_table(objectToSend)
         writer.close()
     
-    def getClient():
-        
-        return pyarrow.flight.FlightClient("grpc+tcp://localhost:5005")
-    
     def _add_common_arguments(parser):
         parser.add_argument('--tls', action='store_true',
                             help='Enable transport-level security')
         parser.add_argument('--tls-roots', default=None,
                             help='Path to trusted TLS certificate(s)')
-        parser.add_argument("--mtls", nargs=2, default=None,
-                            metavar=('CERTFILE', 'KEYFILE'),
-                            help="Enable transport-level security")
-                            
+                    
     def main():
         parser = argparse.ArgumentParser()
         args = parser.parse_args()
         connection_args = {}
         scheme = "grpc+tls"
         
-        if args.tls:
-            
-            if args.tls_roots:
-                with open(args.tls_roots, "rb") as root_certs:
-                    connection_args["tls_root_certs"] = root_certs.read()
-        if args.mtls:
-            with open(args.mtls[0], "rb") as cert_file:
-                tls_cert_chain = cert_file.read()
-            with open(args.mtls[1], "rb") as key_file:
-                tls_private_key = key_file.read()
-            connection_args["cert_chain"] = tls_cert_chain
-            connection_args["private_key"] = tls_private_key
+        
+        with open(args.tls_roots, "rb") as root_certs:
+            connection_args["tls_root_certs"] = root_certs.read()
         
         client = pyarrow.flight.FlightClient(f"{scheme}://{host}:{port}", **connection_args)
         data =  { 'Animal': ['Dog', 'Cat', 'Mouse'], 'Size': ['Big', 'Small', 'Tiny'] }    
         df = pd.DataFrame(data, columns=['Animal', 'Size'])
-        pushToServer("AnimalData", df, client)
+        push_to_server("AnimalData", df, client)
         
     if __name__ == '__main__':
         try:
             main()
         except Exception as e:
             print(e) 
+            
+Running the client script, you should see the server printing out information about the data it just received.
 
 .. _IBM article: https://www.ibm.com/docs/en/arl/9.7?topic=certification-extracting-certificate-keys-from-pfx-file
 .. _GitHub repo: https://github.com/apache/arrow/blob/master/python/examples/flight/server.py
+.. _Windows: https://docs.microsoft.com/en-us/dotnet/core/additional-tools/self-signed-certificates-guide
+.. _Arrow testing data repository: https://github.com/apache/arrow-testing/tree/master/data/flight
+.. _openssl: https://www.ibm.com/docs/en/api-connect/2018.x?topic=overview-generating-self-signed-certificate-using-openssl
