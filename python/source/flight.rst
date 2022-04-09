@@ -613,7 +613,7 @@ Following on from the previous scenario where traffic to the server is managed v
 HTTPS (more specifically TLS) communication allows an additional layer of security by encrypting messages
 between the client and server. This is achieved using certificates. During development, the easiest 
 approach is developing with self-signed certificates. At startup, the server loads the public and private 
-key and the client client authenticates itself to the server with a public key.
+key and the client client authenticates itself to the server with the tls root certificate.
 
 .. note:: In production environments it is recommended to make use of a certificate signed by a certificate authority.
 
@@ -625,12 +625,12 @@ Depending on the file generated, you may need to convert it to a .crt and .key f
 One method to achieve this is openssl, please visit this `IBM article`_ for more info. 
 
 
-
 **Step 2 - Running a server with TLS enabled**
 
 The code below is a minimal working example of an Arrow server used to receive data with TLS. For a full server example, please visit the Arrow `GitHub repo`_. 
 
 .. testcode::
+    import argparse
     import pyarrow.flight
     
     class FlightServer(pyarrow.flight.FlightServerBase):
@@ -656,16 +656,18 @@ The code below is a minimal working example of an Arrow server used to receive d
             print(self.flights[key])
     
     def main():
-    
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--tls", nargs=2, default=None, metavar=('CERTFILE', 'KEYFILE'))
+        args = parser.parse_args()                                
         tls_certificates = []
     
         scheme = "grpc+tls"
         host = "localhost"
         port = "5005"
         
-        with open(<Path to .crt File>, "rb") as cert_file:
+        with open(args.tls[0], "rb") as cert_file:
             tls_cert_chain = cert_file.read()
-        with open(<Path to .key File>, "rb") as key_file:
+        with open(args.tls[1], "rb") as key_file:
             tls_private_key = key_file.read()
     
         tls_certificates.append((tls_cert_chain, tls_private_key))
@@ -710,7 +712,6 @@ The example below shows how one could
         args = parser.parse_args()
         connection_args = {}
         scheme = "grpc+tls"
-        
         
         with open(args.tls_roots, "rb") as root_certs:
             connection_args["tls_root_certs"] = root_certs.read()
