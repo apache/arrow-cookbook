@@ -644,8 +644,6 @@ The code below is a minimal working example of an Arrow server used to receive d
                 location, auth_handler, tls_certificates, verify_client,
                 root_certificates)
             self.flights = {}
-            self.host = host
-            self.tls_certificates = tls_certificates
     
         @classmethod
         def descriptor_to_key(self, descriptor):
