@@ -606,14 +606,14 @@ Or if we use the wrong credentials on login, we also get an error:
 
 .. _(HTTP) basic authentication: https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication#basic_authentication_scheme
 
-Authentication with certificates
+Securing connections with TLS
 =================================
 
 Following on from the previous scenario where traffic to the server is managed via a username and password, 
 HTTPS (more specifically TLS) communication allows an additional layer of security by encrypting messages
 between the client and server. This is achieved using certificates. During development, the easiest 
 approach is developing with self-signed certificates. At startup, the server loads the public and private 
-key and the client client authenticates itself to the server with the tls root certificate.
+key and the client authenticates the server with the TLS root certificate.
 
 .. note:: In production environments it is recommended to make use of a certificate signed by a certificate authority.
 
@@ -627,7 +627,7 @@ One method to achieve this is openssl, please visit this `IBM article`_ for more
 
 **Step 2 - Running a server with TLS enabled**
 
-The code below is a minimal working example of an Arrow server used to receive data with TLS. For a full server example, please visit the Arrow `GitHub repo`_. 
+The code below is a minimal working example of an Arrow server used to receive data with TLS.
 
 .. testcode::
     
@@ -691,7 +691,6 @@ Running the server, you should see ``Serving on grpc+tls://localhost:5005``.
 
 **Step 3 - Securely Connecting to the Server**
 Suppose we want to connect to the client and push some data to it. The following code securely sends information to the server using TLS encryption.
-The example below shows how one could  
 
 .. testcode::
     
@@ -700,11 +699,11 @@ The example below shows how one could
     import pyarrow.flight
     import pandas as pd
     
-    # Assumes incoming data object is a Dataframe
+    # Assumes incoming data object is a Pandas Dataframe
     def push_to_server(name, data, client):
-        objectToSend = pyarrow.Table.from_pandas(data)
-        writer, _ = client.do_put(pyarrow.flight.FlightDescriptor.for_path(name), objectToSend.schema)
-        writer.write_table(objectToSend)
+        object_to_send = pyarrow.Table.from_pandas(data)
+        writer, _ = client.do_put(pyarrow.flight.FlightDescriptor.for_path(name), object_to_send.schema)
+        writer.write_table(object_to_send)
         writer.close()
     
     def main():
@@ -717,12 +716,12 @@ The example below shows how one could
         parser.add_argument('--port', default=5005,
                             help='Host port')
         args = parser.parse_args()
-        connection_args = {}
+        kwargs = {}
     
         with open(args.tls_roots, "rb") as root_certs:
-            connection_args["tls_root_certs"] = root_certs.read()
+            kwargs["tls_root_certs"] = root_certs.read()
     
-        client = pyarrow.flight.FlightClient(f"grpc+tls://{args.host}:{args.port}", **connection_args)
+        client = pyarrow.flight.FlightClient(f"grpc+tls://{args.host}:{args.port}", ****kwargs)
         data = {'Animal': ['Dog', 'Cat', 'Mouse'], 'Size': ['Big', 'Small', 'Tiny']}
         df = pd.DataFrame(data, columns=['Animal', 'Size'])
         push_to_server("AnimalData", df, client)
@@ -736,7 +735,6 @@ The example below shows how one could
 Running the client script, you should see the server printing out information about the data it just received.
 
 .. _IBM article: https://www.ibm.com/docs/en/arl/9.7?topic=certification-extracting-certificate-keys-from-pfx-file
-.. _GitHub repo: https://github.com/apache/arrow/blob/master/python/examples/flight/server.py
 .. _Windows: https://docs.microsoft.com/en-us/dotnet/core/additional-tools/self-signed-certificates-guide
 .. _Arrow testing data repository: https://github.com/apache/arrow-testing/tree/master/data/flight
 .. _openssl: https://www.ibm.com/docs/en/api-connect/2018.x?topic=overview-generating-self-signed-certificate-using-openssl
