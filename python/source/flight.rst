@@ -721,7 +721,7 @@ Suppose we want to connect to the client and push some data to it. The following
         with open(args.tls_roots, "rb") as root_certs:
             kwargs["tls_root_certs"] = root_certs.read()
     
-        client = pyarrow.flight.FlightClient(f"grpc+tls://{args.host}:{args.port}", ****kwargs)
+        client = pyarrow.flight.FlightClient(f"grpc+tls://{args.host}:{args.port}", **kwargs)
         data = {'Animal': ['Dog', 'Cat', 'Mouse'], 'Size': ['Big', 'Small', 'Tiny']}
         df = pd.DataFrame(data, columns=['Animal', 'Size'])
         push_to_server("AnimalData", df, client)
