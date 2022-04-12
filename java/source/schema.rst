@@ -58,7 +58,7 @@ Fields are used to denote the particular columns of tabular data.
 
     points: List<intCol: Int(32, true)>
 
-Adding Metadata for Field
+Adding Metadata to Fields
 =========================
 
 In case we need to add metadata to our definition we could use:
