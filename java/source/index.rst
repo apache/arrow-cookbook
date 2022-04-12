@@ -11,11 +11,11 @@ Welcome to java arrow's documentation!
    :caption: Contents:
 
    create
-   io
    schema
-   data
+   io
    flight
    dataset
+   data
 
 Indices and tables
 ==================

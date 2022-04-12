@@ -15,7 +15,7 @@ Compare Vectors for Field Equality
     import org.apache.arrow.vector.compare.TypeEqualsVisitor;
     import org.apache.arrow.memory.RootAllocator;
 
-    RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
+    RootAllocator rootAllocator = new RootAllocator();
     IntVector right = new IntVector("int", rootAllocator);
     right.allocateNew(3);
     right.set(0, 10);
@@ -43,7 +43,7 @@ Compare Vectors Equality
     import org.apache.arrow.vector.compare.VectorEqualsVisitor;
     import org.apache.arrow.memory.RootAllocator;
 
-    RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
+    RootAllocator rootAllocator = new RootAllocator();
     IntVector vector1 = new IntVector("vector1", rootAllocator);
     vector1.allocateNew(1);
     vector1.set(0, 10);
@@ -78,7 +78,7 @@ Comparing two values at the given indices in the vectors:
     import org.apache.arrow.vector.VarCharVector;
     import org.apache.arrow.memory.RootAllocator;
 
-    RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
+    RootAllocator rootAllocator = new RootAllocator();
     VarCharVector vec = new VarCharVector("valueindexcomparator", rootAllocator);
     vec.allocateNew(3);
     vec.setValueCount(3);
@@ -115,7 +115,7 @@ Algorithm: org.apache.arrow.algorithm.search.VectorSearcher#linearSearch - O(n)
     import org.apache.arrow.vector.IntVector;
     import org.apache.arrow.memory.RootAllocator;
 
-    RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
+    RootAllocator rootAllocator = new RootAllocator();
     IntVector linearSearchVector = new IntVector("linearSearchVector", rootAllocator);
     linearSearchVector.allocateNew(10);
     linearSearchVector.setValueCount(10);
@@ -144,7 +144,7 @@ Algorithm: org.apache.arrow.algorithm.search.VectorSearcher#binarySearch - O(log
     import org.apache.arrow.vector.IntVector;
     import org.apache.arrow.memory.RootAllocator;
 
-    RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
+    RootAllocator rootAllocator = new RootAllocator();
     IntVector binarySearchVector = new IntVector("", rootAllocator);
     binarySearchVector.allocateNew(10);
     binarySearchVector.setValueCount(10);
@@ -177,7 +177,7 @@ Algorithm: org.apache.arrow.algorithm.sort.FixedWidthInPlaceVectorSorter - O(nlo
     import org.apache.arrow.vector.IntVector;
     import org.apache.arrow.memory.RootAllocator;
 
-    RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
+    RootAllocator rootAllocator = new RootAllocator();
     IntVector intVectorNotSorted = new IntVector("intvectornotsorted", rootAllocator);
     intVectorNotSorted.allocateNew(3);
     intVectorNotSorted.setValueCount(3);
@@ -210,7 +210,7 @@ FixedWidthOutOfPlaceVectorSorter & VariableWidthOutOfPlaceVectorSor
     import org.apache.arrow.vector.IntVector;
     import org.apache.arrow.memory.RootAllocator;
 
-    RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
+    RootAllocator rootAllocator = new RootAllocator();
     IntVector intVectorNotSorted = new IntVector("intvectornotsorted", rootAllocator);
     intVectorNotSorted.allocateNew(3);
     intVectorNotSorted.setValueCount(3);

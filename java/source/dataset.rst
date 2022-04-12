@@ -25,7 +25,7 @@ We can construct a dataset with an auto-inferred schema.
     import org.apache.arrow.memory.RootAllocator;
     import java.util.stream.StreamSupport;
 
-    try (RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE)) {
+    try (RootAllocator rootAllocator = new RootAllocator()) {
         String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data1.parquet";
         try (DatasetFactory datasetFactory = new FileSystemDatasetFactory(rootAllocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri)) {
             try(Dataset dataset = datasetFactory.finish()){
@@ -56,7 +56,7 @@ Let construct our dataset with predefined schema.
     import java.util.stream.StreamSupport;
 
     String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data1.parquet";
-    try (RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE)) {
+    try (RootAllocator rootAllocator = new RootAllocator()) {
         try (DatasetFactory datasetFactory = new FileSystemDatasetFactory(rootAllocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri)) {
             try(Dataset dataset = datasetFactory.finish(datasetFactory.inspect())){
                 ScanOptions options = new ScanOptions(/*batchSize*/ 100);
@@ -87,7 +87,7 @@ During Dataset Construction
     import org.apache.arrow.vector.types.pojo.Schema;
 
     String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data1.parquet";
-    try(RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE)){
+    try(RootAllocator rootAllocator = new RootAllocator()){
         try(DatasetFactory datasetFactory = new FileSystemDatasetFactory(rootAllocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri)){
             Schema schema = datasetFactory.inspect();
 
@@ -115,7 +115,7 @@ From a Dataset
     import org.apache.arrow.vector.types.pojo.Schema;
 
     String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data1.parquet";
-    try(RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE)){
+    try(RootAllocator rootAllocator = new RootAllocator()){
         try(DatasetFactory datasetFactory = new FileSystemDatasetFactory(rootAllocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri)){
             ScanOptions options = new ScanOptions(/*batchSize*/ 1);
             try(Dataset dataset = datasetFactory.finish()){
@@ -156,7 +156,7 @@ Query Data Content For File
     import java.util.stream.Stream;
 
     String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data1.parquet";
-    try(RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
+    try(RootAllocator rootAllocator = new RootAllocator();
         DatasetFactory datasetFactory = new FileSystemDatasetFactory(rootAllocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
         Dataset dataset = datasetFactory.finish()){
         ScanOptions options = new ScanOptions(/*batchSize*/ 100);
@@ -201,7 +201,7 @@ Consider that we have these files: data1: 3 rows, data2: 3 rows and data3: 250 r
     import java.util.stream.Stream;
 
     String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/";
-    try(RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
+    try(RootAllocator rootAllocator = new RootAllocator();
         DatasetFactory datasetFactory = new FileSystemDatasetFactory(rootAllocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
         Dataset dataset = datasetFactory.finish()){
         ScanOptions options = new ScanOptions(/*batchSize*/ 100);
@@ -248,7 +248,7 @@ In case we need to project only certain columns we could configure ScanOptions w
     import java.util.Optional;
 
     String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data1.parquet";
-    try(RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
+    try(RootAllocator rootAllocator = new RootAllocator();
         DatasetFactory datasetFactory = new FileSystemDatasetFactory(rootAllocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
         Dataset dataset = datasetFactory.finish()){
         String[] projection = new String[] {"name"};

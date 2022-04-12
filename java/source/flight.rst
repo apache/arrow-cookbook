@@ -175,7 +175,7 @@ Flight Client and Server
         }
     }
     Location location = Location.forGrpcInsecure("0.0.0.0", 33333);
-    try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE)){
+    try (RootAllocator allocator = new RootAllocator()){
         // Server
         try(FlightServer flightServer = FlightServer.builder(allocator, location,
                 new CookbookProducer(allocator, location)).build()) {
