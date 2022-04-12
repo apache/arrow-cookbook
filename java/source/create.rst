@@ -6,12 +6,11 @@ Creating Arrow Objects
 
 A vector is the basic unit in the Arrow Java library. Data types
 describe the types of values; ValueVectors are sequences of typed
-values. Vector by definition is intended to be mutable, a Vector
-can be changed it is mutable. Vector represent a one-dimensional
-sequence of homogeneous values.
+values. Vectors represent a one-dimensional sequence of values of
+the same type. They are mutable containers.
 
-Vectors are provided by java arrow for the interface `FieldVector`_
-that extends `ValueVector`_.
+Vectors implement the interface `ValueVector`_. The Arrow libraries provide
+implementations of vectors for various data types.
 
 .. contents::
 

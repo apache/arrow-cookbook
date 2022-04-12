@@ -2,14 +2,14 @@
 Working with Schema
 ===================
 
-Let's start talk about tabular data. Data often comes in the form of two-dimensional
+Let's start talking about tabular data. Data often comes in the form of two-dimensional
 sets of heterogeneous data (such as database tables, CSV files...). Arrow provides
 several abstractions to handle such data conveniently and efficiently.
 
 .. contents::
 
-Creating Field
-==============
+Creating Fields
+===============
 
 Fields are used to denote the particular columns of tabular data.
 
@@ -84,7 +84,8 @@ In case we need to add metadata to our definition we could use:
 Creating the Schema
 ===================
 
-A Schema describe a sequence of columns in tabular data.
+A schema describes a sequence of columns in tabular data, and consists
+of a list of fields.
 
 .. testcode::
 
@@ -113,7 +114,7 @@ A Schema describe a sequence of columns in tabular data.
 
     Schema<name: Utf8, document: Utf8, age: Int(32, true), points: List<intCol: Int(32, true)>>
 
-Adding Metadata for Schema
+Adding Metadata to Schemas
 ==========================
 
 In case we need to add metadata to our definition we could use:
@@ -153,7 +154,7 @@ In case we need to add metadata to our definition we could use:
 Populate Data
 =============
 
-Let's populate a `VectorSchemaRoot` with a small batch of records:
+Let's populate a ``VectorSchemaRoot`` with a small batch of records:
 
 .. testcode::
 
