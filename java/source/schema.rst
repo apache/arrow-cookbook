@@ -58,29 +58,6 @@ Fields are used to denote the particular columns of tabular data.
 
     points: List<intCol: Int(32, true)>
 
-Adding Metadata to Fields
-=========================
-
-In case we need to add metadata to our definition we could use:
-
-.. testcode::
-
-    import org.apache.arrow.vector.types.pojo.ArrowType;
-    import org.apache.arrow.vector.types.pojo.Field;
-    import org.apache.arrow.vector.types.pojo.FieldType;
-
-    Map<String, String> metadata = new HashMap<>();
-    metadata.put("A", "Id card");
-    metadata.put("B", "Passport");
-    metadata.put("C", "Visa");
-    Field document = new Field("document", new FieldType(true, new ArrowType.Utf8(), null, metadata), null);
-
-    System.out.print(document.getMetadata())
-
-.. testoutput::
-
-    {A=Id card, B=Passport, C=Visa}
-
 Creating the Schema
 ===================
 
@@ -114,10 +91,30 @@ of a list of fields.
 
     Schema<name: Utf8, document: Utf8, age: Int(32, true), points: List<intCol: Int(32, true)>>
 
-Adding Metadata to Schemas
-==========================
+Adding Metadata to Fields and Schemas
+=====================================
 
-In case we need to add metadata to our definition we could use:
+In case we need to add metadata to our Field we could use:
+
+.. testcode::
+
+    import org.apache.arrow.vector.types.pojo.ArrowType;
+    import org.apache.arrow.vector.types.pojo.Field;
+    import org.apache.arrow.vector.types.pojo.FieldType;
+
+    Map<String, String> metadata = new HashMap<>();
+    metadata.put("A", "Id card");
+    metadata.put("B", "Passport");
+    metadata.put("C", "Visa");
+    Field document = new Field("document", new FieldType(true, new ArrowType.Utf8(), null, metadata), null);
+
+    System.out.print(document.getMetadata())
+
+.. testoutput::
+
+    {A=Id card, B=Passport, C=Visa}
+
+In case we need to add metadata to our Schema we could use:
 
 .. testcode::
 
@@ -151,8 +148,11 @@ In case we need to add metadata to our definition we could use:
 
     Schema<name: Utf8, document: Utf8, age: Int(32, true), points: List<intCol: Int(32, true)>>(metadata: {Key-1=Value-1})
 
-Populate Data
-=============
+Creating VectorSchemaRoot
+=========================
+
+``VectorSchemaRoot`` is somewhat analogous to tables and record batches in the
+other Arrow implementations in that they all are 2D datasets, but the usage is different.
 
 Let's populate a ``VectorSchemaRoot`` with a small batch of records:
 
