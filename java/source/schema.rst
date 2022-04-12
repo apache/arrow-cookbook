@@ -90,12 +90,12 @@ of a list of fields.
 .. testcode::
 
     import org.apache.arrow.vector.types.pojo.Schema;
-    import static java.util.Arrays.asList;
     import org.apache.arrow.vector.types.pojo.ArrowType;
     import org.apache.arrow.vector.types.pojo.Field;
     import org.apache.arrow.vector.types.pojo.FieldType;
     import java.util.ArrayList;
     import java.util.List;
+    import static java.util.Arrays.asList;
 
     Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
     Field document = new Field("document", new FieldType(true, new ArrowType.Utf8(), null), null);
@@ -122,15 +122,15 @@ In case we need to add metadata to our definition we could use:
 .. testcode::
 
     import org.apache.arrow.vector.types.pojo.Schema;
-    import static java.util.Arrays.asList;
+
     import org.apache.arrow.vector.types.pojo.ArrowType;
     import org.apache.arrow.vector.types.pojo.Field;
     import org.apache.arrow.vector.types.pojo.FieldType;
-
     import java.util.ArrayList;
     import java.util.HashMap;
     import java.util.List;
     import java.util.Map;
+    import static java.util.Arrays.asList;
 
     Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
     Field document = new Field("document", new FieldType(true, new ArrowType.Utf8(), null), null);
@@ -184,22 +184,22 @@ Let's populate a ``VectorSchemaRoot`` with a small batch of records:
     Schema schema = new Schema(asList(name, age, points));
     try(
         BufferAllocator allocator = new RootAllocator();
-        VectorSchemaRoot root = VectorSchemaRoot.create(schema, allocator);
-        VarCharVector nameVector = (VarCharVector) root.getVector("name");
-        IntVector ageVector = (IntVector) root.getVector("age");
-        ListVector listVector = (ListVector) root.getVector("points");
-        UnionListWriter listWriter = listVector.getWriter()
+        VectorSchemaRoot root = VectorSchemaRoot.create(schema, allocator)
     ){
+        VarCharVector nameVector = (VarCharVector) root.getVector("name");
         nameVector.allocateNew(3);
         nameVector.set(0, "David".getBytes());
         nameVector.set(1, "Gladis".getBytes());
         nameVector.set(2, "Juan".getBytes());
         nameVector.setValueCount(3);
+        IntVector ageVector = (IntVector) root.getVector("age");
         ageVector.allocateNew(3);
         ageVector.set(0, 10);
         ageVector.set(1, 20);
         ageVector.set(2, 30);
         ageVector.setValueCount(3);
+        ListVector listVector = (ListVector) root.getVector("points");
+        UnionListWriter listWriter = listVector.getWriter();
         int[] data = new int[] { 4, 8, 12, 10, 20, 30, 5, 10, 15 };
         int tmp_index = 0;
         for(int i = 0; i < 3; i++) {

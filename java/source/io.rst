@@ -38,21 +38,19 @@ Write - Out to File
     import java.io.FileOutputStream;
     import java.io.IOException;
 
-    try (
-        BufferAllocator allocator = new RootAllocator()
-    ) {
+    try (BufferAllocator allocator = new RootAllocator()) {
         Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
         Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
         Schema schemaPerson = new Schema(asList(name, age));
         try(
-            VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, allocator);
-            VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
-            IntVector ageVector = (IntVector) vectorSchemaRoot.getVector("age")
+            VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, allocator)
         ){
+            VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
             nameVector.allocateNew(3);
             nameVector.set(0, "David".getBytes());
             nameVector.set(1, "Gladis".getBytes());
             nameVector.set(2, "Juan".getBytes());
+            IntVector ageVector = (IntVector) vectorSchemaRoot.getVector("age");
             ageVector.allocateNew(3);
             ageVector.set(0, 10);
             ageVector.set(1, 20);
@@ -97,21 +95,19 @@ Write - Out to Buffer
     import java.io.IOException;
     import java.nio.channels.Channels;
 
-    try (
-        BufferAllocator allocator = new RootAllocator()
-    ) {
+    try (BufferAllocator allocator = new RootAllocator()) {
         Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
         Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
         Schema schemaPerson = new Schema(asList(name, age));
         try(
-            VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, allocator);
-            VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
-            IntVector ageVector = (IntVector) vectorSchemaRoot.getVector("age")
+            VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, allocator)
         ){
+            VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
             nameVector.allocateNew(3);
             nameVector.set(0, "David".getBytes());
             nameVector.set(1, "Gladis".getBytes());
             nameVector.set(2, "Juan".getBytes());
+            IntVector ageVector = (IntVector) vectorSchemaRoot.getVector("age");
             ageVector.allocateNew(3);
             ageVector.set(0, 10);
             ageVector.set(1, 20);
@@ -159,21 +155,19 @@ Write - Out to File
     import java.io.FileOutputStream;
     import java.io.IOException;
 
-    try (
-        BufferAllocator rootAllocator = new RootAllocator()
-    ) {
+    try (BufferAllocator rootAllocator = new RootAllocator()) {
         Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
         Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
         Schema schemaPerson = new Schema(asList(name, age));
         try(
-            VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator);
-            VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
-            IntVector ageVector = (IntVector) vectorSchemaRoot.getVector("age")
+            VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator)
         ){
+            VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
             nameVector.allocateNew(3);
             nameVector.set(0, "David".getBytes());
             nameVector.set(1, "Gladis".getBytes());
             nameVector.set(2, "Juan".getBytes());
+            IntVector ageVector = (IntVector) vectorSchemaRoot.getVector("age");
             ageVector.allocateNew(3);
             ageVector.set(0, 10);
             ageVector.set(1, 20);
@@ -217,21 +211,19 @@ Write - Out to Buffer
     import java.io.IOException;
     import java.nio.channels.Channels;
 
-    try (
-        BufferAllocator rootAllocator = new RootAllocator()
-    ) {
+    try (BufferAllocator rootAllocator = new RootAllocator()) {
         Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
         Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
         Schema schemaPerson = new Schema(asList(name, age));
         try(
-            VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator);
-            VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
-            IntVector ageVector = (IntVector) vectorSchemaRoot.getVector("age");
+            VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator)
         ){
+            VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
             nameVector.allocateNew(3);
             nameVector.set(0, "David".getBytes());
             nameVector.set(1, "Gladis".getBytes());
             nameVector.set(2, "Juan".getBytes());
+            IntVector ageVector = (IntVector) vectorSchemaRoot.getVector("age");
             ageVector.allocateNew(3);
             ageVector.set(0, 10);
             ageVector.set(1, 20);
@@ -279,23 +271,20 @@ We are providing a path with auto generated arrow files for testing purposes, ch
     import java.io.FileInputStream;
     import java.io.IOException;
 
+    File file = new File("./thirdpartydeps/arrowfiles/random_access.arrow");
     try(
-        BufferAllocator rootAllocator = new RootAllocator()
+        BufferAllocator rootAllocator = new RootAllocator();
+        FileInputStream fileInputStream = new FileInputStream(file);
+        ArrowFileReader reader = new ArrowFileReader(fileInputStream.getChannel(), rootAllocator)
     ){
-        File file = new File("./thirdpartydeps/arrowfiles/random_access.arrow");
-        try (
-            FileInputStream fileInputStream = new FileInputStream(file);
-            ArrowFileReader reader = new ArrowFileReader(fileInputStream.getChannel(), rootAllocator)
-        ){
-            System.out.println("Record batches in file: " + reader.getRecordBlocks().size());
-            for (ArrowBlock arrowBlock : reader.getRecordBlocks()) {
-                reader.loadRecordBatch(arrowBlock);
-                VectorSchemaRoot vectorSchemaRootRecover = reader.getVectorSchemaRoot();
-                System.out.print(vectorSchemaRootRecover.contentToTSVString());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+        System.out.println("Record batches in file: " + reader.getRecordBlocks().size());
+        for (ArrowBlock arrowBlock : reader.getRecordBlocks()) {
+            reader.loadRecordBatch(arrowBlock);
+            VectorSchemaRoot vectorSchemaRootRecover = reader.getVectorSchemaRoot();
+            System.out.print(vectorSchemaRootRecover.contentToTSVString());
         }
+    } catch (IOException e) {
+        e.printStackTrace();
     }
 
 .. testoutput::
@@ -331,23 +320,20 @@ Read - From Buffer
     import java.nio.file.Path;
     import java.nio.file.Paths;
 
+    Path path = Paths.get("./thirdpartydeps/arrowfiles/random_access.arrow");
     try(
-        BufferAllocator rootAllocator = new RootAllocator()
-    ) {
-        Path path = Paths.get("./thirdpartydeps/arrowfiles/random_access.arrow");
-        try (
-            ArrowFileReader reader = new ArrowFileReader(new SeekableReadChannel(new ByteArrayReadableSeekableByteChannel(
+        BufferAllocator rootAllocator = new RootAllocator();
+        ArrowFileReader reader = new ArrowFileReader(new SeekableReadChannel(new ByteArrayReadableSeekableByteChannel(
                                             Files.readAllBytes(path))), rootAllocator)
-        ){
-            System.out.println("Record batches in file: " + reader.getRecordBlocks().size());
-            for (ArrowBlock arrowBlock : reader.getRecordBlocks()) {
-                reader.loadRecordBatch(arrowBlock);
-                VectorSchemaRoot vectorSchemaRootRecover = reader.getVectorSchemaRoot();
-                System.out.print(vectorSchemaRootRecover.contentToTSVString());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+    ) {
+        System.out.println("Record batches in file: " + reader.getRecordBlocks().size());
+        for (ArrowBlock arrowBlock : reader.getRecordBlocks()) {
+            reader.loadRecordBatch(arrowBlock);
+            VectorSchemaRoot vectorSchemaRootRecover = reader.getVectorSchemaRoot();
+            System.out.print(vectorSchemaRootRecover.contentToTSVString());
         }
+    } catch (IOException e) {
+        e.printStackTrace();
     }
 
 .. testoutput::
@@ -382,21 +368,18 @@ Read - From File
     import java.io.FileInputStream;
     import java.io.IOException;
 
+    File file = new File("./thirdpartydeps/arrowfiles/streaming.arrow");
     try(
-        BufferAllocator rootAllocator = new RootAllocator()
+        BufferAllocator rootAllocator = new RootAllocator();
+        FileInputStream fileInputStreamForStream = new FileInputStream(file);
+        ArrowStreamReader reader = new ArrowStreamReader(fileInputStreamForStream, rootAllocator)
     ) {
-        File file = new File("./thirdpartydeps/arrowfiles/streaming.arrow");
-        try (
-            FileInputStream fileInputStreamForStream = new FileInputStream(file);
-            ArrowStreamReader reader = new ArrowStreamReader(fileInputStreamForStream, rootAllocator)
-        ) {
-            while (reader.loadNextBatch()) {
-                VectorSchemaRoot vectorSchemaRootRecover = reader.getVectorSchemaRoot();
-                System.out.print(vectorSchemaRootRecover.contentToTSVString());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+        while (reader.loadNextBatch()) {
+            VectorSchemaRoot vectorSchemaRootRecover = reader.getVectorSchemaRoot();
+            System.out.print(vectorSchemaRootRecover.contentToTSVString());
         }
+    } catch (IOException e) {
+        e.printStackTrace();
     }
 
 .. testoutput::
@@ -428,19 +411,17 @@ Read - From Buffer
     import java.nio.file.Path;
     import java.nio.file.Paths;
 
+    Path path = Paths.get("./thirdpartydeps/arrowfiles/streaming.arrow");
     try(
-        BufferAllocator rootAllocator = new RootAllocator()
+        BufferAllocator rootAllocator = new RootAllocator();
+        ArrowStreamReader reader = new ArrowStreamReader(new ByteArrayInputStream(
+                                        Files.readAllBytes(path)), rootAllocator)
     ) {
-        Path path = Paths.get("./thirdpartydeps/arrowfiles/streaming.arrow");
-        try (
-            ArrowStreamReader reader = new ArrowStreamReader(new ByteArrayInputStream(Files.readAllBytes(path)), rootAllocator)
-        ){
-            while(reader.loadNextBatch()){
-                System.out.print(reader.getVectorSchemaRoot().contentToTSVString());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+        while(reader.loadNextBatch()){
+            System.out.print(reader.getVectorSchemaRoot().contentToTSVString());
         }
+    } catch (IOException e) {
+        e.printStackTrace();
     }
 
 .. testoutput::
