@@ -50,6 +50,7 @@ Flight Client and Server
     import org.apache.arrow.flight.PutResult;
     import org.apache.arrow.flight.Result;
     import org.apache.arrow.flight.Ticket;
+    import org.apache.arrow.memory.BufferAllocator;
     import org.apache.arrow.memory.RootAllocator;
     import org.apache.arrow.vector.VarCharVector;
     import org.apache.arrow.vector.VectorLoader;
@@ -90,10 +91,10 @@ Flight Client and Server
         }
     }
     class CookbookProducer extends NoOpFlightProducer {
-        private final RootAllocator allocator;
+        private final BufferAllocator allocator;
         private final Location location;
         private final ConcurrentHashMap<FlightDescriptor, Dataset> datasets;
-        public CookbookProducer(RootAllocator allocator, Location location) {
+        public CookbookProducer(BufferAllocator allocator, Location location) {
             this.allocator = allocator;
             this.location = location;
             this.datasets = new ConcurrentHashMap<>();
@@ -175,7 +176,7 @@ Flight Client and Server
         }
     }
     Location location = Location.forGrpcInsecure("0.0.0.0", 33333);
-    try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE)){
+    try (BufferAllocator allocator = new RootAllocator()){
         // Server
         try(FlightServer flightServer = FlightServer.builder(allocator, location,
                 new CookbookProducer(allocator, location)).build()) {

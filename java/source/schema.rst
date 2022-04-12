@@ -2,16 +2,16 @@
 Working with Schema
 ===================
 
-Common definition of table has an schema. Java arrow is columnar oriented and it also has an schema representation.
-Consider that each name on the schema maps to a columns for a predefined data type
-
+Let's start talking about tabular data. Data often comes in the form of two-dimensional
+sets of heterogeneous data (such as database tables, CSV files...). Arrow provides
+several abstractions to handle such data conveniently and efficiently.
 
 .. contents::
 
-Define Data Type
-================
+Creating Fields
+===============
 
-Definition of columnar fields for string (name), integer (age) and array (points):
+Fields are used to denote the particular columns of tabular data.
 
 .. testcode::
 
@@ -58,10 +58,43 @@ Definition of columnar fields for string (name), integer (age) and array (points
 
     points: List<intCol: Int(32, true)>
 
-Define Metadata for Field
-=========================
+Creating the Schema
+===================
 
-In case we need to add metadata to our definition we could use:
+A schema describes a sequence of columns in tabular data, and consists
+of a list of fields.
+
+.. testcode::
+
+    import org.apache.arrow.vector.types.pojo.Schema;
+    import org.apache.arrow.vector.types.pojo.ArrowType;
+    import org.apache.arrow.vector.types.pojo.Field;
+    import org.apache.arrow.vector.types.pojo.FieldType;
+    import java.util.ArrayList;
+    import java.util.List;
+    import static java.util.Arrays.asList;
+
+    Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
+    Field document = new Field("document", new FieldType(true, new ArrowType.Utf8(), null), null);
+    Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
+    FieldType intType = new FieldType(true, new ArrowType.Int(32, true), /*dictionary=*/null);
+    FieldType listType = new FieldType(true, new ArrowType.List(), /*dictionary=*/null);
+    Field childField = new Field("intCol", intType, null);
+    List<Field> childFields = new ArrayList<>();
+    childFields.add(childField);
+    Field points = new Field("points", listType, childFields);
+    Schema schemaPerson = new Schema(asList(name, document, age, points));
+
+    System.out.print(schemaPerson);
+
+.. testoutput::
+
+    Schema<name: Utf8, document: Utf8, age: Int(32, true), points: List<intCol: Int(32, true)>>
+
+Adding Metadata to Fields and Schemas
+=====================================
+
+In case we need to add metadata to our Field we could use:
 
 .. testcode::
 
@@ -69,7 +102,6 @@ In case we need to add metadata to our definition we could use:
     import org.apache.arrow.vector.types.pojo.Field;
     import org.apache.arrow.vector.types.pojo.FieldType;
 
-    // create a column data type + metadata
     Map<String, String> metadata = new HashMap<>();
     metadata.put("A", "Id card");
     metadata.put("B", "Passport");
@@ -82,25 +114,23 @@ In case we need to add metadata to our definition we could use:
 
     {A=Id card, B=Passport, C=Visa}
 
-Create the Schema
-=================
-
-A schema is a list of Fields, where each Field is defined by name and type.
+In case we need to add metadata to our Schema we could use:
 
 .. testcode::
 
     import org.apache.arrow.vector.types.pojo.Schema;
-    import static java.util.Arrays.asList;
+
     import org.apache.arrow.vector.types.pojo.ArrowType;
     import org.apache.arrow.vector.types.pojo.Field;
     import org.apache.arrow.vector.types.pojo.FieldType;
+    import java.util.ArrayList;
+    import java.util.HashMap;
+    import java.util.List;
+    import java.util.Map;
+    import static java.util.Arrays.asList;
 
     Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
-    Map<String, String> metadata = new HashMap<>();
-    metadata.put("A", "Id card");
-    metadata.put("B", "Passport");
-    metadata.put("C", "Visa");
-    Field document = new Field("document", new FieldType(true, new ArrowType.Utf8(), null, metadata), null);
+    Field document = new Field("document", new FieldType(true, new ArrowType.Utf8(), null), null);
     Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
     FieldType intType = new FieldType(true, new ArrowType.Int(32, true), /*dictionary=*/null);
     FieldType listType = new FieldType(true, new ArrowType.List(), /*dictionary=*/null);
@@ -108,47 +138,42 @@ A schema is a list of Fields, where each Field is defined by name and type.
     List<Field> childFields = new ArrayList<>();
     childFields.add(childField);
     Field points = new Field("points", listType, childFields);
+    Map<String, String> metadataSchema = new HashMap<>();
+    metadataSchema.put("Key-1", "Value-1");
+    Schema schemaPerson = new Schema(asList(name, document, age, points), metadataSchema);
 
-    // create a definition
-    Schema schemaPerson = new Schema(asList(name, document, age, points));
-
-    System.out.print(schemaPerson)
+    System.out.print(schemaPerson);
 
 .. testoutput::
 
-    Schema<name: Utf8, document: Utf8, age: Int(32, true), points: List<intCol: Int(32, true)>>
+    Schema<name: Utf8, document: Utf8, age: Int(32, true), points: List<intCol: Int(32, true)>>(metadata: {Key-1=Value-1})
 
-Populate Data
-=============
+Creating VectorSchemaRoot
+=========================
+
+``VectorSchemaRoot`` is somewhat analogous to tables and record batches in the
+other Arrow implementations in that they all are 2D datasets, but the usage is different.
+
+Let's populate a ``VectorSchemaRoot`` with a small batch of records:
 
 .. testcode::
 
+    import org.apache.arrow.memory.BufferAllocator;
     import org.apache.arrow.memory.RootAllocator;
-    import org.apache.arrow.vector.BitVectorHelper;
-    import org.apache.arrow.vector.IntVector;
     import org.apache.arrow.vector.VarCharVector;
-    import org.apache.arrow.vector.complex.BaseRepeatedValueVector;
-    import org.apache.arrow.vector.complex.ListVector;
-    import org.apache.arrow.vector.types.Types.MinorType;
     import org.apache.arrow.vector.VectorSchemaRoot;
+    import org.apache.arrow.vector.complex.ListVector;
+    import org.apache.arrow.vector.IntVector;
+    import org.apache.arrow.vector.complex.impl.UnionListWriter;
     import org.apache.arrow.vector.types.pojo.Schema;
     import org.apache.arrow.vector.types.pojo.ArrowType;
     import org.apache.arrow.vector.types.pojo.Field;
     import org.apache.arrow.vector.types.pojo.FieldType;
-
     import java.util.ArrayList;
-    import java.util.HashMap;
     import java.util.List;
-    import java.util.Map;
-
     import static java.util.Arrays.asList;
 
     Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
-    Map<String, String> metadata = new HashMap<>();
-    metadata.put("A", "Id card");
-    metadata.put("B", "Passport");
-    metadata.put("C", "Visa");
-    Field document = new Field("document", new FieldType(true, new ArrowType.Utf8(), null, metadata), null);
     Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
     FieldType intType = new FieldType(true, new ArrowType.Int(32, true), null);
     FieldType listType = new FieldType(true, new ArrowType.List(), null);
@@ -156,60 +181,48 @@ Populate Data
     List<Field> childFields = new ArrayList<>();
     childFields.add(childField);
     Field points = new Field("points", listType, childFields);
+    Schema schema = new Schema(asList(name, age, points));
+    try(
+        BufferAllocator allocator = new RootAllocator();
+        VectorSchemaRoot root = VectorSchemaRoot.create(schema, allocator)
+    ){
+        VarCharVector nameVector = (VarCharVector) root.getVector("name");
+        nameVector.allocateNew(3);
+        nameVector.set(0, "David".getBytes());
+        nameVector.set(1, "Gladis".getBytes());
+        nameVector.set(2, "Juan".getBytes());
+        nameVector.setValueCount(3);
+        IntVector ageVector = (IntVector) root.getVector("age");
+        ageVector.allocateNew(3);
+        ageVector.set(0, 10);
+        ageVector.set(1, 20);
+        ageVector.set(2, 30);
+        ageVector.setValueCount(3);
+        ListVector listVector = (ListVector) root.getVector("points");
+        UnionListWriter listWriter = listVector.getWriter();
+        int[] data = new int[] { 4, 8, 12, 10, 20, 30, 5, 10, 15 };
+        int tmp_index = 0;
+        for(int i = 0; i < 3; i++) {
+            listWriter.setPosition(i);
+            listWriter.startList();
+            for(int j = 0; j < 3; j++) {
+                listWriter.writeInt(data[tmp_index]);
+                tmp_index = tmp_index + 1;
+            }
+            listWriter.setValueCount(2);
+            listWriter.endList();
+        }
+        listVector.setValueCount(3);
+        root.setRowCount(3);
 
-    RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
-    Schema schema = new Schema(asList(name, document, age, points));
-    VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schema, rootAllocator);
-
-    VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
-    nameVector.allocateNew(3);
-    nameVector.set(0, "David".getBytes());
-    nameVector.set(1, "Gladis".getBytes());
-    nameVector.set(2, "Juan".getBytes());
-    nameVector.setValueCount(3);
-    VarCharVector documentVector = (VarCharVector) vectorSchemaRoot.getVector("name");
-    documentVector.allocateNew(3);
-    documentVector.set(0, "A".getBytes());
-    documentVector.set(1, "B".getBytes());
-    documentVector.set(2, "C".getBytes());
-    documentVector.setValueCount(3);
-    IntVector ageVector = (IntVector) vectorSchemaRoot.getVector("age");
-    ageVector.allocateNew(3);
-    ageVector.set(0, 10);
-    ageVector.set(1, 20);
-    ageVector.set(2, 30);
-    ageVector.setValueCount(3);
-    ListVector listVector = (ListVector) vectorSchemaRoot.getVector("points");
-    listVector.allocateNew();
-    MinorType type = MinorType.INT;
-    listVector.addOrGetVector(FieldType.nullable(type.getType()));
-    IntVector dataVector = (IntVector) listVector.getDataVector();
-    dataVector.allocateNew();
-    listVector.getOffsetBuffer().setInt(0, 0);
-    BitVectorHelper.setBit(listVector.getValidityBuffer(), 0);
-    dataVector.set(0, 1);
-    dataVector.set(1, 2);
-    dataVector.set(2, 3);
-    listVector.getOffsetBuffer().setInt(1 * BaseRepeatedValueVector.OFFSET_WIDTH, 3);
-    BitVectorHelper.setBit(listVector.getValidityBuffer(), 1);
-    dataVector.set(3, 9);
-    dataVector.set(4, 8);
-    listVector.getOffsetBuffer().setInt(2 * BaseRepeatedValueVector.OFFSET_WIDTH, 5);
-    BitVectorHelper.setBit(listVector.getValidityBuffer(), 2);
-    dataVector.set(5, 10);
-    dataVector.set(6, 20);
-    dataVector.set(7, 30);
-    listVector.getOffsetBuffer().setInt(3 * BaseRepeatedValueVector.OFFSET_WIDTH, 8);
-    listVector.setLastSet(2);
-    listVector.setValueCount(3);
-
-    vectorSchemaRoot.setRowCount(3);
-
-    System.out.print(vectorSchemaRoot.contentToTSVString());
+        System.out.print(root.contentToTSVString());
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
 
 .. testoutput::
 
-    name    document    age    points
-    A    null    10    [1,2,3]
-    B    null    20    [9,8]
-    C    null    30    [10,20,30]
+    name    age    points
+    David    10    [4,8,12]
+    Gladis    20    [10,20,30]
+    Juan    30    [5,10,15]

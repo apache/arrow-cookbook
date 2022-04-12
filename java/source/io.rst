@@ -23,6 +23,7 @@ Write - Out to File
 
 .. testcode::
 
+    import org.apache.arrow.memory.BufferAllocator;
     import org.apache.arrow.memory.RootAllocator;
     import org.apache.arrow.vector.VarCharVector;
     import org.apache.arrow.vector.IntVector;
@@ -33,16 +34,17 @@ Write - Out to File
     import org.apache.arrow.vector.VectorSchemaRoot;
     import static java.util.Arrays.asList;
     import org.apache.arrow.vector.ipc.ArrowFileWriter;
-
     import java.io.File;
     import java.io.FileOutputStream;
     import java.io.IOException;
 
-    try (RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE)) {
+    try (BufferAllocator allocator = new RootAllocator()) {
         Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
         Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
         Schema schemaPerson = new Schema(asList(name, age));
-        try(VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator)){
+        try(
+            VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, allocator)
+        ){
             VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
             nameVector.allocateNew(3);
             nameVector.set(0, "David".getBytes());
@@ -55,8 +57,9 @@ Write - Out to File
             ageVector.set(2, 30);
             vectorSchemaRoot.setRowCount(3);
             File file = new File("randon_access_to_file.arrow");
-            try (FileOutputStream fileOutputStream = new FileOutputStream(file);
-                 ArrowFileWriter writer = new ArrowFileWriter(vectorSchemaRoot, null, fileOutputStream.getChannel())
+            try (
+                FileOutputStream fileOutputStream = new FileOutputStream(file);
+                ArrowFileWriter writer = new ArrowFileWriter(vectorSchemaRoot, null, fileOutputStream.getChannel())
             ) {
                 writer.start();
                 writer.writeBatch();
@@ -77,6 +80,7 @@ Write - Out to Buffer
 
 .. testcode::
 
+    import org.apache.arrow.memory.BufferAllocator;
     import org.apache.arrow.memory.RootAllocator;
     import org.apache.arrow.vector.VarCharVector;
     import org.apache.arrow.vector.IntVector;
@@ -87,16 +91,17 @@ Write - Out to Buffer
     import org.apache.arrow.vector.VectorSchemaRoot;
     import static java.util.Arrays.asList;
     import org.apache.arrow.vector.ipc.ArrowFileWriter;
-
     import java.io.ByteArrayOutputStream;
     import java.io.IOException;
     import java.nio.channels.Channels;
 
-    try (RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE)) {
+    try (BufferAllocator allocator = new RootAllocator()) {
         Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
         Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
         Schema schemaPerson = new Schema(asList(name, age));
-        try(VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator)){
+        try(
+            VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, allocator)
+        ){
             VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
             nameVector.allocateNew(3);
             nameVector.set(0, "David".getBytes());
@@ -108,12 +113,15 @@ Write - Out to Buffer
             ageVector.set(1, 20);
             ageVector.set(2, 30);
             vectorSchemaRoot.setRowCount(3);
-            try (ByteArrayOutputStream out = new ByteArrayOutputStream();
-                 ArrowFileWriter writer = new ArrowFileWriter(vectorSchemaRoot, null, Channels.newChannel(out)))
-            {
+            try (
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                 ArrowFileWriter writer = new ArrowFileWriter(vectorSchemaRoot, null, Channels.newChannel(out))
+            ) {
                 writer.start();
                 writer.writeBatch();
-                System.out.println("Record batches written: " + writer.getRecordBlocks().size() + ". Number of rows written: " + vectorSchemaRoot.getRowCount());
+
+                System.out.println("Record batches written: " + writer.getRecordBlocks().size() +
+                        ". Number of rows written: " + vectorSchemaRoot.getRowCount());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -132,26 +140,28 @@ Write - Out to File
 
 .. testcode::
 
+    import org.apache.arrow.memory.BufferAllocator;
     import org.apache.arrow.memory.RootAllocator;
     import org.apache.arrow.vector.VarCharVector;
     import org.apache.arrow.vector.IntVector;
+    import org.apache.arrow.vector.ipc.ArrowStreamWriter;
     import org.apache.arrow.vector.types.pojo.Field;
     import org.apache.arrow.vector.types.pojo.FieldType;
     import org.apache.arrow.vector.types.pojo.ArrowType;
     import org.apache.arrow.vector.types.pojo.Schema;
     import org.apache.arrow.vector.VectorSchemaRoot;
     import static java.util.Arrays.asList;
-    import org.apache.arrow.vector.ipc.ArrowStreamWriter;
     import java.io.File;
     import java.io.FileOutputStream;
     import java.io.IOException;
 
-    try (RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE)) {
-        // Create and populate data:
+    try (BufferAllocator rootAllocator = new RootAllocator()) {
         Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
         Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
         Schema schemaPerson = new Schema(asList(name, age));
-        try(VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator)){
+        try(
+            VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator)
+        ){
             VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
             nameVector.allocateNew(3);
             nameVector.set(0, "David".getBytes());
@@ -164,8 +174,9 @@ Write - Out to File
             ageVector.set(2, 30);
             vectorSchemaRoot.setRowCount(3);
             File file = new File("streaming_to_file.arrow");
-            try (FileOutputStream fileOutputStream = new FileOutputStream(file);
-                 ArrowStreamWriter writer = new ArrowStreamWriter(vectorSchemaRoot, null, fileOutputStream.getChannel())
+            try (
+                FileOutputStream fileOutputStream = new FileOutputStream(file);
+                ArrowStreamWriter writer = new ArrowStreamWriter(vectorSchemaRoot, null, fileOutputStream.getChannel())
             ){
                 writer.start();
                 writer.writeBatch();
@@ -185,6 +196,7 @@ Write - Out to Buffer
 
 .. testcode::
 
+    import org.apache.arrow.memory.BufferAllocator;
     import org.apache.arrow.memory.RootAllocator;
     import org.apache.arrow.vector.VarCharVector;
     import org.apache.arrow.vector.IntVector;
@@ -195,17 +207,17 @@ Write - Out to Buffer
     import org.apache.arrow.vector.types.pojo.Schema;
     import org.apache.arrow.vector.VectorSchemaRoot;
     import static java.util.Arrays.asList;
-
     import java.io.ByteArrayOutputStream;
     import java.io.IOException;
     import java.nio.channels.Channels;
 
-    try (RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE)) {
-        // Create and populate data:
+    try (BufferAllocator rootAllocator = new RootAllocator()) {
         Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
         Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
         Schema schemaPerson = new Schema(asList(name, age));
-        try(VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator)){
+        try(
+            VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.create(schemaPerson, rootAllocator)
+        ){
             VarCharVector nameVector = (VarCharVector) vectorSchemaRoot.getVector("name");
             nameVector.allocateNew(3);
             nameVector.set(0, "David".getBytes());
@@ -217,8 +229,9 @@ Write - Out to Buffer
             ageVector.set(1, 20);
             ageVector.set(2, 30);
             vectorSchemaRoot.setRowCount(3);
-            try (ByteArrayOutputStream out = new ByteArrayOutputStream();
-                 ArrowStreamWriter writer = new ArrowStreamWriter(vectorSchemaRoot, null, Channels.newChannel(out))
+            try (
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                ArrowStreamWriter writer = new ArrowStreamWriter(vectorSchemaRoot, null, Channels.newChannel(out))
             ){
                 writer.start();
                 writer.writeBatch();
@@ -249,29 +262,29 @@ We are providing a path with auto generated arrow files for testing purposes, ch
 
 .. testcode::
 
+    import org.apache.arrow.memory.BufferAllocator;
     import org.apache.arrow.memory.RootAllocator;
     import org.apache.arrow.vector.ipc.ArrowFileReader;
     import org.apache.arrow.vector.ipc.message.ArrowBlock;
     import org.apache.arrow.vector.VectorSchemaRoot;
     import java.io.File;
     import java.io.FileInputStream;
-    import java.io.FileOutputStream;
     import java.io.IOException;
 
-    try(RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE)){
-        File file = new File("./thirdpartydeps/arrowfiles/random_access.arrow");
-        try (FileInputStream fileInputStream = new FileInputStream(file);
-             ArrowFileReader reader = new ArrowFileReader(fileInputStream.getChannel(), rootAllocator)
-        ){
-            System.out.println("Record batches in file: " + reader.getRecordBlocks().size());
-            for (ArrowBlock arrowBlock : reader.getRecordBlocks()) {
-                reader.loadRecordBatch(arrowBlock);
-                VectorSchemaRoot vectorSchemaRootRecover = reader.getVectorSchemaRoot();
-                System.out.print(vectorSchemaRootRecover.contentToTSVString());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+    File file = new File("./thirdpartydeps/arrowfiles/random_access.arrow");
+    try(
+        BufferAllocator rootAllocator = new RootAllocator();
+        FileInputStream fileInputStream = new FileInputStream(file);
+        ArrowFileReader reader = new ArrowFileReader(fileInputStream.getChannel(), rootAllocator)
+    ){
+        System.out.println("Record batches in file: " + reader.getRecordBlocks().size());
+        for (ArrowBlock arrowBlock : reader.getRecordBlocks()) {
+            reader.loadRecordBatch(arrowBlock);
+            VectorSchemaRoot vectorSchemaRootRecover = reader.getVectorSchemaRoot();
+            System.out.print(vectorSchemaRootRecover.contentToTSVString());
         }
+    } catch (IOException e) {
+        e.printStackTrace();
     }
 
 .. testoutput::
@@ -295,30 +308,32 @@ Read - From Buffer
 
 .. testcode::
 
+    import org.apache.arrow.memory.BufferAllocator;
     import org.apache.arrow.memory.RootAllocator;
     import org.apache.arrow.vector.ipc.ArrowFileReader;
     import org.apache.arrow.vector.ipc.SeekableReadChannel;
     import org.apache.arrow.vector.ipc.message.ArrowBlock;
     import org.apache.arrow.vector.VectorSchemaRoot;
     import org.apache.arrow.vector.util.ByteArrayReadableSeekableByteChannel;
-
     import java.io.IOException;
     import java.nio.file.Files;
     import java.nio.file.Path;
     import java.nio.file.Paths;
 
-    try(RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE)) {
-        Path path = Paths.get("./thirdpartydeps/arrowfiles/random_access.arrow");
-        try (ArrowFileReader reader = new ArrowFileReader(new SeekableReadChannel(new ByteArrayReadableSeekableByteChannel(Files.readAllBytes(path))), rootAllocator)){
-            System.out.println("Record batches in file: " + reader.getRecordBlocks().size());
-            for (ArrowBlock arrowBlock : reader.getRecordBlocks()) {
-                reader.loadRecordBatch(arrowBlock);
-                VectorSchemaRoot vectorSchemaRootRecover = reader.getVectorSchemaRoot();
-                System.out.print(vectorSchemaRootRecover.contentToTSVString());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+    Path path = Paths.get("./thirdpartydeps/arrowfiles/random_access.arrow");
+    try(
+        BufferAllocator rootAllocator = new RootAllocator();
+        ArrowFileReader reader = new ArrowFileReader(new SeekableReadChannel(new ByteArrayReadableSeekableByteChannel(
+                                            Files.readAllBytes(path))), rootAllocator)
+    ) {
+        System.out.println("Record batches in file: " + reader.getRecordBlocks().size());
+        for (ArrowBlock arrowBlock : reader.getRecordBlocks()) {
+            reader.loadRecordBatch(arrowBlock);
+            VectorSchemaRoot vectorSchemaRootRecover = reader.getVectorSchemaRoot();
+            System.out.print(vectorSchemaRootRecover.contentToTSVString());
         }
+    } catch (IOException e) {
+        e.printStackTrace();
     }
 
 .. testoutput::
@@ -345,6 +360,7 @@ Read - From File
 
 .. testcode::
 
+    import org.apache.arrow.memory.BufferAllocator;
     import org.apache.arrow.memory.RootAllocator;
     import org.apache.arrow.vector.ipc.ArrowStreamReader;
     import org.apache.arrow.vector.VectorSchemaRoot;
@@ -352,17 +368,18 @@ Read - From File
     import java.io.FileInputStream;
     import java.io.IOException;
 
-    try(RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE)) {
-        File file = new File("./thirdpartydeps/arrowfiles/streaming.arrow");
-        try (FileInputStream fileInputStreamForStream = new FileInputStream(file);
-             ArrowStreamReader reader = new ArrowStreamReader(fileInputStreamForStream, rootAllocator)) {
-            while (reader.loadNextBatch()) {
-                VectorSchemaRoot vectorSchemaRootRecover = reader.getVectorSchemaRoot();
-                System.out.print(vectorSchemaRootRecover.contentToTSVString());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+    File file = new File("./thirdpartydeps/arrowfiles/streaming.arrow");
+    try(
+        BufferAllocator rootAllocator = new RootAllocator();
+        FileInputStream fileInputStreamForStream = new FileInputStream(file);
+        ArrowStreamReader reader = new ArrowStreamReader(fileInputStreamForStream, rootAllocator)
+    ) {
+        while (reader.loadNextBatch()) {
+            VectorSchemaRoot vectorSchemaRootRecover = reader.getVectorSchemaRoot();
+            System.out.print(vectorSchemaRootRecover.contentToTSVString());
         }
+    } catch (IOException e) {
+        e.printStackTrace();
     }
 
 .. testoutput::
@@ -385,24 +402,26 @@ Read - From Buffer
 
 .. testcode::
 
+    import org.apache.arrow.memory.BufferAllocator;
     import org.apache.arrow.memory.RootAllocator;
     import org.apache.arrow.vector.ipc.ArrowStreamReader;
-
     import java.io.ByteArrayInputStream;
     import java.io.IOException;
     import java.nio.file.Files;
     import java.nio.file.Path;
     import java.nio.file.Paths;
 
-    try(RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE)) {
-        Path path = Paths.get("./thirdpartydeps/arrowfiles/streaming.arrow");
-        try (ArrowStreamReader reader = new ArrowStreamReader(new ByteArrayInputStream(Files.readAllBytes(path)), rootAllocator)){
-            while(reader.loadNextBatch()){
-                System.out.print(reader.getVectorSchemaRoot().contentToTSVString());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+    Path path = Paths.get("./thirdpartydeps/arrowfiles/streaming.arrow");
+    try(
+        BufferAllocator rootAllocator = new RootAllocator();
+        ArrowStreamReader reader = new ArrowStreamReader(new ByteArrayInputStream(
+                                        Files.readAllBytes(path)), rootAllocator)
+    ) {
+        while(reader.loadNextBatch()){
+            System.out.print(reader.getVectorSchemaRoot().contentToTSVString());
         }
+    } catch (IOException e) {
+        e.printStackTrace();
     }
 
 .. testoutput::
