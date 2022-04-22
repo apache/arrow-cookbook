@@ -33,12 +33,15 @@ jobs:
   test_java_osx:
     name: "Test Java Cookbook on MacOS"
     runs-on: macos-latest
+    strategy:
+      matrix:
+        java-version: [ 11.0.3, 17, 18-ea ]
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-java@v2
         with:
           distribution: 'temurin'
-          java-version: '11'
+          java-version: ${{ matrix.java-version }}
       - name: Upgrade pip
         run: python3 -m pip install --upgrade pip
       - name: Run tests

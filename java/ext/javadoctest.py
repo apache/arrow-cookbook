@@ -59,7 +59,7 @@ class JavaDocTestBuilder(DocTestBuilder):
         # JDK11 support '-' This allows the pipe to work as expected without requiring a shell
         # Migrating to /dev/stdin to also support JDK9+
         proc_jshell_process = subprocess.Popen(
-            ["jshell", "--class-path", stdout_dependency, "-s", "/dev/stdin"],
+            ["jshell", "-R--add-opens=java.base/java.nio=ALL-UNNAMED", "--class-path", stdout_dependency, "-s", "/dev/stdin"],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             text=True,
