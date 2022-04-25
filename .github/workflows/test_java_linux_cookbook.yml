@@ -33,16 +33,23 @@ jobs:
   test_java_linux:
     name: "Test Java Cookbook On Linux"
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ '3.9' ]
+        java-version: [ '11', '17', '18' ]
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-java@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
-          java-version: '11'
+          java-version: ${{ matrix.java-version }}
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install libcurl4-openssl-dev libssl-dev python3-pip maven
+          sudo apt install libcurl4-openssl-dev libssl-dev
       - name: Run tests
         run: make javatest
       - name: Build cookbook
