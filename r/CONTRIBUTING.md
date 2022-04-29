@@ -44,11 +44,13 @@ Running ``make rtest`` from the cookbook root directory will verify that the cod
 
 The Arrow R cookbook has been written using `bookdown`.
 
-Running ``make r`` from the cookbook root directory (the one where the ``Makefile`` exists) will install all necessary dependencies (including the latest nightly build of the Arrow R package) and compile the cookbook to HTML.
+Running ``make r`` from the cookbook root directory (the one where the ``Makefile`` exists) will install all necessary dependencies and compile the cookbook to HTML.
 
 You can see the compiled result inside the ``build/r`` directory.
 
 If you add a new recipe to the cookbook, you do not need to commit changes to `build/r` to the repo, as this is automatically run by our CI when building the latest version of the cookbook on the main branch.
+
+The dependencies installed include: `testthat`, `bookdown`, `knitr`, `purrr`, `remotes`, `dplyr`, `stringr`, `reticulate` and the latest nightly build of the Arrow R package `arrow`. `bookdown` requires `pandoc` to build the site---`pandoc` ships with [RStudio](https://www.rstudio.com/products/rstudio/), or you can [install it independently](https://pandoc.org/installing.html). If `bookdown` is using RStudio's `pandoc` you may need to set the path globally in your zsh/bash start up file (e.g. `export RSTUDIO_PANDOC=/Applications/RStudio.app/Contents/MacOS/quarto/bin` in the `.zshrc` or `.bash_profile` file on MacOS).
 
 ------------------------------------------------------------------------
 
