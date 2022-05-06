@@ -27,7 +27,7 @@ is run, please refer to the language specific cookbook contribution documentatio
 how to make your recipes testable.
 
  * [Contributing to C++ Cookbook](cpp/CONTRIBUTING.md)
- * [Contributing to Java Cookbook](java/CONTRIBUTING.md)
+ * [Contributing to Java Cookbook](java/CONTRIBUTING.rst)
  * [Contributing to Python Cookbook](python/CONTRIBUTING.rst)
  * [Contributing to R Cookbook](r/CONTRIBUTING.md)
 
