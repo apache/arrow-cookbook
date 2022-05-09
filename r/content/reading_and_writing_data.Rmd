@@ -241,21 +241,6 @@ unlink("my_table.arrows")
 
 ## Read CSV files 
 
-You want to write Arrow data to a CSV file.
-
-### Solution
-
-```{r, write_csv_arrow}
-write_csv_arrow(cars, "cars.csv")
-```
-```{r, test_write_csv_arrow, opts.label = "test"}
-test_that("write_csv_arrow chunk works as expected", {
-  expect_true(file.exists("cars.csv"))
-})
-```
-
-## Write CSV files 
-
 You want to read a CSV file.
 
 ### Solution
@@ -269,6 +254,21 @@ test_that("read_csv_arrow chunk works as expected", {
   expect_equivalent(as.data.frame(my_csv), cars)
 })
 unlink("cars.csv")
+```
+
+## Write CSV files 
+
+You want to write Arrow data to a CSV file.
+
+### Solution
+
+```{r, write_csv_arrow}
+write_csv_arrow(cars, "cars.csv")
+```
+```{r, test_write_csv_arrow, opts.label = "test"}
+test_that("write_csv_arrow chunk works as expected", {
+  expect_true(file.exists("cars.csv"))
+})
 ```
 
 ## Read JSON files 
