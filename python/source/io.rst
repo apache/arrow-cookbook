@@ -72,7 +72,7 @@ the parquet file as :class:`ChunkedArray`
     pyarrow.Table
     col1: int64
     ----
-    col1: [[0,1,2,3,4,5,6,7,8,9,...,90,91,92,93,94,95,96,97,98,99]]
+    col1: [[0,1,2,3,4,...,95,96,97,98,99]]
 
 Reading a subset of Parquet data
 ================================
@@ -228,7 +228,7 @@ provided to :func:`pyarrow.csv.read_csv` to drive
     pyarrow.Table
     col1: int64
     ----
-    col1: [[0,1,2,3,4,5,6,7,8,9,...,90,91,92,93,94,95,96,97,98,99]]
+    col1: [[0,1,2,3,4,...,95,96,97,98,99]]
 
 Writing Partitioned Datasets 
 ============================
@@ -529,7 +529,7 @@ the parquet file as :class:`ChunkedArray`
     pyarrow.Table
     col1: int64
     ----
-    col1: [[0,1,2,3,4,5,6,7,8,9,...,90,91,92,93,94,95,96,97,98,99]]
+    col1: [[0,1,2,3,4,...,95,96,97,98,99]]
 
 Reading Line Delimited JSON
 ===========================
