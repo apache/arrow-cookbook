@@ -92,10 +92,10 @@ During Dataset Construction
     import org.apache.arrow.vector.types.pojo.Schema;
 
     String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data1.parquet";
-    try(
+    try (
         BufferAllocator allocator = new RootAllocator();
         DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri)
-    ){
+    ) {
         Schema schema = datasetFactory.inspect();
 
         System.out.println(schema);
@@ -125,12 +125,12 @@ From a Dataset
 
     String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data1.parquet";
     ScanOptions options = new ScanOptions(/*batchSize*/ 1);
-    try(
+    try (
         BufferAllocator allocator = new RootAllocator();
         DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
         Dataset dataset = datasetFactory.finish();
         Scanner scanner = dataset.newScan(options)
-    ){
+    ) {
         Schema schema = scanner.schema();
 
         System.out.println(schema);
@@ -161,26 +161,29 @@ Query Data Content For File
     import org.apache.arrow.dataset.source.DatasetFactory;
     import org.apache.arrow.memory.BufferAllocator;
     import org.apache.arrow.memory.RootAllocator;
-    import org.apache.arrow.vector.VectorLoader;
     import org.apache.arrow.vector.VectorSchemaRoot;
-    import java.util.stream.Stream;
+    import org.apache.arrow.vector.ipc.ArrowReader;
+
+    import java.io.IOException;
 
     String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data1.parquet";
     ScanOptions options = new ScanOptions(/*batchSize*/ 100);
-    try(
+    try (
         BufferAllocator allocator = new RootAllocator();
         DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
         Dataset dataset = datasetFactory.finish();
-        Scanner scanner = dataset.newScan(options);
-        VectorSchemaRoot vsr = VectorSchemaRoot.create(scanner.schema(), allocator)
-    ){
-        scanner.scan().forEach(scanTask-> {
-            VectorLoader loader = new VectorLoader(vsr);
-            scanTask.execute().forEachRemaining(arrowRecordBatch -> {
-                loader.load(arrowRecordBatch);
-                System.out.print(vsr.contentToTSVString());
-                arrowRecordBatch.close();
-            });
+        Scanner scanner = dataset.newScan(options)
+    ) {
+        scanner.scan().forEach(scanTask -> {
+            try (ArrowReader reader = scanTask.execute()) {
+                while (reader.loadNextBatch()) {
+                    try (VectorSchemaRoot root = reader.getVectorSchemaRoot()) {
+                        System.out.print(root.contentToTSVString());
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         });
     } catch (Exception e) {
         e.printStackTrace();
@@ -209,26 +212,29 @@ Consider that we have these files: data1: 3 rows, data2: 3 rows and data3: 250 r
     import org.apache.arrow.dataset.source.DatasetFactory;
     import org.apache.arrow.memory.BufferAllocator;
     import org.apache.arrow.memory.RootAllocator;
-    import org.apache.arrow.vector.VectorLoader;
     import org.apache.arrow.vector.VectorSchemaRoot;
-    import java.util.stream.Stream;
+    import org.apache.arrow.vector.ipc.ArrowReader;
+
+    import java.io.IOException;
 
     String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/";
     ScanOptions options = new ScanOptions(/*batchSize*/ 100);
-    try(BufferAllocator allocator = new RootAllocator();
-        DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
-        Dataset dataset = datasetFactory.finish();
-        Scanner scanner = dataset.newScan(options);
-        VectorSchemaRoot vsr = VectorSchemaRoot.create(scanner.schema(), allocator)
-    ){
+    try (BufferAllocator allocator = new RootAllocator();
+         DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
+         Dataset dataset = datasetFactory.finish();
+         Scanner scanner = dataset.newScan(options)
+    ) {
         scanner.scan().forEach(scanTask-> {
-            VectorLoader loader = new VectorLoader(vsr);
             final int[] count = {1};
-            scanTask.execute().forEachRemaining(arrowRecordBatch -> {
-                loader.load(arrowRecordBatch);
-                System.out.println("Batch: " + count[0]++ + ", RowCount: " + vsr.getRowCount());
-                arrowRecordBatch.close();
-            });
+            try (ArrowReader reader = scanTask.execute()) {
+                while (reader.loadNextBatch()) {
+                    try (VectorSchemaRoot root = reader.getVectorSchemaRoot()) {
+                        System.out.println("Batch: " + count[0]++ + ", RowCount: " + root.getRowCount());
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         });
     } catch (Exception e) {
         e.printStackTrace();
@@ -258,28 +264,30 @@ In case we need to project only certain columns we could configure ScanOptions w
     import org.apache.arrow.dataset.source.DatasetFactory;
     import org.apache.arrow.memory.BufferAllocator;
     import org.apache.arrow.memory.RootAllocator;
-    import org.apache.arrow.vector.VectorLoader;
     import org.apache.arrow.vector.VectorSchemaRoot;
+    import org.apache.arrow.vector.ipc.ArrowReader;
 
-    import java.util.Optional;
+    import java.io.IOException;
 
     String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data1.parquet";
     String[] projection = new String[] {"name"};
     ScanOptions options = new ScanOptions(/*batchSize*/ 100, Optional.of(projection));
-    try(
+    try (
         BufferAllocator allocator = new RootAllocator();
         DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
         Dataset dataset = datasetFactory.finish();
-        Scanner scanner = dataset.newScan(options);
-        VectorSchemaRoot vsr = VectorSchemaRoot.create(scanner.schema(), allocator)
-    ){
+        Scanner scanner = dataset.newScan(options)
+    ) {
         scanner.scan().forEach(scanTask-> {
-            VectorLoader loader = new VectorLoader(vsr);
-            scanTask.execute().forEachRemaining(arrowRecordBatch -> {
-                loader.load(arrowRecordBatch);
-                System.out.print(vsr.contentToTSVString());
-                arrowRecordBatch.close();
-            });
+            try (ArrowReader reader = scanTask.execute()) {
+                while (reader.loadNextBatch()) {
+                    try (VectorSchemaRoot root = reader.getVectorSchemaRoot()) {
+                        System.out.print(root.contentToTSVString());
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         });
     } catch (Exception e) {
         e.printStackTrace();
