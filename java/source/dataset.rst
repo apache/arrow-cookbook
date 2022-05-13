@@ -92,10 +92,10 @@ During Dataset Construction
     import org.apache.arrow.vector.types.pojo.Schema;
 
     String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data1.parquet";
-    try(
+    try (
         BufferAllocator allocator = new RootAllocator();
         DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri)
-    ){
+    ) {
         Schema schema = datasetFactory.inspect();
 
         System.out.println(schema);
@@ -125,12 +125,12 @@ From a Dataset
 
     String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data1.parquet";
     ScanOptions options = new ScanOptions(/*batchSize*/ 1);
-    try(
+    try (
         BufferAllocator allocator = new RootAllocator();
         DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
         Dataset dataset = datasetFactory.finish();
         Scanner scanner = dataset.newScan(options)
-    ){
+    ) {
         Schema schema = scanner.schema();
 
         System.out.println(schema);
@@ -180,11 +180,11 @@ Query Data Content For File
     ) {
         scanner.scan().forEach(scanTask -> {
             VectorLoader loader = new VectorLoader(vsr);
-            try(ArrowReader reader = scanTask.execute()){
+            try (ArrowReader reader = scanTask.execute()) {
                 while (reader.loadNextBatch()) {
-                    try(VectorSchemaRoot root = reader.getVectorSchemaRoot()) {
+                    try (VectorSchemaRoot root = reader.getVectorSchemaRoot()) {
                         final VectorUnloader unloader = new VectorUnloader(root);
-                        try(ArrowRecordBatch arrowRecordBatch = unloader.getRecordBatch()){
+                        try (ArrowRecordBatch arrowRecordBatch = unloader.getRecordBatch()) {
                             loader.load(arrowRecordBatch);
                             System.out.print(vsr.contentToTSVString());
                         }
@@ -231,20 +231,20 @@ Consider that we have these files: data1: 3 rows, data2: 3 rows and data3: 250 r
 
     String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/";
     ScanOptions options = new ScanOptions(/*batchSize*/ 100);
-    try(BufferAllocator allocator = new RootAllocator();
+    try (BufferAllocator allocator = new RootAllocator();
         DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
         Dataset dataset = datasetFactory.finish();
         Scanner scanner = dataset.newScan(options);
         VectorSchemaRoot vsr = VectorSchemaRoot.create(scanner.schema(), allocator)
-    ){
+    ) {
         scanner.scan().forEach(scanTask-> {
             VectorLoader loader = new VectorLoader(vsr);
             final int[] count = {1};
-            try(ArrowReader reader = scanTask.execute()){
+            try (ArrowReader reader = scanTask.execute()) {
                 while (reader.loadNextBatch()) {
-                    try(VectorSchemaRoot root = reader.getVectorSchemaRoot()) {
+                    try (VectorSchemaRoot root = reader.getVectorSchemaRoot()) {
                         final VectorUnloader unloader = new VectorUnloader(root);
-                        try(ArrowRecordBatch arrowRecordBatch = unloader.getRecordBatch()){
+                        try (ArrowRecordBatch arrowRecordBatch = unloader.getRecordBatch()) {
                             loader.load(arrowRecordBatch);
                             System.out.println("Batch: " + count[0]++ + ", RowCount: " + vsr.getRowCount());
                         }
@@ -293,20 +293,20 @@ In case we need to project only certain columns we could configure ScanOptions w
     String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data1.parquet";
     String[] projection = new String[] {"name"};
     ScanOptions options = new ScanOptions(/*batchSize*/ 100, Optional.of(projection));
-    try(
+    try (
         BufferAllocator allocator = new RootAllocator();
         DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
         Dataset dataset = datasetFactory.finish();
         Scanner scanner = dataset.newScan(options);
         VectorSchemaRoot vsr = VectorSchemaRoot.create(scanner.schema(), allocator)
-    ){
+    ) {
         scanner.scan().forEach(scanTask-> {
             VectorLoader loader = new VectorLoader(vsr);
-            try(ArrowReader reader = scanTask.execute()){
+            try (ArrowReader reader = scanTask.execute()) {
                 while (reader.loadNextBatch()) {
-                    try(VectorSchemaRoot root = reader.getVectorSchemaRoot()) {
+                    try (VectorSchemaRoot root = reader.getVectorSchemaRoot()) {
                         final VectorUnloader unloader = new VectorUnloader(root);
-                        try(ArrowRecordBatch arrowRecordBatch = unloader.getRecordBatch()){
+                        try (ArrowRecordBatch arrowRecordBatch = unloader.getRecordBatch()) {
                             loader.load(arrowRecordBatch);
                             System.out.print(vsr.contentToTSVString());
                         }
