@@ -239,7 +239,7 @@ test_that("read_ipc_stream chunk works as expected", {
 unlink("my_table.arrows")
 ```
 
-## ## Write CSV files Read CSV files 
+## Write CSV files  
 
 You want to write Arrow data to a CSV file.
 
