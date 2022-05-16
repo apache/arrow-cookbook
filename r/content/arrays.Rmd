@@ -63,11 +63,6 @@ fivenum(as.vector(arrow_array))
 
 test_that("array_fivenum works as expected", {
   
-  # generates both an error and a warning
-  expect_warning(
-    expect_error(fivenum(arrow_array))  
-  )
-  
   expect_identical(
     fivenum(as.vector(arrow_array)),
     c(1, 25.5, 50.5, 75.5, 100)
