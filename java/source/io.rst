@@ -463,8 +463,10 @@ Reading and writing dictionary-encoded data requires separately tracking the dic
     import org.apache.arrow.vector.ipc.ArrowFileReader;
     import org.apache.arrow.vector.ipc.ArrowFileWriter;
     import org.apache.arrow.vector.ipc.message.ArrowBlock;
+    import org.apache.arrow.vector.types.Types;
     import org.apache.arrow.vector.types.pojo.ArrowType;
     import org.apache.arrow.vector.types.pojo.DictionaryEncoding;
+    import org.apache.arrow.vector.types.pojo.FieldType;
 
     import java.io.File;
     import java.io.FileInputStream;
@@ -473,9 +475,16 @@ Reading and writing dictionary-encoded data requires separately tracking the dic
     import java.io.IOException;
     import java.nio.charset.StandardCharsets;
 
+    final DictionaryEncoding dictionaryEncoding = new DictionaryEncoding(
+            /*id=*/666L, /*ordered=*/false, /*indexType=*/
+            new ArrowType.Int(8, true)
+    );
     try (BufferAllocator root = new RootAllocator();
          VarCharVector countries = new VarCharVector("country-dict", root);
-         VarCharVector appUserCountriesUnencoded = new VarCharVector("app-use-country-dict", root)
+         VarCharVector appUserCountriesUnencoded = new VarCharVector(
+                 "app-use-country-dict",
+                 new FieldType(true, Types.MinorType.VARCHAR.getType(), dictionaryEncoding),
+                 root)
     ) {
         countries.allocateNew(10);
         countries.set(0, "Andorra".getBytes(StandardCharsets.UTF_8));
@@ -490,8 +499,7 @@ Reading and writing dictionary-encoded data requires separately tracking the dic
         countries.set(9, "Zambia".getBytes(StandardCharsets.UTF_8));
         countries.setValueCount(10);
 
-        Dictionary countriesDictionary = new Dictionary(countries,
-                new DictionaryEncoding(/*id=*/123L, /*ordered=*/false, /*indexType=*/new ArrowType.Int(8, true)));
+        Dictionary countriesDictionary = new Dictionary(countries, dictionaryEncoding);
         System.out.println("Dictionary: " + countriesDictionary);
 
         appUserCountriesUnencoded.allocateNew(5);
@@ -506,29 +514,32 @@ Reading and writing dictionary-encoded data requires separately tracking the dic
         File file = new File("random_access_file_with_dictionary.arrow");
         DictionaryProvider.MapDictionaryProvider provider = new DictionaryProvider.MapDictionaryProvider();
         provider.put(countriesDictionary);
-        try (FieldVector appUserCountriesDictionaryEncoded = (FieldVector) DictionaryEncoder
+        try (FieldVector appUseCountryDictionaryEncoded = (FieldVector) DictionaryEncoder
                 .encode(appUserCountriesUnencoded, countriesDictionary);
-             VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.of(appUserCountriesDictionaryEncoded);
+             VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.of(appUseCountryDictionaryEncoded);
              FileOutputStream fileOutputStream = new FileOutputStream(file);
              ArrowFileWriter writer = new ArrowFileWriter(vectorSchemaRoot, provider, fileOutputStream.getChannel())
         ) {
-            System.out.println("Dictionary-encoded data: " + appUserCountriesDictionaryEncoded);
+            System.out.println("Dictionary-encoded data: " +appUseCountryDictionaryEncoded);
+            System.out.println("Dictionary-encoded ID: " +appUseCountryDictionaryEncoded.getField().getDictionary().getId());
             writer.start();
             writer.writeBatch();
             writer.end();
             System.out.println("Record batches written: " + writer.getRecordBlocks().size() + ". Number of rows written: " + vectorSchemaRoot.getRowCount());
             try(
-                    BufferAllocator rootAllocator = new RootAllocator();
-                    FileInputStream fileInputStream = new FileInputStream(file);
-                    ArrowFileReader reader = new ArrowFileReader(fileInputStream.getChannel(), rootAllocator)
+                BufferAllocator rootAllocator = new RootAllocator();
+                FileInputStream fileInputStream = new FileInputStream(file);
+                ArrowFileReader reader = new ArrowFileReader(fileInputStream.getChannel(), rootAllocator)
             ){
                 for (ArrowBlock arrowBlock : reader.getRecordBlocks()) {
                     reader.loadRecordBatch(arrowBlock);
-                    FieldVector appUserCountriesDictionaryEncodedRead = reader.getVectorSchemaRoot().getVector("app-use-country-dict");
-                    Dictionary appUseCountryDictionaryRead = reader.getDictionaryVectors().get(123L);
-                    System.out.println("Dictionary-encoded data recovered: " + appUserCountriesDictionaryEncodedRead);
+                    FieldVector appUseCountryDictionaryEncodedRead = reader.getVectorSchemaRoot().getVector("app-use-country-dict");
+                    DictionaryEncoding dictionaryEncodingRead = appUseCountryDictionaryEncodedRead.getField().getDictionary();
+                    System.out.println("Dictionary-encoded ID recovered: " + dictionaryEncodingRead.getId());
+                    Dictionary appUseCountryDictionaryRead = reader.getDictionaryVectors().get(dictionaryEncodingRead.getId());
+                    System.out.println("Dictionary-encoded data recovered: " + appUseCountryDictionaryEncodedRead);
                     System.out.println("Dictionary recovered: " + appUseCountryDictionaryRead);
-                    try (ValueVector readVector = DictionaryEncoder.decode(appUserCountriesDictionaryEncodedRead, appUseCountryDictionaryRead)) {
+                    try (ValueVector readVector = DictionaryEncoder.decode(appUseCountryDictionaryEncodedRead, appUseCountryDictionaryRead)) {
                         System.out.println("Decoded data: " + readVector);
                     }
                 }
@@ -542,10 +553,12 @@ Reading and writing dictionary-encoded data requires separately tracking the dic
 
 .. testoutput::
 
-    Dictionary: Dictionary DictionaryEncoding[id=123,ordered=false,indexType=Int(8, true)] [Andorra, Cuba, Grecia, Guinea, Islandia, Malta, Tailandia, Uganda, Yemen, Zambia]
+    Dictionary: Dictionary DictionaryEncoding[id=666,ordered=false,indexType=Int(8, true)] [Andorra, Cuba, Grecia, Guinea, Islandia, Malta, Tailandia, Uganda, Yemen, Zambia]
     Unencoded data: [Andorra, Guinea, Islandia, Malta, Uganda]
     Dictionary-encoded data: [0, 3, 4, 5, 7]
+    Dictionary-encoded ID: 666
     Record batches written: 1. Number of rows written: 5
+    Dictionary-encoded ID recovered: 666
     Dictionary-encoded data recovered: [0, 3, 4, 5, 7]
-    Dictionary recovered: Dictionary DictionaryEncoding[id=123,ordered=false,indexType=Int(8, true)] [Andorra, Cuba, Grecia, Guinea, Islandia, Malta, Tailandia, Uganda, Yemen, Zambia]
+    Dictionary recovered: Dictionary DictionaryEncoding[id=666,ordered=false,indexType=Int(8, true)] [Andorra, Cuba, Grecia, Guinea, Islandia, Malta, Tailandia, Uganda, Yemen, Zambia]
     Decoded data: [Andorra, Guinea, Islandia, Malta, Uganda]
