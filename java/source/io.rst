@@ -506,13 +506,13 @@ Reading and writing dictionary-encoded data requires separately tracking the dic
         File file = new File("random_access_file_with_dictionary.arrow");
         DictionaryProvider.MapDictionaryProvider provider = new DictionaryProvider.MapDictionaryProvider();
         provider.put(countriesDictionary);
-        try (FieldVector appUseCountryDictionaryEncoded = (FieldVector) DictionaryEncoder
+        try (FieldVector appUserCountriesDictionaryEncoded = (FieldVector) DictionaryEncoder
                 .encode(appUserCountriesUnencoded, countriesDictionary);
-             VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.of(appUseCountryDictionaryEncoded);
+             VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.of(appUserCountriesDictionaryEncoded);
              FileOutputStream fileOutputStream = new FileOutputStream(file);
              ArrowFileWriter writer = new ArrowFileWriter(vectorSchemaRoot, provider, fileOutputStream.getChannel())
         ) {
-            System.out.println("Dictionary-encoded data: " +appUseCountryDictionaryEncoded);
+            System.out.println("Dictionary-encoded data: " + appUserCountriesDictionaryEncoded);
             writer.start();
             writer.writeBatch();
             writer.end();
@@ -524,11 +524,11 @@ Reading and writing dictionary-encoded data requires separately tracking the dic
             ){
                 for (ArrowBlock arrowBlock : reader.getRecordBlocks()) {
                     reader.loadRecordBatch(arrowBlock);
-                    FieldVector appUseCountryDictionaryEncodedRead = reader.getVectorSchemaRoot().getVector("app-use-country-dict");
+                    FieldVector appUserCountriesDictionaryEncodedRead = reader.getVectorSchemaRoot().getVector("app-use-country-dict");
                     Dictionary appUseCountryDictionaryRead = reader.getDictionaryVectors().get(123L);
-                    System.out.println("Dictionary-encoded data recovered: " + appUseCountryDictionaryEncodedRead);
+                    System.out.println("Dictionary-encoded data recovered: " + appUserCountriesDictionaryEncodedRead);
                     System.out.println("Dictionary recovered: " + appUseCountryDictionaryRead);
-                    try (ValueVector readVector = DictionaryEncoder.decode(appUseCountryDictionaryEncodedRead, appUseCountryDictionaryRead)) {
+                    try (ValueVector readVector = DictionaryEncoder.decode(appUserCountriesDictionaryEncodedRead, appUseCountryDictionaryRead)) {
                         System.out.println("Decoded data: " + readVector);
                     }
                 }

@@ -118,9 +118,9 @@ In some scenarios `dictionary-encoding`_ a column is useful to save memory.
         appUserCountriesUnencoded.setValueCount(5);
         System.out.println("Unencoded data: " + appUserCountriesUnencoded);
 
-        try (FieldVector appUseCountryDictionaryEncoded = (FieldVector) DictionaryEncoder
+        try (FieldVector appUserCountriesDictionaryEncoded = (FieldVector) DictionaryEncoder
                 .encode(appUserCountriesUnencoded, countriesDictionary)) {
-            System.out.println("Dictionary-encoded data: " + appUseCountryDictionaryEncoded);
+            System.out.println("Dictionary-encoded data: " + appUserCountriesDictionaryEncoded);
         }
     }
 
@@ -170,4 +170,4 @@ Array of List
 
 .. _`FieldVector`: https://arrow.apache.org/docs/java/reference/org/apache/arrow/vector/FieldVector.html
 .. _`ValueVector`: https://arrow.apache.org/docs/java/vector.html
-.. _`Dictionary-encoded Layout`: https://arrow.apache.org/docs/format/Columnar.html#dictionary-encoded-layout
+.. _`dictionary-encoding`: https://arrow.apache.org/docs/format/Columnar.html#dictionary-encoded-layout
