@@ -444,10 +444,10 @@ Reading Parquet File
 
 Please check :doc:`Dataset <./dataset>`
 
-Dictionary-encoded Layout
-=========================
+Handling Data with Dictionaries
+*******************************
 
-In some scenarios could be more appropriate use `Dictionary-encoded Layout`_ to encoded data which takes much less space.
+Reading and writing dictionary-encoded data requires separately tracking the dictionaries.
 
 .. testcode::
 
@@ -502,7 +502,7 @@ In some scenarios could be more appropriate use `Dictionary-encoded Layout`_ to 
         myAppUseCountryDictionary.setValueCount(5);
         System.out.println("Data to retain: " + myAppUseCountryDictionary);
 
-        File file = new File("randon_access_to_file_with_dictionary.arrow");
+        File file = new File("random_access_file_with_dictionary.arrow");
         DictionaryProvider.MapDictionaryProvider provider = new DictionaryProvider.MapDictionaryProvider();
         provider.put(myCountryDictionary);
         try (FieldVector myAppUseCountryDictionaryEncoded = (FieldVector) DictionaryEncoder

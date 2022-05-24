@@ -70,7 +70,10 @@ Array of Varchar
 
     [one, two, three]
 
-In some scenarios could be more appropriate use `Dictionary-encoded Layout`_ to encoded data which takes much less space.
+Dictionary-Encoded Array of Varchar
+-----------------------------------
+
+In some scenarios `dictionary-encoding`_ a column is useful to save memory.
 
 .. testcode::
 
