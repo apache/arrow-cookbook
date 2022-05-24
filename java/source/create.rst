@@ -83,13 +83,14 @@ In some scenarios `dictionary-encoding`_ a column is useful to save memory.
     import org.apache.arrow.vector.VarCharVector;
     import org.apache.arrow.vector.dictionary.Dictionary;
     import org.apache.arrow.vector.dictionary.DictionaryEncoder;
+    import org.apache.arrow.vector.types.pojo.ArrowType;
     import org.apache.arrow.vector.types.pojo.DictionaryEncoding;
 
     import java.nio.charset.StandardCharsets;
 
     try (BufferAllocator root = new RootAllocator();
          VarCharVector countries = new VarCharVector("country-dict", root);
-         VarCharVector myAppUseCountryDictionary = new VarCharVector("app-use-country-dict", root)
+         VarCharVector appUserCountriesUnencoded = new VarCharVector("app-use-country-dict", root)
     ) {
         countries.allocateNew(10);
         countries.set(0, "Andorra".getBytes(StandardCharsets.UTF_8));
@@ -104,30 +105,30 @@ In some scenarios `dictionary-encoding`_ a column is useful to save memory.
         countries.set(9, "Zambia".getBytes(StandardCharsets.UTF_8));
         countries.setValueCount(10);
 
-        Dictionary myCountryDictionary = new Dictionary(countries,
-                new DictionaryEncoding(/*id=*/1L, /*ordered=*/false, /*indexType=*/null));
-        System.out.println("Dictionary used: " + myCountryDictionary);
+        Dictionary countriesDictionary = new Dictionary(countries,
+                new DictionaryEncoding(/*id=*/1L, /*ordered=*/false, /*indexType=*/new ArrowType.Int(8, true)));
+        System.out.println("Dictionary: " + countriesDictionary);
 
-        myAppUseCountryDictionary.allocateNew(5);
-        myAppUseCountryDictionary.set(0, "Andorra".getBytes(StandardCharsets.UTF_8));
-        myAppUseCountryDictionary.set(1, "Guinea".getBytes(StandardCharsets.UTF_8));
-        myAppUseCountryDictionary.set(2, "Islandia".getBytes(StandardCharsets.UTF_8));
-        myAppUseCountryDictionary.set(3, "Malta".getBytes(StandardCharsets.UTF_8));
-        myAppUseCountryDictionary.set(4, "Uganda".getBytes(StandardCharsets.UTF_8));
-        myAppUseCountryDictionary.setValueCount(5);
-        System.out.println("Data to retain: " + myAppUseCountryDictionary);
+        appUserCountriesUnencoded.allocateNew(5);
+        appUserCountriesUnencoded.set(0, "Andorra".getBytes(StandardCharsets.UTF_8));
+        appUserCountriesUnencoded.set(1, "Guinea".getBytes(StandardCharsets.UTF_8));
+        appUserCountriesUnencoded.set(2, "Islandia".getBytes(StandardCharsets.UTF_8));
+        appUserCountriesUnencoded.set(3, "Malta".getBytes(StandardCharsets.UTF_8));
+        appUserCountriesUnencoded.set(4, "Uganda".getBytes(StandardCharsets.UTF_8));
+        appUserCountriesUnencoded.setValueCount(5);
+        System.out.println("Unencoded data: " + appUserCountriesUnencoded);
 
-        try (FieldVector myAppUseCountryDictionaryEncoded = (FieldVector) DictionaryEncoder
-                .encode(myAppUseCountryDictionary, myCountryDictionary)) {
-            System.out.println("Data to retain through Dictionary: " +myAppUseCountryDictionaryEncoded);
+        try (FieldVector appUseCountryDictionaryEncoded = (FieldVector) DictionaryEncoder
+                .encode(appUserCountriesUnencoded, countriesDictionary)) {
+            System.out.println("Dictionary-encoded data: " + appUseCountryDictionaryEncoded);
         }
     }
 
 .. testoutput::
 
-    Dictionary used: Dictionary DictionaryEncoding[id=1,ordered=false,indexType=Int(32, true)] [Andorra, Cuba, Grecia, Guinea, Islandia, Malta, Tailandia, Uganda, Yemen, Zambia]
-    Data to retain: [Andorra, Guinea, Islandia, Malta, Uganda]
-    Data to retain through Dictionary: [0, 3, 4, 5, 7]
+    Dictionary: Dictionary DictionaryEncoding[id=1,ordered=false,indexType=Int(8, true)] [Andorra, Cuba, Grecia, Guinea, Islandia, Malta, Tailandia, Uganda, Yemen, Zambia]
+    Unencoded data: [Andorra, Guinea, Islandia, Malta, Uganda]
+    Dictionary-encoded data: [0, 3, 4, 5, 7]
 
 Array of List
 -------------
