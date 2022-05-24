@@ -70,6 +70,62 @@ Array of Varchar
 
     [one, two, three]
 
+In some scenarios could be more appropriate use `Dictionary-encoded Layout`_ to encoded data which takes much less space.
+
+.. testcode::
+
+    import org.apache.arrow.memory.BufferAllocator;
+    import org.apache.arrow.memory.RootAllocator;
+    import org.apache.arrow.vector.FieldVector;
+    import org.apache.arrow.vector.VarCharVector;
+    import org.apache.arrow.vector.dictionary.Dictionary;
+    import org.apache.arrow.vector.dictionary.DictionaryEncoder;
+    import org.apache.arrow.vector.types.pojo.DictionaryEncoding;
+
+    import java.nio.charset.StandardCharsets;
+
+    try (BufferAllocator root = new RootAllocator();
+         VarCharVector countries = new VarCharVector("country-dict", root);
+         VarCharVector myAppUseCountryDictionary = new VarCharVector("app-use-country-dict", root)
+    ) {
+        countries.allocateNew(10);
+        countries.set(0, "Andorra".getBytes(StandardCharsets.UTF_8));
+        countries.set(1, "Cuba".getBytes(StandardCharsets.UTF_8));
+        countries.set(2, "Grecia".getBytes(StandardCharsets.UTF_8));
+        countries.set(3, "Guinea".getBytes(StandardCharsets.UTF_8));
+        countries.set(4, "Islandia".getBytes(StandardCharsets.UTF_8));
+        countries.set(5, "Malta".getBytes(StandardCharsets.UTF_8));
+        countries.set(6, "Tailandia".getBytes(StandardCharsets.UTF_8));
+        countries.set(7, "Uganda".getBytes(StandardCharsets.UTF_8));
+        countries.set(8, "Yemen".getBytes(StandardCharsets.UTF_8));
+        countries.set(9, "Zambia".getBytes(StandardCharsets.UTF_8));
+        countries.setValueCount(10);
+
+        Dictionary myCountryDictionary = new Dictionary(countries,
+                new DictionaryEncoding(/*id=*/1L, /*ordered=*/false, /*indexType=*/null));
+        System.out.println("Dictionary used: " + myCountryDictionary);
+
+        myAppUseCountryDictionary.allocateNew(5);
+        myAppUseCountryDictionary.set(0, "Andorra".getBytes(StandardCharsets.UTF_8));
+        myAppUseCountryDictionary.set(1, "Guinea".getBytes(StandardCharsets.UTF_8));
+        myAppUseCountryDictionary.set(2, "Islandia".getBytes(StandardCharsets.UTF_8));
+        myAppUseCountryDictionary.set(3, "Malta".getBytes(StandardCharsets.UTF_8));
+        myAppUseCountryDictionary.set(4, "Uganda".getBytes(StandardCharsets.UTF_8));
+        myAppUseCountryDictionary.setValueCount(5);
+        System.out.println("Data to retain: " + myAppUseCountryDictionary);
+
+        try (FieldVector myAppUseCountryDictionaryEncoded = (FieldVector) DictionaryEncoder
+                .encode(myAppUseCountryDictionary, myCountryDictionary)) {
+            System.out.println("Data to retain through Dictionary: " +myAppUseCountryDictionaryEncoded);
+        }
+    }
+
+.. testoutput::
+
+    Dictionary used: Dictionary DictionaryEncoding[id=1,ordered=false,indexType=Int(32, true)] [Andorra, Cuba, Grecia, Guinea, Islandia, Malta, Tailandia, Uganda, Yemen, Zambia]
+    Data to retain: [Andorra, Guinea, Islandia, Malta, Uganda]
+    Data to retain through Dictionary: [0, 3, 4, 5, 7]
+
 Array of List
 -------------
 
@@ -110,3 +166,4 @@ Array of List
 
 .. _`FieldVector`: https://arrow.apache.org/docs/java/reference/org/apache/arrow/vector/FieldVector.html
 .. _`ValueVector`: https://arrow.apache.org/docs/java/vector.html
+.. _`Dictionary-encoded Layout`: https://arrow.apache.org/docs/format/Columnar.html#dictionary-encoded-layout

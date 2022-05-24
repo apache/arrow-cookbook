@@ -443,3 +443,108 @@ Reading Parquet File
 ********************
 
 Please check :doc:`Dataset <./dataset>`
+
+Dictionary-encoded Layout
+=========================
+
+In some scenarios could be more appropriate use `Dictionary-encoded Layout`_ to encoded data which takes much less space.
+
+.. testcode::
+
+    import org.apache.arrow.memory.BufferAllocator;
+    import org.apache.arrow.memory.RootAllocator;
+    import org.apache.arrow.vector.FieldVector;
+    import org.apache.arrow.vector.ValueVector;
+    import org.apache.arrow.vector.VarCharVector;
+    import org.apache.arrow.vector.VectorSchemaRoot;
+    import org.apache.arrow.vector.dictionary.Dictionary;
+    import org.apache.arrow.vector.dictionary.DictionaryEncoder;
+    import org.apache.arrow.vector.dictionary.DictionaryProvider;
+    import org.apache.arrow.vector.ipc.ArrowFileReader;
+    import org.apache.arrow.vector.ipc.ArrowFileWriter;
+    import org.apache.arrow.vector.ipc.message.ArrowBlock;
+    import org.apache.arrow.vector.types.pojo.DictionaryEncoding;
+
+    import java.io.File;
+    import java.io.FileInputStream;
+    import java.io.FileNotFoundException;
+    import java.io.FileOutputStream;
+    import java.io.IOException;
+    import java.nio.charset.StandardCharsets;
+
+    try (BufferAllocator root = new RootAllocator();
+         VarCharVector countries = new VarCharVector("country-dict", root);
+         VarCharVector myAppUseCountryDictionary = new VarCharVector("app-use-country-dict", root)
+    ) {
+        countries.allocateNew(10);
+        countries.set(0, "Andorra".getBytes(StandardCharsets.UTF_8));
+        countries.set(1, "Cuba".getBytes(StandardCharsets.UTF_8));
+        countries.set(2, "Grecia".getBytes(StandardCharsets.UTF_8));
+        countries.set(3, "Guinea".getBytes(StandardCharsets.UTF_8));
+        countries.set(4, "Islandia".getBytes(StandardCharsets.UTF_8));
+        countries.set(5, "Malta".getBytes(StandardCharsets.UTF_8));
+        countries.set(6, "Tailandia".getBytes(StandardCharsets.UTF_8));
+        countries.set(7, "Uganda".getBytes(StandardCharsets.UTF_8));
+        countries.set(8, "Yemen".getBytes(StandardCharsets.UTF_8));
+        countries.set(9, "Zambia".getBytes(StandardCharsets.UTF_8));
+        countries.setValueCount(10);
+
+        Dictionary myCountryDictionary = new Dictionary(countries,
+                new DictionaryEncoding(/*id=*/123L, /*ordered=*/false, /*indexType=*/null));
+        System.out.println("Dictionary used: " + myCountryDictionary);
+
+        myAppUseCountryDictionary.allocateNew(5);
+        myAppUseCountryDictionary.set(0, "Andorra".getBytes(StandardCharsets.UTF_8));
+        myAppUseCountryDictionary.set(1, "Guinea".getBytes(StandardCharsets.UTF_8));
+        myAppUseCountryDictionary.set(2, "Islandia".getBytes(StandardCharsets.UTF_8));
+        myAppUseCountryDictionary.set(3, "Malta".getBytes(StandardCharsets.UTF_8));
+        myAppUseCountryDictionary.set(4, "Uganda".getBytes(StandardCharsets.UTF_8));
+        myAppUseCountryDictionary.setValueCount(5);
+        System.out.println("Data to retain: " + myAppUseCountryDictionary);
+
+        File file = new File("randon_access_to_file_with_dictionary.arrow");
+        DictionaryProvider.MapDictionaryProvider provider = new DictionaryProvider.MapDictionaryProvider();
+        provider.put(myCountryDictionary);
+        try (FieldVector myAppUseCountryDictionaryEncoded = (FieldVector) DictionaryEncoder
+                .encode(myAppUseCountryDictionary, myCountryDictionary);
+             VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.of(myAppUseCountryDictionaryEncoded);
+             FileOutputStream fileOutputStream = new FileOutputStream(file);
+             ArrowFileWriter writer = new ArrowFileWriter(vectorSchemaRoot, provider, fileOutputStream.getChannel())
+        ) {
+            System.out.println("Data to retain through Dictionary: " +myAppUseCountryDictionaryEncoded);
+            writer.start();
+            writer.writeBatch();
+            writer.end();
+            System.out.println("Record batches written: " + writer.getRecordBlocks().size() + ". Number of rows written: " + vectorSchemaRoot.getRowCount());
+            try(
+                    BufferAllocator rootAllocator = new RootAllocator();
+                    FileInputStream fileInputStream = new FileInputStream(file);
+                    ArrowFileReader reader = new ArrowFileReader(fileInputStream.getChannel(), rootAllocator)
+            ){
+                for (ArrowBlock arrowBlock : reader.getRecordBlocks()) {
+                    reader.loadRecordBatch(arrowBlock);
+                    FieldVector myAppUseCountryDictionaryEncodedRead = reader.getVectorSchemaRoot().getVector("app-use-country-dict");
+                    Dictionary myAppUseCountryDictionaryRead = reader.getDictionaryVectors().get(123L);
+                    System.out.println("Data to retain recovered: " + myAppUseCountryDictionaryEncodedRead);
+                    System.out.println("Dictionary recovered: " + myAppUseCountryDictionaryRead);
+                    try (ValueVector readVector = DictionaryEncoder.decode(myAppUseCountryDictionaryEncodedRead, myAppUseCountryDictionaryRead)) {
+                        System.out.println("Data to retain recovered decoded: " + readVector);
+                    }
+                }
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+.. testoutput::
+
+    Dictionary used: Dictionary DictionaryEncoding[id=123,ordered=false,indexType=Int(32, true)] [Andorra, Cuba, Grecia, Guinea, Islandia, Malta, Tailandia, Uganda, Yemen, Zambia]
+    Data to retain: [Andorra, Guinea, Islandia, Malta, Uganda]
+    Data to retain through Dictionary: [0, 3, 4, 5, 7]
+    Record batches written: 1. Number of rows written: 5
+    Data to retain recovered: [0, 3, 4, 5, 7]
+    Dictionary recovered: Dictionary DictionaryEncoding[id=123,ordered=false,indexType=Int(32, true)] [Andorra, Cuba, Grecia, Guinea, Islandia, Malta, Tailandia, Uganda, Yemen, Zambia]
+    Data to retain recovered decoded: [Andorra, Guinea, Islandia, Malta, Uganda]
