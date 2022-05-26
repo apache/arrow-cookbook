@@ -55,24 +55,3 @@ test_that("open_dataset chunk works as expected", {
 ```{r}
 unlink("airquality_partitioned", recursive = TRUE)
 ```
-
-You can also supply the `compression` argument to `write_dataset()`, as long as 
-the compression algorithm is compatible with the chosen format.
-
-```{r, dataset_gzip}
-# Create a temporary directory
-td <- tempfile()
-dir.create(td)
-
-# Write dataset to file
-write_dataset(iris, path = td, compression = "gzip")
-```
-```{r}
-# View files in the directory
-list.files(td, recursive = TRUE)
-```
-```{r, test_dataset_gzip, opts.label = "test"}
-test_that("dataset_gzip", {
-  file.exists(file.path(td, "part-0.parquet"))
-})
-```
