@@ -443,3 +443,122 @@ Reading Parquet File
 ********************
 
 Please check :doc:`Dataset <./dataset>`
+
+Handling Data with Dictionaries
+*******************************
+
+Reading and writing dictionary-encoded data requires separately tracking the dictionaries.
+
+.. testcode::
+
+    import org.apache.arrow.memory.BufferAllocator;
+    import org.apache.arrow.memory.RootAllocator;
+    import org.apache.arrow.vector.FieldVector;
+    import org.apache.arrow.vector.ValueVector;
+    import org.apache.arrow.vector.VarCharVector;
+    import org.apache.arrow.vector.VectorSchemaRoot;
+    import org.apache.arrow.vector.dictionary.Dictionary;
+    import org.apache.arrow.vector.dictionary.DictionaryEncoder;
+    import org.apache.arrow.vector.dictionary.DictionaryProvider;
+    import org.apache.arrow.vector.ipc.ArrowFileReader;
+    import org.apache.arrow.vector.ipc.ArrowFileWriter;
+    import org.apache.arrow.vector.ipc.message.ArrowBlock;
+    import org.apache.arrow.vector.types.Types;
+    import org.apache.arrow.vector.types.pojo.ArrowType;
+    import org.apache.arrow.vector.types.pojo.DictionaryEncoding;
+    import org.apache.arrow.vector.types.pojo.FieldType;
+
+    import java.io.File;
+    import java.io.FileInputStream;
+    import java.io.FileNotFoundException;
+    import java.io.FileOutputStream;
+    import java.io.IOException;
+    import java.nio.charset.StandardCharsets;
+
+    final DictionaryEncoding dictionaryEncoding = new DictionaryEncoding(
+            /*id=*/666L, /*ordered=*/false, /*indexType=*/
+            new ArrowType.Int(8, true)
+    );
+    try (BufferAllocator root = new RootAllocator();
+         VarCharVector countries = new VarCharVector("country-dict", root);
+         VarCharVector appUserCountriesUnencoded = new VarCharVector(
+                 "app-use-country-dict",
+                 new FieldType(true, Types.MinorType.VARCHAR.getType(), dictionaryEncoding),
+                 root)
+    ) {
+        countries.allocateNew(10);
+        countries.set(0, "Andorra".getBytes(StandardCharsets.UTF_8));
+        countries.set(1, "Cuba".getBytes(StandardCharsets.UTF_8));
+        countries.set(2, "Grecia".getBytes(StandardCharsets.UTF_8));
+        countries.set(3, "Guinea".getBytes(StandardCharsets.UTF_8));
+        countries.set(4, "Islandia".getBytes(StandardCharsets.UTF_8));
+        countries.set(5, "Malta".getBytes(StandardCharsets.UTF_8));
+        countries.set(6, "Tailandia".getBytes(StandardCharsets.UTF_8));
+        countries.set(7, "Uganda".getBytes(StandardCharsets.UTF_8));
+        countries.set(8, "Yemen".getBytes(StandardCharsets.UTF_8));
+        countries.set(9, "Zambia".getBytes(StandardCharsets.UTF_8));
+        countries.setValueCount(10);
+
+        Dictionary countriesDictionary = new Dictionary(countries, dictionaryEncoding);
+        System.out.println("Dictionary: " + countriesDictionary);
+
+        appUserCountriesUnencoded.allocateNew(5);
+        appUserCountriesUnencoded.set(0, "Andorra".getBytes(StandardCharsets.UTF_8));
+        appUserCountriesUnencoded.set(1, "Guinea".getBytes(StandardCharsets.UTF_8));
+        appUserCountriesUnencoded.set(2, "Islandia".getBytes(StandardCharsets.UTF_8));
+        appUserCountriesUnencoded.set(3, "Malta".getBytes(StandardCharsets.UTF_8));
+        appUserCountriesUnencoded.set(4, "Uganda".getBytes(StandardCharsets.UTF_8));
+        appUserCountriesUnencoded.setValueCount(5);
+        System.out.println("Unencoded data: " + appUserCountriesUnencoded);
+
+        File file = new File("random_access_file_with_dictionary.arrow");
+        DictionaryProvider.MapDictionaryProvider provider = new DictionaryProvider.MapDictionaryProvider();
+        provider.put(countriesDictionary);
+        try (FieldVector appUseCountryDictionaryEncoded = (FieldVector) DictionaryEncoder
+                .encode(appUserCountriesUnencoded, countriesDictionary);
+             VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.of(appUseCountryDictionaryEncoded);
+             FileOutputStream fileOutputStream = new FileOutputStream(file);
+             ArrowFileWriter writer = new ArrowFileWriter(vectorSchemaRoot, provider, fileOutputStream.getChannel())
+        ) {
+            System.out.println("Dictionary-encoded data: " +appUseCountryDictionaryEncoded);
+            System.out.println("Dictionary-encoded ID: " +appUseCountryDictionaryEncoded.getField().getDictionary().getId());
+            writer.start();
+            writer.writeBatch();
+            writer.end();
+            System.out.println("Record batches written: " + writer.getRecordBlocks().size() + ". Number of rows written: " + vectorSchemaRoot.getRowCount());
+            try(
+                BufferAllocator rootAllocator = new RootAllocator();
+                FileInputStream fileInputStream = new FileInputStream(file);
+                ArrowFileReader reader = new ArrowFileReader(fileInputStream.getChannel(), rootAllocator)
+            ){
+                for (ArrowBlock arrowBlock : reader.getRecordBlocks()) {
+                    reader.loadRecordBatch(arrowBlock);
+                    FieldVector appUseCountryDictionaryEncodedRead = reader.getVectorSchemaRoot().getVector("app-use-country-dict");
+                    DictionaryEncoding dictionaryEncodingRead = appUseCountryDictionaryEncodedRead.getField().getDictionary();
+                    System.out.println("Dictionary-encoded ID recovered: " + dictionaryEncodingRead.getId());
+                    Dictionary appUseCountryDictionaryRead = reader.getDictionaryVectors().get(dictionaryEncodingRead.getId());
+                    System.out.println("Dictionary-encoded data recovered: " + appUseCountryDictionaryEncodedRead);
+                    System.out.println("Dictionary recovered: " + appUseCountryDictionaryRead);
+                    try (ValueVector readVector = DictionaryEncoder.decode(appUseCountryDictionaryEncodedRead, appUseCountryDictionaryRead)) {
+                        System.out.println("Decoded data: " + readVector);
+                    }
+                }
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+.. testoutput::
+
+    Dictionary: Dictionary DictionaryEncoding[id=666,ordered=false,indexType=Int(8, true)] [Andorra, Cuba, Grecia, Guinea, Islandia, Malta, Tailandia, Uganda, Yemen, Zambia]
+    Unencoded data: [Andorra, Guinea, Islandia, Malta, Uganda]
+    Dictionary-encoded data: [0, 3, 4, 5, 7]
+    Dictionary-encoded ID: 666
+    Record batches written: 1. Number of rows written: 5
+    Dictionary-encoded ID recovered: 666
+    Dictionary-encoded data recovered: [0, 3, 4, 5, 7]
+    Dictionary recovered: Dictionary DictionaryEncoding[id=666,ordered=false,indexType=Int(8, true)] [Andorra, Cuba, Grecia, Guinea, Islandia, Malta, Tailandia, Uganda, Yemen, Zambia]
+    Decoded data: [Andorra, Guinea, Islandia, Malta, Uganda]
