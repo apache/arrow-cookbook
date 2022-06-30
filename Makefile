@@ -59,11 +59,13 @@ rtest: rdeps
 	cd ./r && Rscript ./scripts/test.R
 
 
+# Only release mode is supported because of a Protobuf WONTFIX bug
+# https://github.com/protocolbuffers/protobuf/issues/9947
 cpptest:
 	@echo ">>> Running C++ Tests/Snippets <<<\n"
 	rm -rf cpp/recipe-test-build
 	mkdir cpp/recipe-test-build
-	cd cpp/recipe-test-build && cmake ../code -DCMAKE_BUILD_TYPE=Debug && cmake --build . && ctest --output-on-failure -j 1
+	cd cpp/recipe-test-build && cmake ../code -DCMAKE_BUILD_TYPE=Release && cmake --build . && ctest --output-on-failure -j 1
 	mkdir -p cpp/build
 	cp cpp/recipe-test-build/recipes_out.arrow cpp/build
 

@@ -65,7 +65,7 @@ target_link_libraries(flight
 target_include_directories(flight PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 get_target_property(grpc_cpp_plugin_location gRPC::grpc_cpp_plugin LOCATION)
 protobuf_generate(TARGET flight LANGUAGE cpp PROTOS ${PROTO_FILES})
-protobuf_generate(TARGET flight LANGUAGE grpc 
-                  GENERATE_EXTENSIONS .grpc.pb.h .grpc.pb.cc 
+protobuf_generate(TARGET flight LANGUAGE grpc
+                  GENERATE_EXTENSIONS .grpc.pb.h .grpc.pb.cc
                   PLUGIN "protoc-gen-grpc=${grpc_cpp_plugin_location}"
                   PROTOS ${PROTO_FILES})

@@ -81,8 +81,7 @@ class ParquetStorageService : public arrow::flight::FlightServerBase {
                       std::unique_ptr<arrow::flight::FlightMetadataWriter>) override {
     ARROW_ASSIGN_OR_RAISE(auto file_info, FileInfoFromDescriptor(reader->descriptor()));
     ARROW_ASSIGN_OR_RAISE(auto sink, root_->OpenOutputStream(file_info.path()));
-    std::shared_ptr<arrow::Table> table;
-    ARROW_RETURN_NOT_OK(reader->ReadAll(&table));
+    ARROW_ASSIGN_OR_RAISE(std::shared_ptr<arrow::Table> table, reader->ToTable());
 
     ARROW_RETURN_NOT_OK(parquet::arrow::WriteTable(*table, arrow::default_memory_pool(),
                                                    sink, /*chunk_size=*/65536));
@@ -105,7 +104,7 @@ class ParquetStorageService : public arrow::flight::FlightServerBase {
     // when we exit this function
     std::vector<std::shared_ptr<arrow::RecordBatch>> batches;
     arrow::TableBatchReader batch_reader(*table);
-    ARROW_RETURN_NOT_OK(batch_reader.ReadAll(&batches));
+    ARROW_ASSIGN_OR_RAISE(batches, batch_reader.ToRecordBatches());
 
     ARROW_ASSIGN_OR_RAISE(auto owning_reader, arrow::RecordBatchReader::Make(
                                                   std::move(batches), table->schema()));
@@ -148,8 +147,8 @@ class ParquetStorageService : public arrow::flight::FlightServerBase {
     arrow::flight::FlightEndpoint endpoint;
     endpoint.ticket.ticket = file_info.base_name();
     arrow::flight::Location location;
-    ARROW_RETURN_NOT_OK(
-        arrow::flight::Location::ForGrpcTcp("localhost", port(), &location));
+    ARROW_ASSIGN_OR_RAISE(location,
+        arrow::flight::Location::ForGrpcTcp("localhost", port()));
     endpoint.locations.push_back(location);
 
     int64_t total_records = reader->parquet_reader()->metadata()->num_rows();
@@ -197,8 +196,8 @@ arrow::Status TestPutGetDelete() {
   auto root = std::make_shared<arrow::fs::SubTreeFileSystem>("./flight_datasets/", fs);
 
   arrow::flight::Location server_location;
-  ARROW_RETURN_NOT_OK(
-      arrow::flight::Location::ForGrpcTcp("0.0.0.0", 0, &server_location));
+  ARROW_ASSIGN_OR_RAISE(server_location,
+      arrow::flight::Location::ForGrpcTcp("0.0.0.0", 0));
 
   arrow::flight::FlightServerOptions options(server_location);
   auto server = std::unique_ptr<arrow::flight::FlightServerBase>(
@@ -209,11 +208,11 @@ arrow::Status TestPutGetDelete() {
 
   StartRecipe("ParquetStorageService::Connect");
   arrow::flight::Location location;
-  ARROW_RETURN_NOT_OK(
-      arrow::flight::Location::ForGrpcTcp("localhost", server->port(), &location));
+  ARROW_ASSIGN_OR_RAISE(location,
+      arrow::flight::Location::ForGrpcTcp("localhost", server->port()));
 
   std::unique_ptr<arrow::flight::FlightClient> client;
-  ARROW_RETURN_NOT_OK(arrow::flight::FlightClient::Connect(location, &client));
+  ARROW_ASSIGN_OR_RAISE(client, arrow::flight::FlightClient::Connect(location));
   rout << "Connected to " << location.ToString() << std::endl;
   EndRecipe("ParquetStorageService::Connect");
 
@@ -234,7 +233,9 @@ arrow::Status TestPutGetDelete() {
   // Start the RPC call
   std::unique_ptr<arrow::flight::FlightStreamWriter> writer;
   std::unique_ptr<arrow::flight::FlightMetadataReader> metadata_reader;
-  ARROW_RETURN_NOT_OK(client->DoPut(descriptor, schema, &writer, &metadata_reader));
+  ARROW_ASSIGN_OR_RAISE(auto put_stream, client->DoPut(descriptor, schema));
+  writer = std::move(put_stream.writer);
+  metadata_reader = std::move(put_stream.reader);
 
   // Upload data
   std::shared_ptr<arrow::RecordBatchReader> batch_reader;
@@ -255,21 +256,21 @@ arrow::Status TestPutGetDelete() {
 
   StartRecipe("ParquetStorageService::GetFlightInfo");
   std::unique_ptr<arrow::flight::FlightInfo> flight_info;
-  ARROW_RETURN_NOT_OK(client->GetFlightInfo(descriptor, &flight_info));
+  ARROW_ASSIGN_OR_RAISE(flight_info, client->GetFlightInfo(descriptor));
   rout << flight_info->descriptor().ToString() << std::endl;
   rout << "=== Schema ===" << std::endl;
   std::shared_ptr<arrow::Schema> info_schema;
   arrow::ipc::DictionaryMemo dictionary_memo;
-  ARROW_RETURN_NOT_OK(flight_info->GetSchema(&dictionary_memo, &info_schema));
+  ARROW_ASSIGN_OR_RAISE(info_schema, flight_info->GetSchema(&dictionary_memo));
   rout << info_schema->ToString() << std::endl;
   rout << "==============" << std::endl;
   EndRecipe("ParquetStorageService::GetFlightInfo");
 
   StartRecipe("ParquetStorageService::DoGet");
   std::unique_ptr<arrow::flight::FlightStreamReader> stream;
-  ARROW_RETURN_NOT_OK(client->DoGet(flight_info->endpoints()[0].ticket, &stream));
+  ARROW_ASSIGN_OR_RAISE(stream, client->DoGet(flight_info->endpoints()[0].ticket));
   std::shared_ptr<arrow::Table> table;
-  ARROW_RETURN_NOT_OK(stream->ReadAll(&table));
+  ARROW_ASSIGN_OR_RAISE(table, stream->ToTable());
   arrow::PrettyPrintOptions print_options(/*indent=*/0, /*window=*/2);
   ARROW_RETURN_NOT_OK(arrow::PrettyPrint(*table, print_options, &rout));
   EndRecipe("ParquetStorageService::DoGet");
@@ -278,22 +279,22 @@ arrow::Status TestPutGetDelete() {
   arrow::flight::Action action{"drop_dataset",
                                arrow::Buffer::FromString("airquality.parquet")};
   std::unique_ptr<arrow::flight::ResultStream> results;
-  ARROW_RETURN_NOT_OK(client->DoAction(action, &results));
+  ARROW_ASSIGN_OR_RAISE(results, client->DoAction(action));
   rout << "Deleted dataset" << std::endl;
   EndRecipe("ParquetStorageService::DoAction");
 
   StartRecipe("ParquetStorageService::ListFlights");
   std::unique_ptr<arrow::flight::FlightListing> listing;
-  ARROW_RETURN_NOT_OK(client->ListFlights(&listing));
+  ARROW_ASSIGN_OR_RAISE(listing, client->ListFlights());
   while (true) {
     std::unique_ptr<arrow::flight::FlightInfo> flight_info;
-    ARROW_RETURN_NOT_OK(listing->Next(&flight_info));
+    ARROW_ASSIGN_OR_RAISE(flight_info, listing->Next());
     if (!flight_info) break;
     rout << flight_info->descriptor().ToString() << std::endl;
     rout << "=== Schema ===" << std::endl;
     std::shared_ptr<arrow::Schema> info_schema;
     arrow::ipc::DictionaryMemo dictionary_memo;
-    ARROW_RETURN_NOT_OK(flight_info->GetSchema(&dictionary_memo, &info_schema));
+    ARROW_ASSIGN_OR_RAISE(info_schema, flight_info->GetSchema(&dictionary_memo));
     rout << info_schema->ToString() << std::endl;
     rout << "==============" << std::endl;
   }
@@ -315,8 +316,8 @@ arrow::Status TestClientOptions() {
   auto root = std::make_shared<arrow::fs::SubTreeFileSystem>("./flight_datasets/", fs);
 
   arrow::flight::Location server_location;
-  ARROW_RETURN_NOT_OK(
-      arrow::flight::Location::ForGrpcTcp("0.0.0.0", 0, &server_location));
+  ARROW_ASSIGN_OR_RAISE(server_location,
+      arrow::flight::Location::ForGrpcTcp("0.0.0.0", 0));
 
   arrow::flight::FlightServerOptions options(server_location);
   auto server = std::unique_ptr<arrow::flight::FlightServerBase>(
@@ -329,18 +330,18 @@ arrow::Status TestClientOptions() {
   client_options.generic_options.emplace_back(GRPC_ARG_MAX_SEND_MESSAGE_LENGTH, 2);
 
   arrow::flight::Location location;
-  ARROW_RETURN_NOT_OK(
-      arrow::flight::Location::ForGrpcTcp("localhost", server->port(), &location));
+  ARROW_ASSIGN_OR_RAISE(location,
+      arrow::flight::Location::ForGrpcTcp("localhost", server->port()));
 
   std::unique_ptr<arrow::flight::FlightClient> client;
-  ARROW_RETURN_NOT_OK(  // pass client_options into Connect()
-      arrow::flight::FlightClient::Connect(location, client_options, &client));
+  // pass client_options into Connect()
+  ARROW_ASSIGN_OR_RAISE(client,
+      arrow::flight::FlightClient::Connect(location, client_options));
   rout << "Connected to " << location.ToString() << std::endl;
   EndRecipe("TestClientOptions::Connect");
 
   auto descriptor = arrow::flight::FlightDescriptor::Path({"airquality.parquet"});
-  std::unique_ptr<arrow::flight::FlightInfo> flight_info;
-  return client->GetFlightInfo(descriptor, &flight_info);
+  return client->GetFlightInfo(descriptor).status();
 }
 
 arrow::Status TestCustomGrpcImpl() {
@@ -352,8 +353,8 @@ arrow::Status TestCustomGrpcImpl() {
 
   StartRecipe("CustomGrpcImpl::StartServer");
   arrow::flight::Location server_location;
-  ARROW_RETURN_NOT_OK(
-      arrow::flight::Location::ForGrpcTcp("0.0.0.0", 5000, &server_location));
+  ARROW_ASSIGN_OR_RAISE(server_location,
+      arrow::flight::Location::ForGrpcTcp("0.0.0.0", 5000));
 
   arrow::flight::FlightServerOptions options(server_location);
   auto server = std::unique_ptr<arrow::flight::FlightServerBase>(
