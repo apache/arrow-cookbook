@@ -107,6 +107,11 @@ cmake --build .
 ctest
 ```
 
+(Tip: If you are using MacOS with Homebrew, you may need to `unset CPATH` to make
+sure the compiler finds the conda include path instead of the homebrew one. Otherwise
+you may encounter linking errors due to mismatches between header file and library
+versions.)
+
 Then you can rerun all of the tests with `ctest` and you can rebuild and
 rerun individual tests much more quickly with something like
 `cmake --build . --target creating_arrow_objects && ctest creating_arrow_objects`.
@@ -150,6 +155,10 @@ source code that is not referenced by the cookbook itself.
 This cookbook follows the same style rules as Arrow C++ which is the Google style
 guide with a few exceptions described
 [here](https://arrow.apache.org/docs/developers/cpp/development.html#code-style-linting-and-ci)
+
+We do follow a stricter clang-tidy rule set than Arrow. In general, we use all 
+rules provided by clang-tidy and exclude ones that don't make sense for the
+project. See `cpp/code/.clang-tidy`.
 
 ## Simple
 

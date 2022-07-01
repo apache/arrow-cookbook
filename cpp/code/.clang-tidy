@@ -17,6 +17,13 @@
 ---
 Checks: '*,-llvmlibc*,-cert-err58-cpp,-modernize-use-trailing-return-type,-fuchsia-*,-cppcoreguidelines-*,
   -readability-magic-numbers,-clang-analyzer-cplusplus.NewDelete,-clang-analyzer-cplusplus.NewDeleteLeaks,
-  -readability-function-cognitive-complexity, -hicpp-special-member-functions'
+  -readability-function-cognitive-complexity,-readability-named-parameter,
+  -readability-convert-member-functions-to-static,-hicpp-special-member-functions,-hicpp-named-parameter,
+  -altera-*,-misc-no-recursion'
 WarningsAsErrors: '*'
 FormatStyle: 'file'
+CheckOptions:
+  - key: performance-unnecessary-value-param.AllowedTypes
+    value: 'shared_ptr'
+  - key: performance-for-range-copy.AllowedTypes
+    value: 'shared_ptr'

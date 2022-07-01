@@ -2,16 +2,12 @@ cmake_minimum_required(VERSION 3.19)
 project(arrow-cookbook)
 
 set(CMAKE_CXX_STANDARD 17)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
-endif()
 
 # Add Arrow
 find_package(Arrow REQUIRED COMPONENTS dataset flight parquet)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(CMAKE_CXX_CLANG_TIDY "clang-tidy")
-endif()
+# You may wish to comment this line out to temporarily ignore pendantic linting errors
+set(CMAKE_CXX_CLANG_TIDY "clang-tidy")
 
 # Create test targets
 enable_testing()
