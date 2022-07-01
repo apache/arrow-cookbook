@@ -42,7 +42,7 @@ be considered nulls
 
     import numpy as np
 
-    array = pa.array([1, 2, 3, 4, 5], 
+    array = pa.array([1, 2, 3, 4, 5],
                      mask=np.array([True, False, True, False, True]))
 
     print(array)
@@ -104,7 +104,7 @@ Create Table from Plain Types
 
 Arrow allows fast zero copy creation of arrow arrays
 from numpy and pandas arrays and series, but it's also
-possible to create Arrow Arrays and Tables from 
+possible to create Arrow Arrays and Tables from
 plain Python structures.
 
 The :func:`pyarrow.table` function allows creation of Tables
@@ -136,6 +136,33 @@ from a variety of inputs, including plain python objects
     :func:`pyarrow.array` for conversion to Arrow arrays,
     and will benefit from zero copy behaviour when possible.
 
+The :meth:`pyarrow.Table.from_pylist` method allows the creation
+of Tables from python lists of row dicts. Types are inferred if a
+schema is not explicitly passed.
+
+.. testcode::
+
+    import pyarrow as pa
+
+    table = pa.Table.from_pylist([
+        {"col1": 1, "col2": "a"},
+        {"col1": 2, "col2": "b"},
+        {"col1": 3, "col2": "c"},
+        {"col1": 4, "col2": "d"},
+        {"col1": 5, "col2": "e"}
+    ])
+
+    print(table)
+
+.. testoutput::
+
+    pyarrow.Table
+    col1: int64
+    col2: string
+    ----
+    col1: [[1,2,3,4,5]]
+    col2: [["a","b","c","d","e"]]
+
 Creating Record Batches
 =======================
 
@@ -153,7 +180,7 @@ of a table.
         pa.array([2, 4, 6, 8, 10])
     ], names=["odd", "even"])
 
-Multiple batches can be combined into a table using 
+Multiple batches can be combined into a table using
 :meth:`pyarrow.Table.from_batches`
 
 .. testcode::
@@ -178,7 +205,7 @@ Multiple batches can be combined into a table using
     odd: [[1,3,5,7,9],[11,13,15,17,19]]
     even: [[2,4,6,8,10],[12,14,16,18,20]]
 
-Equally, :class:`pyarrow.Table` can be converted to a list of 
+Equally, :class:`pyarrow.Table` can be converted to a list of
 :class:`pyarrow.RecordBatch` using the :meth:`pyarrow.Table.to_batches`
 method
 
@@ -230,7 +257,7 @@ using :meth:`pyarrow.Array.dictionary_encode`
       ]
 
 If you already know the categories and indices then you can skip the encode
-step and directly create the ``DictionaryArray`` using 
+step and directly create the ``DictionaryArray`` using
 :meth:`pyarrow.DictionaryArray.from_arrays`
 
 .. testcode::
