@@ -1,0 +1,266 @@
+# Manipulating Data - Datasets
+
+## Introduction
+
+While Arrow allows you to work with single files imported as Tables, you can 
+also work with Datasets.  These differ from tables as they can be split across 
+multiple files/folders via partitioning, which means that you avoid problems 
+associated with storing all your data in a single file.  This can provide 
+further advantages to using Arrow, as you can now conduct analyses which only 
+read in the necessary files.
+
+It's possible to have datasets in Parquet, Feather (aka Arrow), and CSV (or 
+other text-delimited formats).  If you are choosing a dataset format, we 
+recommend Parquet or Feather, which will likely lead to improved performance 
+when compared to CSVs due to their capabilities around metadata and compression.
+
+## Write a dataset to disk (Parquet)
+
+You want to write a dataset to disk in a single Parquet file.
+
+### Solution
+
+```{r, write_dataset_basic}
+write_dataset(dataset = starwars, path = "starwars_data")
+```
+
+```{r, test_write_dataset_basic, opts.label = "test"}
+
+test_that("write_dataset_basic works as expected", {
+  
+  expect_true(file.exists("starwars_data"))
+  expect_length(list.files("starwars_data"), 1)
+  
+})
+
+```
+
+### Discussion
+
+The default format for `open_dataset()` is Parquet. 
+
+## Write a dataset to disk - partitioned based on a variable
+
+You want to write a dataset to disk partitioned across multiple files.
+
+### Solution
+
+```{r, write_dataset_partitioned}
+write_dataset(dataset = starwars, path = "starwars_data_partitioned", partitioning = "homeworld")
+```
+
+
+```{r, test_write_dataset_partitioned, opts.label = "test"}
+
+test_that("write_dataset_partitioned works as expected", {
+  
+  expect_true(file.exists("starwars_data_partitioned"))
+  expect_length(list.files("starwars_data_partitioned", recursive = TRUE), 49)
+  
+})
+
+```
+
+### Discussion
+
+The data is written to separate folders based on the values in the `homeworld` 
+column.  The default behaviour is to use Hive-style (i.e. "col_name=value" folder names)
+partitions.
+
+```{r}
+# Take a look at the files in this directory
+list.files("starwars_data_partitioned", recursive = TRUE)
+```
+
+Note that in the example above, when there was an `NA` value in the `homeworld`
+column, these values are written to the `homeworld=__HIVE_DEFAULT_PARTITION__`
+directory.
+
+You can specify multiple partitioning variables to add extra layers of partitioning.
+
+```{r, write_dataset_partitioned_deeper}
+write_dataset(
+  dataset = starwars,
+  path = "starwars_partitioned_twice",
+  partitioning = c("homeworld", "species")
+)
+```
+
+```{r, test_write_dataset_partitioned_deeper, opts.label = "test"}
+
+test_that("write_dataset_partitioned_deeper works as expected", {
+  
+  expect_true(file.exists("starwars_partitioned_twice"))
+  expect_length(list.files("starwars_partitioned_twice", recursive = TRUE), 58)
+  
+})
+
+```
+
+```{r}
+# Take a look at the files in this directory
+list.files("starwars_partitioned_twice", recursive = TRUE)
+```
+
+There are two different ways to specify variables to use for partitioning - 
+either via the `partitioning` variable as above, or by using `dplyr::group_by()` on your data - the group variables will form the partitions.
+
+```{r, write_dataset_partitioned_groupby}
+library(dplyr)
+write_dataset(dataset = group_by(starwars, homeworld, species), path = "starwars_groupby")
+```
+
+```{r, test_write_dataset_partitioned_groupby, opts.label = "test"}
+
+test_that("write_dataset_partitioned_groupby works as expected", {
+  
+  expect_true(file.exists("starwars_groupby"))
+  expect_length(list.files("starwars_groupby", recursive = TRUE), 58)
+  
+})
+
+```
+
+```{r}
+# Take a look at the files in this directory
+list.files("starwars_groupby", recursive = TRUE)
+```
+## Write a dataset to disk - Feather format
+
+You want to write a dataset to disk in a single Feather file.
+
+### Solution
+
+```{r, write_dataset_feather}
+write_dataset(dataset = starwars, path = "starwars_data_feather", format = "feather")
+```
+
+```{r, test_write_dataset_feather, opts.label = "test"}
+
+test_that("write_dataset_feather works as expected", {
+  
+  expect_true(file.exists("starwars_data_feather"))
+  expect_length(list.files("starwars_data_feather"), 1)
+  
+})
+
+```
+
+## Write a dataset to disk - CSV format
+
+You want to write a dataset to disk in a single CSV file.
+
+### Solution
+
+```{r, write_dataset_csv}
+# Need to update this example as we can't write list columns to CSV :(
+write_dataset(dataset = starwars, path = "starwars_data_csv", format = "csv")
+```
+
+```{r, test_write_dataset_csv, opts.label = "test"}
+
+test_that("write_dataset_csv works as expected", {
+  
+  expect_true(file.exists("starwars_data_csv"))
+  expect_length(list.files("starwars_data_csv"), 1)
+  
+})
+
+```
+
+## Read in a CSV dataset
+
+You want to read in a CSV dataset
+
+### Solution
+
+```{r, read_csv_datset}
+# write CSV file to use in this example
+starwars_heights <- select(starwars, name, height)
+write_dataset(starwars_heights, "starwars_csv", format = "csv")
+
+# read into R
+open_dataset("starwars_csv", format = "csv")
+```
+
+```{r, test_read_csv_datset, opts.label = "test"}
+
+test_that("read_csv_datset works as expected", {
+  
+  dataset <- open_dataset("starwars_csv", format = "csv")
+  expect_s3_class(dataset, "FileSystemDataset")
+  expect_identical(dim(dataset), c(87L, 2L))
+  
+})
+
+```
+
+## Read in a CSV dataset (no headers)
+
+You want to read in a dataset containing CSVs with no headers
+
+### Solution
+
+```{r, read_headerless_csv_datset}
+# write CSV file to use in this example
+dataset_1 <- starwars[1:40, c("name", "height")]
+dataset_2 <- starwars[41:87, c("name", "height")]
+
+dir.create("starwars")
+write.table(dataset_1, "starwars/part-1.csv", sep = ",", row.names = FALSE, col.names = FALSE)
+write.table(dataset_2, "starwars/part-2.csv", sep = ",", row.names = FALSE, col.names = FALSE)
+
+# read into R
+open_dataset("starwars", format = "csv", column_names = c("name", "height"))
+```
+
+```{r, test_read_headerless_csv_datset, opts.label = "test"}
+
+test_that("read_headerless_csv_datset works as expected", {
+  
+  data_in <- open_dataset("starwars", format = "csv", column_names = c("name", "height"))
+  
+  expect_s3_class(data_in, "FileSystemDataset")
+  expect_identical(dim(data_in), c(87L, 2L))
+  expect_named(data_in, c("name", "height"))
+  
+})
+
+```
+
+### Discussion
+
+If your dataset is made up of headerless CSV files, you must supply the names of
+each column.  You can do this in multiple ways - either via the `column_names` 
+parameter (as shown above) or via a schema:
+
+```{r, read_headerless_csv_datset_schema}
+# write CSV file to use in this example
+dataset_1 <- starwars[1:40, c("name", "height")]
+dataset_2 <- starwars[41:87, c("name", "height")]
+
+dir.create("starwars")
+write.table(dataset_1, "starwars/part-1.csv", sep = ",", row.names = FALSE, col.names = FALSE)
+write.table(dataset_2, "starwars/part-2.csv", sep = ",", row.names = FALSE, col.names = FALSE)
+
+# read into R
+open_dataset("starwars", format = "csv", schema = schema("name" = string(), "height" = int16()))
+```
+
+```{r, test_read_headerless_csv_datset_schema, opts.label = "test"}
+
+test_that("read_headerless_csv_datset_schema works as expected", {
+  
+  data_in <- open_dataset("starwars", format = "csv", schema = schema("name" = string(), "height" = int16()))
+  
+  expect_s3_class(data_in, "FileSystemDataset")
+  expect_identical(dim(data_in), c(87L, 2L))
+  expect_named(data_in, c("name", "height"))
+  expect_equal(data_in$schema, schema("name" = string(), "height" = int16()))
+  
+})
+
+```
+
+One additional advantage of using a schema is that you also have control of the 
+data types of the columns.
