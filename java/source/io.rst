@@ -448,8 +448,7 @@ Reading JDBC ResultSets
 ***********************
 
 The `Arrow Java JDBC module <https://arrow.apache.org/docs/java/jdbc.html>`_
-help us to convert JDBC ResultSets objects into columnar arrow format objects
-through Arrow VectorSchemaRoots.
+converts JDBC ResultSets into Arrow VectorSchemaRoots.
 
 ResultSet to VectorSchemaRoot Conversion
 ----------------------------------------
@@ -483,9 +482,7 @@ The main class to help us to convert ResultSet to VectorSchemaRoot is
                 System.out.print(root.contentToTSVString());
             }
         }
-    } catch (SQLException throwables) {
-        throwables.printStackTrace();
-    } catch (IOException e) {
+    } catch (SQLException | IOException e) {
         e.printStackTrace();
     }
 
@@ -496,9 +493,9 @@ The main class to help us to convert ResultSet to VectorSchemaRoot is
     102    true    5.6478356785345E10
     103    true    5.6478356785345E10
 
-JdbcToArrow could be created also with a custom configurations needed with the
-support of `JdbcToArrowConfig <https://arrow.apache.org/docs/java/reference/org/apache/arrow/adapter/jdbc/JdbcToArrowConfig.html>`_
-, it is useful at the moment to work with array columns.
+JdbcToArrow accepts configuration through `JdbcToArrowConfig
+<https://arrow.apache.org/docs/java/reference/org/apache/arrow/adapter/jdbc/JdbcToArrowConfig.html>`_.
+For example, the type of the elements of array columns can be specified.
 
 .. testcode::
 
