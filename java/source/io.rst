@@ -444,6 +444,176 @@ Reading Parquet File
 
 Please check :doc:`Dataset <./dataset>`
 
+Reading JDBC ResultSets
+***********************
+
+The `Arrow Java JDBC module <https://arrow.apache.org/docs/java/jdbc.html>`_
+help us to convert JDBC ResultSets objects into columnar arrow format objects
+through Arrow VectorSchemaRoots.
+
+ResultSet to VectorSchemaRoot Conversion
+----------------------------------------
+
+The main class to help us to convert ResultSet to VectorSchemaRoot is
+`JdbcToArrow <https://arrow.apache.org/docs/java/reference/org/apache/arrow/adapter/jdbc/JdbcToArrow.html>`_
+
+.. testcode::
+
+    import org.apache.arrow.adapter.jdbc.ArrowVectorIterator;
+    import org.apache.arrow.adapter.jdbc.JdbcToArrow;
+    import org.apache.arrow.memory.BufferAllocator;
+    import org.apache.arrow.memory.RootAllocator;
+    import org.apache.arrow.vector.VectorSchemaRoot;
+    import org.h2.jdbcx.JdbcConnectionPool;
+
+    import java.io.IOException;
+    import java.sql.ResultSet;
+    import java.sql.SQLException;
+
+    try (BufferAllocator allocator = new RootAllocator()) {
+        JdbcConnectionPool pool = JdbcConnectionPool.create(
+                "jdbc:h2:zip:./thirdpartydeps/database/jdbc-cookbook.zip!/test",
+                "sa", "");
+        ResultSet resultSet = pool.getConnection().createStatement().executeQuery(
+                "SELECT int_field1, bool_field2, double_field7 FROM TABLE1");
+        try (ArrowVectorIterator iterator = JdbcToArrow.sqlToArrowVectorIterator(
+                resultSet, allocator)) {
+            while (iterator.hasNext()) {
+                VectorSchemaRoot root = iterator.next();
+                System.out.print(root.contentToTSVString());
+            }
+        }
+    } catch (SQLException throwables) {
+        throwables.printStackTrace();
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+
+.. testoutput::
+
+    INT_FIELD1    BOOL_FIELD2    DOUBLE_FIELD7
+    101    true    5.6478356785345E10
+    102    true    5.6478356785345E10
+    103    true    5.6478356785345E10
+
+JdbcToArrow could be created also with a custom configurations needed with the
+support of `JdbcToArrowConfig <https://arrow.apache.org/docs/java/reference/org/apache/arrow/adapter/jdbc/JdbcToArrowConfig.html>`_
+, it is useful at the moment to work with array columns.
+
+.. testcode::
+
+    import org.apache.arrow.adapter.jdbc.ArrowVectorIterator;
+    import org.apache.arrow.adapter.jdbc.JdbcFieldInfo;
+    import org.apache.arrow.adapter.jdbc.JdbcToArrow;
+    import org.apache.arrow.adapter.jdbc.JdbcToArrowConfig;
+    import org.apache.arrow.adapter.jdbc.JdbcToArrowConfigBuilder;
+    import org.apache.arrow.adapter.jdbc.JdbcToArrowUtils;
+    import org.apache.arrow.memory.BufferAllocator;
+    import org.apache.arrow.memory.RootAllocator;
+    import org.apache.arrow.vector.VectorSchemaRoot;
+    import org.h2.jdbcx.JdbcConnectionPool;
+
+    import java.io.IOException;
+    import java.sql.ResultSet;
+    import java.sql.SQLException;
+    import java.sql.Types;
+    import java.util.HashMap;
+
+    try (BufferAllocator allocator = new RootAllocator()) {
+        JdbcConnectionPool pool = JdbcConnectionPool.create(
+                "jdbc:h2:zip:./thirdpartydeps/database/jdbc-cookbook.zip!/test",
+                "sa", "");
+        ResultSet resultSet = pool.getConnection().createStatement().executeQuery(
+                "SELECT int_field1, bool_field2, double_field7, char_field16, list_field19 FROM TABLE1");
+        JdbcToArrowConfig config = new JdbcToArrowConfigBuilder(allocator,
+                JdbcToArrowUtils.getUtcCalendar())
+                .setArraySubTypeByColumnNameMap(
+                        new HashMap<>() {{
+                            put("LIST_FIELD19",
+                                    new JdbcFieldInfo(Types.INTEGER));
+                        }}
+                )
+                .build();
+        try (ArrowVectorIterator iterator = JdbcToArrow.sqlToArrowVectorIterator(
+                resultSet, config)) {
+            while (iterator.hasNext()) {
+                VectorSchemaRoot root = iterator.next();
+                System.out.print(root.contentToTSVString());
+            }
+        }
+    } catch (SQLException throwables) {
+        throwables.printStackTrace();
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+
+.. testoutput::
+
+    INT_FIELD1    BOOL_FIELD2    DOUBLE_FIELD7    CHAR_FIELD16    LIST_FIELD19
+    101    true    5.6478356785345E10    some char text      [1,2,3]
+    102    true    5.6478356785345E10    some char text      [1,2]
+    103    true    5.6478356785345E10    some char text      [1]
+
+The maximum rowCount to read each time is configured by default in 1024. This
+can be customized by setting values as needed.
+
+.. testcode::
+
+    import org.apache.arrow.adapter.jdbc.ArrowVectorIterator;
+    import org.apache.arrow.adapter.jdbc.JdbcFieldInfo;
+    import org.apache.arrow.adapter.jdbc.JdbcToArrow;
+    import org.apache.arrow.adapter.jdbc.JdbcToArrowConfig;
+    import org.apache.arrow.adapter.jdbc.JdbcToArrowConfigBuilder;
+    import org.apache.arrow.adapter.jdbc.JdbcToArrowUtils;
+    import org.apache.arrow.memory.BufferAllocator;
+    import org.apache.arrow.memory.RootAllocator;
+    import org.apache.arrow.vector.VectorSchemaRoot;
+    import org.h2.jdbcx.JdbcConnectionPool;
+
+    import java.io.IOException;
+    import java.sql.ResultSet;
+    import java.sql.SQLException;
+    import java.sql.Types;
+    import java.util.HashMap;
+
+    try (BufferAllocator allocator = new RootAllocator()) {
+        JdbcConnectionPool pool = JdbcConnectionPool.create(
+                "jdbc:h2:zip:./thirdpartydeps/database/jdbc-cookbook.zip!/test",
+                "sa", "");
+        ResultSet resultSet = pool.getConnection().createStatement().executeQuery(
+                "SELECT int_field1, bool_field2, double_field7, char_field16, list_field19 FROM TABLE1");
+        JdbcToArrowConfig config = new JdbcToArrowConfigBuilder(allocator,
+                JdbcToArrowUtils.getUtcCalendar())
+                .setTargetBatchSize(2)
+                .setArraySubTypeByColumnNameMap(
+                        new HashMap<>() {{
+                            put("LIST_FIELD19",
+                                    new JdbcFieldInfo(Types.INTEGER));
+                        }}
+                )
+                .build();
+        try (ArrowVectorIterator iterator = JdbcToArrow.sqlToArrowVectorIterator(
+                resultSet, config)) {
+            while (iterator.hasNext()) {
+                try(VectorSchemaRoot root = iterator.next()){
+                    System.out.print(root.contentToTSVString());
+                }
+            }
+        }
+    } catch (SQLException throwables) {
+        throwables.printStackTrace();
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+
+.. testoutput::
+
+    INT_FIELD1    BOOL_FIELD2    DOUBLE_FIELD7    CHAR_FIELD16    LIST_FIELD19
+    101    true    5.6478356785345E10    some char text      [1,2,3]
+    102    true    5.6478356785345E10    some char text      [1,2]
+    INT_FIELD1    BOOL_FIELD2    DOUBLE_FIELD7    CHAR_FIELD16    LIST_FIELD19
+    103    true    5.6478356785345E10    some char text      [1]
+
 Handling Data with Dictionaries
 *******************************
 
@@ -475,7 +645,7 @@ Reading and writing dictionary-encoded data requires separately tracking the dic
     import java.io.IOException;
     import java.nio.charset.StandardCharsets;
 
-    final DictionaryEncoding dictionaryEncoding = new DictionaryEncoding(
+    DictionaryEncoding dictionaryEncoding = new DictionaryEncoding(
             /*id=*/666L, /*ordered=*/false, /*indexType=*/
             new ArrowType.Int(8, true)
     );
