@@ -21,7 +21,7 @@
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
-        <arrow.version>9.0.0.dev191</arrow.version><!-- Prepare for 9.0.0 release -->
+        <arrow.version>9.0.0.dev405</arrow.version><!-- Prepare for 9.0.0 release -->
         <h2.version>2.1.214</h2.version>
     </properties>
 
@@ -77,6 +77,11 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>${h2.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ibatis</groupId>
+            <artifactId>ibatis-core</artifactId>
+            <version>3.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
