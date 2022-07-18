@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>7 Using PyArrow from R | Apache Arrow R Cookbook</title>
+  <meta name="description" content="7 Using PyArrow from R | Apache Arrow R Cookbook" />
+  <meta name="generator" content="bookdown 0.27 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="7 Using PyArrow from R | Apache Arrow R Cookbook" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="7 Using PyArrow from R | Apache Arrow R Cookbook" />
+  
+  
+  
+
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="manipulating-data---tables.html"/>
+<link rel="next" href="flight.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<script src="libs/accessible-code-block-0.0.1/empty-anchor.js"></script>
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+
+
+<style type="text/css">
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Preface</a><ul>
+<li class="chapter" data-level="1.1" data-path="index.html"><a href="index.html#what-is-arrow"><i class="fa fa-check"></i><b>1.1</b> What is Arrow?</a></li>
+<li class="chapter" data-level="1.2" data-path="index.html"><a href="index.html#alternative-resources"><i class="fa fa-check"></i><b>1.2</b> Alternative resources</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html"><i class="fa fa-check"></i><b>2</b> Reading and Writing Data</a><ul>
+<li class="chapter" data-level="2.1" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#introduction"><i class="fa fa-check"></i><b>2.1</b> Introduction</a></li>
+<li class="chapter" data-level="2.2" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#convert-from-a-data-frame-to-an-arrow-table"><i class="fa fa-check"></i><b>2.2</b> Convert from a data frame to an Arrow Table</a><ul>
+<li class="chapter" data-level="2.2.1" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#solution"><i class="fa fa-check"></i><b>2.2.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="2.3" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#convert-data-from-an-arrow-table-to-a-data-frame"><i class="fa fa-check"></i><b>2.3</b> Convert data from an Arrow Table to a data frame</a><ul>
+<li class="chapter" data-level="2.3.1" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#solution-1"><i class="fa fa-check"></i><b>2.3.1</b> Solution</a></li>
+<li class="chapter" data-level="2.3.2" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#discussion"><i class="fa fa-check"></i><b>2.3.2</b> Discussion</a></li>
+</ul></li>
+<li class="chapter" data-level="2.4" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#write-a-parquet-file"><i class="fa fa-check"></i><b>2.4</b> Write a Parquet file</a><ul>
+<li class="chapter" data-level="2.4.1" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#solution-2"><i class="fa fa-check"></i><b>2.4.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="2.5" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#read-a-parquet-file"><i class="fa fa-check"></i><b>2.5</b> Read a Parquet file</a><ul>
+<li class="chapter" data-level="2.5.1" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#solution-3"><i class="fa fa-check"></i><b>2.5.1</b> Solution</a></li>
+<li class="chapter" data-level="2.5.2" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#discussion-1"><i class="fa fa-check"></i><b>2.5.2</b> Discussion</a></li>
+</ul></li>
+<li class="chapter" data-level="2.6" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#read-a-parquet-file-from-s3"><i class="fa fa-check"></i><b>2.6</b> Read a Parquet file from S3</a><ul>
+<li class="chapter" data-level="2.6.1" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#solution-4"><i class="fa fa-check"></i><b>2.6.1</b> Solution</a></li>
+<li class="chapter" data-level="2.6.2" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#see-also"><i class="fa fa-check"></i><b>2.6.2</b> See also</a></li>
+</ul></li>
+<li class="chapter" data-level="2.7" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#filter-columns-while-reading-a-parquet-file"><i class="fa fa-check"></i><b>2.7</b> Filter columns while reading a Parquet file</a><ul>
+<li class="chapter" data-level="2.7.1" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#solution-5"><i class="fa fa-check"></i><b>2.7.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="2.8" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#write-an-ipcfeather-v2-file"><i class="fa fa-check"></i><b>2.8</b> Write an IPC/Feather V2 file</a><ul>
+<li class="chapter" data-level="2.8.1" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#solution-6"><i class="fa fa-check"></i><b>2.8.1</b> Solution</a></li>
+<li class="chapter" data-level="2.8.2" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#discussion-2"><i class="fa fa-check"></i><b>2.8.2</b> Discussion</a></li>
+</ul></li>
+<li class="chapter" data-level="2.9" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#read-a-feather-file"><i class="fa fa-check"></i><b>2.9</b> Read a Feather file</a><ul>
+<li class="chapter" data-level="2.9.1" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#solution-7"><i class="fa fa-check"></i><b>2.9.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="2.10" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#write-streaming-ipc-files"><i class="fa fa-check"></i><b>2.10</b> Write streaming IPC files</a><ul>
+<li class="chapter" data-level="2.10.1" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#solution-8"><i class="fa fa-check"></i><b>2.10.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="2.11" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#read-streaming-ipc-files"><i class="fa fa-check"></i><b>2.11</b> Read streaming IPC files</a><ul>
+<li class="chapter" data-level="2.11.1" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#solution-9"><i class="fa fa-check"></i><b>2.11.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="2.12" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#write-csv-files"><i class="fa fa-check"></i><b>2.12</b> Write CSV files</a><ul>
+<li class="chapter" data-level="2.12.1" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#solution-10"><i class="fa fa-check"></i><b>2.12.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="2.13" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#read-csv-files"><i class="fa fa-check"></i><b>2.13</b> Read CSV files</a><ul>
+<li class="chapter" data-level="2.13.1" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#solution-11"><i class="fa fa-check"></i><b>2.13.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="2.14" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#read-json-files"><i class="fa fa-check"></i><b>2.14</b> Read JSON files</a><ul>
+<li class="chapter" data-level="2.14.1" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#solution-12"><i class="fa fa-check"></i><b>2.14.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="2.15" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#write-partitioned-data"><i class="fa fa-check"></i><b>2.15</b> Write partitioned data</a><ul>
+<li class="chapter" data-level="2.15.1" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#solution-13"><i class="fa fa-check"></i><b>2.15.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="2.16" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#read-partitioned-data"><i class="fa fa-check"></i><b>2.16</b> Read partitioned data</a><ul>
+<li class="chapter" data-level="2.16.1" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#solution-14"><i class="fa fa-check"></i><b>2.16.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="2.17" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#write-compressed-data"><i class="fa fa-check"></i><b>2.17</b> Write compressed data</a><ul>
+<li class="chapter" data-level="2.17.1" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#solution-15"><i class="fa fa-check"></i><b>2.17.1</b> Solution</a></li>
+<li class="chapter" data-level="2.17.2" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#discussion-3"><i class="fa fa-check"></i><b>2.17.2</b> Discussion</a></li>
+<li class="chapter" data-level="2.17.3" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#see-also-1"><i class="fa fa-check"></i><b>2.17.3</b> See also</a></li>
+</ul></li>
+<li class="chapter" data-level="2.18" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#read-compressed-data"><i class="fa fa-check"></i><b>2.18</b> Read compressed data</a><ul>
+<li class="chapter" data-level="2.18.1" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#solution-16"><i class="fa fa-check"></i><b>2.18.1</b> Solution</a></li>
+<li class="chapter" data-level="2.18.2" data-path="reading-and-writing-data.html"><a href="reading-and-writing-data.html#discussion-4"><i class="fa fa-check"></i><b>2.18.2</b> Discussion</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="creating-arrow-objects.html"><a href="creating-arrow-objects.html"><i class="fa fa-check"></i><b>3</b> Creating Arrow Objects</a><ul>
+<li class="chapter" data-level="3.1" data-path="creating-arrow-objects.html"><a href="creating-arrow-objects.html#create-an-arrow-array-from-an-r-object"><i class="fa fa-check"></i><b>3.1</b> Create an Arrow Array from an R object</a><ul>
+<li class="chapter" data-level="3.1.1" data-path="creating-arrow-objects.html"><a href="creating-arrow-objects.html#solution-17"><i class="fa fa-check"></i><b>3.1.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="3.2" data-path="creating-arrow-objects.html"><a href="creating-arrow-objects.html#create-a-arrow-table-from-an-r-object"><i class="fa fa-check"></i><b>3.2</b> Create a Arrow Table from an R object</a><ul>
+<li class="chapter" data-level="3.2.1" data-path="creating-arrow-objects.html"><a href="creating-arrow-objects.html#solution-18"><i class="fa fa-check"></i><b>3.2.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="3.3" data-path="creating-arrow-objects.html"><a href="creating-arrow-objects.html#view-the-contents-of-an-arrow-table-or-recordbatch"><i class="fa fa-check"></i><b>3.3</b> View the contents of an Arrow Table or RecordBatch</a><ul>
+<li class="chapter" data-level="3.3.1" data-path="creating-arrow-objects.html"><a href="creating-arrow-objects.html#solution-19"><i class="fa fa-check"></i><b>3.3.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="3.4" data-path="creating-arrow-objects.html"><a href="creating-arrow-objects.html#manually-create-a-recordbatch-from-an-r-object."><i class="fa fa-check"></i><b>3.4</b> Manually create a RecordBatch from an R object.</a><ul>
+<li class="chapter" data-level="3.4.1" data-path="creating-arrow-objects.html"><a href="creating-arrow-objects.html#solution-20"><i class="fa fa-check"></i><b>3.4.1</b> Solution</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="defining-data-types.html"><a href="defining-data-types.html"><i class="fa fa-check"></i><b>4</b> Defining Data Types</a><ul>
+<li class="chapter" data-level="4.1" data-path="defining-data-types.html"><a href="defining-data-types.html#introduction-1"><i class="fa fa-check"></i><b>4.1</b> Introduction</a></li>
+<li class="chapter" data-level="4.2" data-path="defining-data-types.html"><a href="defining-data-types.html#update-data-type-of-an-existing-arrow-array"><i class="fa fa-check"></i><b>4.2</b> Update data type of an existing Arrow Array</a><ul>
+<li class="chapter" data-level="4.2.1" data-path="defining-data-types.html"><a href="defining-data-types.html#solution-21"><i class="fa fa-check"></i><b>4.2.1</b> Solution</a></li>
+<li class="chapter" data-level="4.2.2" data-path="defining-data-types.html"><a href="defining-data-types.html#discussion-5"><i class="fa fa-check"></i><b>4.2.2</b> Discussion</a></li>
+</ul></li>
+<li class="chapter" data-level="4.3" data-path="defining-data-types.html"><a href="defining-data-types.html#update-data-type-of-a-field-in-an-existing-arrow-table"><i class="fa fa-check"></i><b>4.3</b> Update data type of a field in an existing Arrow Table</a><ul>
+<li class="chapter" data-level="4.3.1" data-path="defining-data-types.html"><a href="defining-data-types.html#solution-22"><i class="fa fa-check"></i><b>4.3.1</b> Solution</a></li>
+<li class="chapter" data-level="4.3.2" data-path="defining-data-types.html"><a href="defining-data-types.html#no-compat-type"><i class="fa fa-check"></i><b>4.3.2</b> Discussion</a></li>
+</ul></li>
+<li class="chapter" data-level="4.4" data-path="defining-data-types.html"><a href="defining-data-types.html#specify-data-types-when-creating-an-arrow-table-from-an-r-object"><i class="fa fa-check"></i><b>4.4</b> Specify data types when creating an Arrow table from an R object</a><ul>
+<li class="chapter" data-level="4.4.1" data-path="defining-data-types.html"><a href="defining-data-types.html#solution-23"><i class="fa fa-check"></i><b>4.4.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="4.5" data-path="defining-data-types.html"><a href="defining-data-types.html#specify-data-types-when-reading-in-files"><i class="fa fa-check"></i><b>4.5</b> Specify data types when reading in files</a><ul>
+<li class="chapter" data-level="4.5.1" data-path="defining-data-types.html"><a href="defining-data-types.html#solution-24"><i class="fa fa-check"></i><b>4.5.1</b> Solution</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html"><i class="fa fa-check"></i><b>5</b> Manipulating Data - Arrays</a><ul>
+<li class="chapter" data-level="5.1" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#introduction-2"><i class="fa fa-check"></i><b>5.1</b> Introduction</a></li>
+<li class="chapter" data-level="5.2" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#filter-by-values-matching-a-predicate-or-mask"><i class="fa fa-check"></i><b>5.2</b> Filter by values matching a predicate or mask</a><ul>
+<li class="chapter" data-level="5.2.1" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#solution-25"><i class="fa fa-check"></i><b>5.2.1</b> Solution</a></li>
+<li class="chapter" data-level="5.2.2" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#discussion-6"><i class="fa fa-check"></i><b>5.2.2</b> Discussion</a></li>
+</ul></li>
+<li class="chapter" data-level="5.3" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#compute-meanminmax-etc-value-of-an-array"><i class="fa fa-check"></i><b>5.3</b> Compute Mean/Min/Max, etc value of an Array</a><ul>
+<li class="chapter" data-level="5.3.1" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#solution-26"><i class="fa fa-check"></i><b>5.3.1</b> Solution</a></li>
+<li class="chapter" data-level="5.3.2" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#discussion-7"><i class="fa fa-check"></i><b>5.3.2</b> Discussion</a></li>
+</ul></li>
+<li class="chapter" data-level="5.4" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#count-occurrences-of-elements-in-an-array"><i class="fa fa-check"></i><b>5.4</b> Count occurrences of elements in an Array</a><ul>
+<li class="chapter" data-level="5.4.1" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#solution-27"><i class="fa fa-check"></i><b>5.4.1</b> Solution</a></li>
+<li class="chapter" data-level="5.4.2" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#discussion-8"><i class="fa fa-check"></i><b>5.4.2</b> Discussion</a></li>
+</ul></li>
+<li class="chapter" data-level="5.5" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#apply-arithmetic-functions-to-arrays."><i class="fa fa-check"></i><b>5.5</b> Apply arithmetic functions to Arrays.</a><ul>
+<li class="chapter" data-level="5.5.1" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#solution-28"><i class="fa fa-check"></i><b>5.5.1</b> Solution</a></li>
+<li class="chapter" data-level="5.5.2" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#discussion-9"><i class="fa fa-check"></i><b>5.5.2</b> Discussion</a></li>
+</ul></li>
+<li class="chapter" data-level="5.6" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#call-arrow-compute-functions-directly-on-arrays"><i class="fa fa-check"></i><b>5.6</b> Call Arrow compute functions directly on Arrays</a><ul>
+<li class="chapter" data-level="5.6.1" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#solution-29"><i class="fa fa-check"></i><b>5.6.1</b> Solution</a></li>
+<li class="chapter" data-level="5.6.2" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#discussion-10"><i class="fa fa-check"></i><b>5.6.2</b> Discussion</a></li>
+<li class="chapter" data-level="5.6.3" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#see-also-2"><i class="fa fa-check"></i><b>5.6.3</b> See also</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="manipulating-data---tables.html"><a href="manipulating-data---tables.html"><i class="fa fa-check"></i><b>6</b> Manipulating Data - Tables</a><ul>
+<li class="chapter" data-level="6.1" data-path="manipulating-data---tables.html"><a href="manipulating-data---tables.html#introduction-3"><i class="fa fa-check"></i><b>6.1</b> Introduction</a></li>
+<li class="chapter" data-level="6.2" data-path="manipulating-data---tables.html"><a href="manipulating-data---tables.html#use-dplyr-verbs-in-arrow"><i class="fa fa-check"></i><b>6.2</b> Use dplyr verbs in arrow</a><ul>
+<li class="chapter" data-level="6.2.1" data-path="manipulating-data---tables.html"><a href="manipulating-data---tables.html#solution-30"><i class="fa fa-check"></i><b>6.2.1</b> Solution</a></li>
+<li class="chapter" data-level="6.2.2" data-path="manipulating-data---tables.html"><a href="manipulating-data---tables.html#discussion-11"><i class="fa fa-check"></i><b>6.2.2</b> Discussion</a></li>
+<li class="chapter" data-level="6.2.3" data-path="manipulating-data---tables.html"><a href="manipulating-data---tables.html#see-also-3"><i class="fa fa-check"></i><b>6.2.3</b> See also</a></li>
+</ul></li>
+<li class="chapter" data-level="6.3" data-path="manipulating-data---tables.html"><a href="manipulating-data---tables.html#use-r-functions-in-dplyr-verbs-in-arrow"><i class="fa fa-check"></i><b>6.3</b> Use R functions in dplyr verbs in arrow</a><ul>
+<li class="chapter" data-level="6.3.1" data-path="manipulating-data---tables.html"><a href="manipulating-data---tables.html#solution-31"><i class="fa fa-check"></i><b>6.3.1</b> Solution</a></li>
+<li class="chapter" data-level="6.3.2" data-path="manipulating-data---tables.html"><a href="manipulating-data---tables.html#discussion-12"><i class="fa fa-check"></i><b>6.3.2</b> Discussion</a></li>
+</ul></li>
+<li class="chapter" data-level="6.4" data-path="manipulating-data---tables.html"><a href="manipulating-data---tables.html#use-arrow-functions-in-dplyr-verbs-in-arrow"><i class="fa fa-check"></i><b>6.4</b> Use arrow functions in dplyr verbs in arrow</a><ul>
+<li class="chapter" data-level="6.4.1" data-path="manipulating-data---tables.html"><a href="manipulating-data---tables.html#solution-32"><i class="fa fa-check"></i><b>6.4.1</b> Solution</a></li>
+<li class="chapter" data-level="6.4.2" data-path="manipulating-data---tables.html"><a href="manipulating-data---tables.html#discussion-13"><i class="fa fa-check"></i><b>6.4.2</b> Discussion</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="using-pyarrow-from-r.html"><a href="using-pyarrow-from-r.html"><i class="fa fa-check"></i><b>7</b> Using PyArrow from R</a><ul>
+<li class="chapter" data-level="7.1" data-path="using-pyarrow-from-r.html"><a href="using-pyarrow-from-r.html#introduction-4"><i class="fa fa-check"></i><b>7.1</b> Introduction</a></li>
+<li class="chapter" data-level="7.2" data-path="using-pyarrow-from-r.html"><a href="using-pyarrow-from-r.html#create-an-arrow-object-using-pyarrow-in-r"><i class="fa fa-check"></i><b>7.2</b> Create an Arrow object using PyArrow in R</a><ul>
+<li class="chapter" data-level="7.2.1" data-path="using-pyarrow-from-r.html"><a href="using-pyarrow-from-r.html#solution-33"><i class="fa fa-check"></i><b>7.2.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="7.3" data-path="using-pyarrow-from-r.html"><a href="using-pyarrow-from-r.html#call-a-pyarrow-function-from-r"><i class="fa fa-check"></i><b>7.3</b> Call a PyArrow function from R</a><ul>
+<li class="chapter" data-level="7.3.1" data-path="using-pyarrow-from-r.html"><a href="using-pyarrow-from-r.html#solution-34"><i class="fa fa-check"></i><b>7.3.1</b> Solution</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="flight.html"><a href="flight.html"><i class="fa fa-check"></i><b>8</b> Flight</a><ul>
+<li class="chapter" data-level="8.1" data-path="flight.html"><a href="flight.html#introduction-5"><i class="fa fa-check"></i><b>8.1</b> Introduction</a></li>
+<li class="chapter" data-level="8.2" data-path="flight.html"><a href="flight.html#connect-to-a-flight-server"><i class="fa fa-check"></i><b>8.2</b> Connect to a Flight server</a><ul>
+<li class="chapter" data-level="8.2.1" data-path="flight.html"><a href="flight.html#solution-35"><i class="fa fa-check"></i><b>8.2.1</b> Solution</a></li>
+<li class="chapter" data-level="8.2.2" data-path="flight.html"><a href="flight.html#see-also-4"><i class="fa fa-check"></i><b>8.2.2</b> See also</a></li>
+</ul></li>
+<li class="chapter" data-level="8.3" data-path="flight.html"><a href="flight.html#send-data-to-a-flight-server"><i class="fa fa-check"></i><b>8.3</b> Send data to a Flight server</a><ul>
+<li class="chapter" data-level="8.3.1" data-path="flight.html"><a href="flight.html#solution-36"><i class="fa fa-check"></i><b>8.3.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="8.4" data-path="flight.html"><a href="flight.html#check-what-resources-exist-on-a-flight-server"><i class="fa fa-check"></i><b>8.4</b> Check what resources exist on a Flight server</a><ul>
+<li class="chapter" data-level="8.4.1" data-path="flight.html"><a href="flight.html#solution-37"><i class="fa fa-check"></i><b>8.4.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="8.5" data-path="flight.html"><a href="flight.html#retrieve-data-from-a-flight-server"><i class="fa fa-check"></i><b>8.5</b> Retrieve data from a Flight server</a><ul>
+<li class="chapter" data-level="8.5.1" data-path="flight.html"><a href="flight.html#solution-38"><i class="fa fa-check"></i><b>8.5.1</b> Solution</a></li>
+</ul></li>
+</ul></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Apache Arrow R Cookbook</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="using-pyarrow-from-r" class="section level1 hasAnchor">
+<h1><span class="header-section-number">7</span> Using PyArrow from R<a href="using-pyarrow-from-r.html#using-pyarrow-from-r" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<div id="introduction-4" class="section level2 hasAnchor">
+<h2><span class="header-section-number">7.1</span> Introduction<a href="using-pyarrow-from-r.html#introduction-4" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>For more information on using setting up and installing PyArrow to use in R, see
+<a href="https://arrow.apache.org/docs/r/articles/python.html">the “Apache Arrow in Python and R with reticulate” vignette</a>.</p>
+</div>
+<div id="create-an-arrow-object-using-pyarrow-in-r" class="section level2 hasAnchor">
+<h2><span class="header-section-number">7.2</span> Create an Arrow object using PyArrow in R<a href="using-pyarrow-from-r.html#create-an-arrow-object-using-pyarrow-in-r" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>You want to use PyArrow to create an Arrow object in an R session.</p>
+<div id="solution-33" class="section level3 hasAnchor">
+<h3><span class="header-section-number">7.2.1</span> Solution<a href="using-pyarrow-from-r.html#solution-33" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="sourceCode" id="cb105"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb105-1"><a href="using-pyarrow-from-r.html#cb105-1"></a><span class="kw">library</span>(reticulate)</span>
+<span id="cb105-2"><a href="using-pyarrow-from-r.html#cb105-2"></a>pa &lt;-<span class="st"> </span><span class="kw">import</span>(<span class="st">&quot;pyarrow&quot;</span>)</span>
+<span id="cb105-3"><a href="using-pyarrow-from-r.html#cb105-3"></a>pyarrow_scalar &lt;-<span class="st"> </span>pa<span class="op">$</span><span class="kw">scalar</span>(<span class="dv">42</span>)</span>
+<span id="cb105-4"><a href="using-pyarrow-from-r.html#cb105-4"></a>pyarrow_scalar</span></code></pre></div>
+<pre><code>## &lt;pyarrow.DoubleScalar: 42.0&gt;</code></pre>
+</div>
+</div>
+<div id="call-a-pyarrow-function-from-r" class="section level2 hasAnchor">
+<h2><span class="header-section-number">7.3</span> Call a PyArrow function from R<a href="using-pyarrow-from-r.html#call-a-pyarrow-function-from-r" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>You want to call a PyArrow function from your R session.</p>
+<div id="solution-34" class="section level3 hasAnchor">
+<h3><span class="header-section-number">7.3.1</span> Solution<a href="using-pyarrow-from-r.html#solution-34" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="sourceCode" id="cb107"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb107-1"><a href="using-pyarrow-from-r.html#cb107-1"></a>table_<span class="dv">1</span> &lt;-<span class="st"> </span><span class="kw">arrow_table</span>(mtcars[<span class="dv">1</span><span class="op">:</span><span class="dv">5</span>,])</span>
+<span id="cb107-2"><a href="using-pyarrow-from-r.html#cb107-2"></a>table_<span class="dv">2</span> &lt;-<span class="st"> </span><span class="kw">arrow_table</span>(mtcars[<span class="dv">11</span><span class="op">:</span><span class="dv">15</span>,])</span>
+<span id="cb107-3"><a href="using-pyarrow-from-r.html#cb107-3"></a></span>
+<span id="cb107-4"><a href="using-pyarrow-from-r.html#cb107-4"></a>pa<span class="op">$</span><span class="kw">concat_tables</span>(<span class="dt">tables =</span> <span class="kw">list</span>(table_<span class="dv">1</span>, table_<span class="dv">2</span>)) <span class="op">%&gt;%</span></span>
+<span id="cb107-5"><a href="using-pyarrow-from-r.html#cb107-5"></a><span class="st">  </span><span class="kw">collect</span>()</span></code></pre></div>
+<pre><code>##     mpg cyl  disp  hp drat    wt  qsec vs am gear carb
+## 1  21.0   6 160.0 110 3.90 2.620 16.46  0  1    4    4
+## 2  21.0   6 160.0 110 3.90 2.875 17.02  0  1    4    4
+## 3  22.8   4 108.0  93 3.85 2.320 18.61  1  1    4    1
+## 4  21.4   6 258.0 110 3.08 3.215 19.44  1  0    3    1
+## 5  18.7   8 360.0 175 3.15 3.440 17.02  0  0    3    2
+## 6  17.8   6 167.6 123 3.92 3.440 18.90  1  0    4    4
+## 7  16.4   8 275.8 180 3.07 4.070 17.40  0  0    3    3
+## 8  17.3   8 275.8 180 3.07 3.730 17.60  0  0    3    3
+## 9  15.2   8 275.8 180 3.07 3.780 18.00  0  0    3    3
+## 10 10.4   8 472.0 205 2.93 5.250 17.98  0  0    3    4</code></pre>
+
+</div>
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="manipulating-data---tables.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="flight.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/apache/arrow-cookbook/edit/main/r/content/python.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": null,
+"search": {
+"engine": "fuse",
+"options": null
+},
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+</body>
+
+</html>
