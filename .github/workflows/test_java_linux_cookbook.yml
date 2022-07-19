@@ -37,6 +37,8 @@ jobs:
       matrix:
         python-version: [ '3.9' ]
         java-version: [ '11', '17', '18' ]
+        compiler-version: ['8', '11', '17']
+        arrow-version: ['8.0.0', '9.0.0.dev405']
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
@@ -52,5 +54,8 @@ jobs:
           sudo apt install libcurl4-openssl-dev libssl-dev
       - name: Run tests
         run: make javatest
+        env:
+          compiler_version: ${{ matrix.compiler-version }}
+          arrow_version: ${{ matrix.arrow-version }}
       - name: Build cookbook
         run: make java
