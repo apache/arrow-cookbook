@@ -37,7 +37,7 @@ jobs:
       matrix:
         python-version: [ '3.9' ]
         java-version: [ '11', '17', '18' ]
-        compiler-version: ['8', '11', '17']
+        compiler-version: ['11']
         arrow-version: ['8.0.0', '9.0.0.dev405']
     steps:
       - uses: actions/checkout@v3
