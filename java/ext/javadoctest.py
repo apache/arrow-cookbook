@@ -31,8 +31,6 @@ class JavaDocTestBuilder(DocTestBuilder):
         # go to project that contains all your arrow maven dependencies
         path_arrow_project = pathlib.Path(__file__).parent.parent / "source" / "demo"
         # create list of all arrow jar dependencies
-        print(os.environ.get('compiler_version', '11'))
-        print(os.environ.get('arrow_version', '8.0.0'))
         subprocess.check_call(
             [
                 "mvn",
