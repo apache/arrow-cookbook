@@ -444,6 +444,292 @@ Reading Parquet File
 
 Please check :doc:`Dataset <./dataset>`
 
+Reading JDBC ResultSets
+***********************
+
+The `Arrow Java JDBC module <https://arrow.apache.org/docs/java/jdbc.html>`_
+converts JDBC ResultSets into Arrow VectorSchemaRoots.
+
+ResultSet to VectorSchemaRoot Conversion
+----------------------------------------
+
+The main class to help us to convert ResultSet to VectorSchemaRoot is
+`JdbcToArrow <https://arrow.apache.org/docs/java/reference/org/apache/arrow/adapter/jdbc/JdbcToArrow.html>`_
+
+.. testcode::
+
+    import org.apache.arrow.adapter.jdbc.ArrowVectorIterator;
+    import org.apache.arrow.adapter.jdbc.JdbcToArrow;
+    import org.apache.arrow.memory.BufferAllocator;
+    import org.apache.arrow.memory.RootAllocator;
+    import org.apache.arrow.vector.VectorSchemaRoot;
+    import org.apache.ibatis.jdbc.ScriptRunner;
+
+    import java.io.BufferedReader;
+    import java.io.FileReader;
+    import java.io.IOException;
+    import java.sql.Connection;
+    import java.sql.DriverManager;
+    import java.sql.ResultSet;
+    import java.sql.SQLException;
+
+    try (BufferAllocator allocator = new RootAllocator();
+         Connection connection = DriverManager.getConnection(
+                 "jdbc:h2:mem:h2-jdbc-adapter")) {
+        ScriptRunner runnerDDLDML = new ScriptRunner(connection);
+        runnerDDLDML.setLogWriter(null);
+        runnerDDLDML.runScript(new BufferedReader(
+                new FileReader("./thirdpartydeps/database/h2-ddl.sql")));
+        runnerDDLDML.runScript(new BufferedReader(
+                new FileReader("./thirdpartydeps/database/h2-dml.sql")));
+        try (ResultSet resultSet = connection.createStatement().executeQuery(
+                "SELECT int_field1, bool_field2, bigint_field5 FROM TABLE1");
+             ArrowVectorIterator iterator = JdbcToArrow.sqlToArrowVectorIterator(
+                     resultSet, allocator)) {
+            while (iterator.hasNext()) {
+                try (VectorSchemaRoot root = iterator.next()) {
+                    System.out.print(root.contentToTSVString());
+                }
+            }
+        }
+
+    } catch (SQLException | IOException e) {
+        e.printStackTrace();
+    }
+
+.. testoutput::
+
+    INT_FIELD1    BOOL_FIELD2    BIGINT_FIELD5
+    101    true    1000000000300
+    102    true    100000000030
+    103    true    10000000003
+
+ResultSet with Array to VectorSchemaRoot Conversion
+---------------------------------------------------
+
+JdbcToArrow accepts configuration through `JdbcToArrowConfig
+<https://arrow.apache.org/docs/java/reference/org/apache/arrow/adapter/jdbc/JdbcToArrowConfig.html>`_.
+For example, the type of the elements of array columns can be specified by
+``setArraySubTypeByColumnNameMap``.
+
+.. testcode::
+
+    import org.apache.arrow.adapter.jdbc.ArrowVectorIterator;
+    import org.apache.arrow.adapter.jdbc.JdbcFieldInfo;
+    import org.apache.arrow.adapter.jdbc.JdbcToArrow;
+    import org.apache.arrow.adapter.jdbc.JdbcToArrowConfig;
+    import org.apache.arrow.adapter.jdbc.JdbcToArrowConfigBuilder;
+    import org.apache.arrow.adapter.jdbc.JdbcToArrowUtils;
+    import org.apache.arrow.memory.BufferAllocator;
+    import org.apache.arrow.memory.RootAllocator;
+    import org.apache.arrow.vector.VectorSchemaRoot;
+    import org.apache.ibatis.jdbc.ScriptRunner;
+
+    import java.io.BufferedReader;
+    import java.io.FileReader;
+    import java.io.IOException;
+    import java.sql.Connection;
+    import java.sql.DriverManager;
+    import java.sql.ResultSet;
+    import java.sql.SQLException;
+    import java.sql.Types;
+    import java.util.HashMap;
+
+    try (BufferAllocator allocator = new RootAllocator();
+         Connection connection = DriverManager.getConnection(
+                 "jdbc:h2:mem:h2-jdbc-adapter")) {
+        ScriptRunner runnerDDLDML = new ScriptRunner(connection);
+        runnerDDLDML.setLogWriter(null);
+        runnerDDLDML.runScript(new BufferedReader(
+                new FileReader("./thirdpartydeps/database/h2-ddl.sql")));
+        runnerDDLDML.runScript(new BufferedReader(
+                new FileReader("./thirdpartydeps/database/h2-dml.sql")));
+        JdbcToArrowConfig config = new JdbcToArrowConfigBuilder(allocator,
+                JdbcToArrowUtils.getUtcCalendar())
+                .setArraySubTypeByColumnNameMap(
+                        new HashMap<>() {{
+                            put("LIST_FIELD19",
+                                    new JdbcFieldInfo(Types.INTEGER));
+                        }}
+                )
+                .build();
+        try (ResultSet resultSet = connection.createStatement().executeQuery(
+                "SELECT int_field1, bool_field2, bigint_field5, char_field16, list_field19 FROM TABLE1");
+             ArrowVectorIterator iterator = JdbcToArrow.sqlToArrowVectorIterator(
+                     resultSet, config)) {
+            while (iterator.hasNext()) {
+                try (VectorSchemaRoot root = iterator.next()) {
+                    System.out.print(root.contentToTSVString());
+                }
+            }
+        }
+    } catch (SQLException | IOException e) {
+        e.printStackTrace();
+    }
+
+.. testoutput::
+
+    INT_FIELD1    BOOL_FIELD2    BIGINT_FIELD5    CHAR_FIELD16    LIST_FIELD19
+    101    true    1000000000300    some char text      [1,2,3]
+    102    true    100000000030    some char text      [1,2]
+    103    true    10000000003    some char text      [1]
+
+ResultSet per Batches to VectorSchemaRoot Conversion
+----------------------------------------------------
+
+The maximum rowCount to read each time is configured by default in 1024. This
+can be customized by setting values as needed by ``setTargetBatchSize``.
+
+.. testcode::
+
+    import org.apache.arrow.adapter.jdbc.ArrowVectorIterator;
+    import org.apache.arrow.adapter.jdbc.JdbcFieldInfo;
+    import org.apache.arrow.adapter.jdbc.JdbcToArrow;
+    import org.apache.arrow.adapter.jdbc.JdbcToArrowConfig;
+    import org.apache.arrow.adapter.jdbc.JdbcToArrowConfigBuilder;
+    import org.apache.arrow.adapter.jdbc.JdbcToArrowUtils;
+    import org.apache.arrow.memory.BufferAllocator;
+    import org.apache.arrow.memory.RootAllocator;
+    import org.apache.arrow.vector.VectorSchemaRoot;
+    import org.apache.ibatis.jdbc.ScriptRunner;
+
+    import java.io.BufferedReader;
+    import java.io.FileReader;
+    import java.io.IOException;
+    import java.sql.Connection;
+    import java.sql.DriverManager;
+    import java.sql.ResultSet;
+    import java.sql.SQLException;
+    import java.sql.Types;
+    import java.util.HashMap;
+
+    try (BufferAllocator allocator = new RootAllocator();
+         Connection connection = DriverManager.getConnection(
+                 "jdbc:h2:mem:h2-jdbc-adapter")) {
+        ScriptRunner runnerDDLDML = new ScriptRunner(connection);
+        runnerDDLDML.setLogWriter(null);
+        runnerDDLDML.runScript(new BufferedReader(
+                new FileReader("./thirdpartydeps/database/h2-ddl.sql")));
+        runnerDDLDML.runScript(new BufferedReader(
+                new FileReader("./thirdpartydeps/database/h2-dml.sql")));
+        JdbcToArrowConfig config = new JdbcToArrowConfigBuilder(allocator,
+                JdbcToArrowUtils.getUtcCalendar())
+                .setTargetBatchSize(2)
+                .setArraySubTypeByColumnNameMap(
+                        new HashMap<>() {{
+                            put("LIST_FIELD19",
+                                    new JdbcFieldInfo(Types.INTEGER));
+                        }}
+                )
+                .build();
+        try (ResultSet resultSet = connection.createStatement().executeQuery(
+                "SELECT int_field1, bool_field2, bigint_field5, char_field16, list_field19 FROM TABLE1");
+             ArrowVectorIterator iterator = JdbcToArrow.sqlToArrowVectorIterator(
+                     resultSet, config)) {
+            while (iterator.hasNext()) {
+                try (VectorSchemaRoot root = iterator.next()) {
+                    System.out.print(root.contentToTSVString());
+                }
+            }
+        }
+    } catch (SQLException | IOException e) {
+        e.printStackTrace();
+    }
+
+.. testoutput::
+
+    INT_FIELD1    BOOL_FIELD2    BIGINT_FIELD5    CHAR_FIELD16    LIST_FIELD19
+    101    true    1000000000300    some char text      [1,2,3]
+    102    true    100000000030    some char text      [1,2]
+    INT_FIELD1    BOOL_FIELD2    BIGINT_FIELD5    CHAR_FIELD16    LIST_FIELD19
+    103    true    10000000003    some char text      [1]
+
+ResultSet with Precision/Scale to VectorSchemaRoot Conversion
+-------------------------------------------------------------
+
+There is a configuration about precision & scale for column data type needed
+(i.e. ``JdbcFieldInfo(Types.DECIMAL, /*precision*/ 20, /*scale*/ 7))``) but this
+configuration required exact matching of every row to the established scale
+for the column, and throws ``UnsupportedOperationException`` when there is a mismatch,
+aborting ResultSet processing,
+
+In this example we have BigInt data type configured on H2 Database, this is
+converted to (``/*scale*/0)`` by default, then we have a ``/*scale*/7`` configured on
+our code, this will be the error message for these differences: ``Caused by: java.lang.UnsupportedOperationException: BigDecimal scale must equal that in the Arrow vector: 0 != 7``
+if not applying ``setBigDecimalRoundingMode``
+
+.. testcode::
+
+    import org.apache.arrow.adapter.jdbc.ArrowVectorIterator;
+    import org.apache.arrow.adapter.jdbc.JdbcFieldInfo;
+    import org.apache.arrow.adapter.jdbc.JdbcToArrow;
+    import org.apache.arrow.adapter.jdbc.JdbcToArrowConfig;
+    import org.apache.arrow.adapter.jdbc.JdbcToArrowConfigBuilder;
+    import org.apache.arrow.adapter.jdbc.JdbcToArrowUtils;
+    import org.apache.arrow.memory.BufferAllocator;
+    import org.apache.arrow.memory.RootAllocator;
+    import org.apache.arrow.vector.VectorSchemaRoot;
+    import org.apache.ibatis.jdbc.ScriptRunner;
+
+    import java.io.BufferedReader;
+    import java.io.FileReader;
+    import java.io.IOException;
+    import java.math.RoundingMode;
+    import java.sql.Connection;
+    import java.sql.DriverManager;
+    import java.sql.ResultSet;
+    import java.sql.SQLException;
+    import java.sql.Types;
+    import java.util.HashMap;
+
+    try (BufferAllocator allocator = new RootAllocator();
+         Connection connection = DriverManager.getConnection(
+                 "jdbc:h2:mem:h2-jdbc-adapter")) {
+        ScriptRunner runnerDDLDML = new ScriptRunner(connection);
+        runnerDDLDML.setLogWriter(null);
+        runnerDDLDML.runScript(new BufferedReader(
+                new FileReader("./thirdpartydeps/database/h2-ddl.sql")));
+        runnerDDLDML.runScript(new BufferedReader(
+                new FileReader("./thirdpartydeps/database/h2-dml.sql")));
+        JdbcToArrowConfig config = new JdbcToArrowConfigBuilder(allocator,
+                JdbcToArrowUtils.getUtcCalendar())
+                .setTargetBatchSize(2)
+                .setArraySubTypeByColumnNameMap(
+                        new HashMap<>() {{
+                            put("LIST_FIELD19",
+                                    new JdbcFieldInfo(Types.INTEGER));
+                        }}
+                )
+                .setExplicitTypesByColumnName(
+                        new HashMap<>() {{
+                            put("BIGINT_FIELD5",
+                                    new JdbcFieldInfo(Types.DECIMAL, 20, 7));
+                        }}
+                )
+                .setBigDecimalRoundingMode(RoundingMode.UNNECESSARY)
+                .build();
+        try (ResultSet resultSet = connection.createStatement().executeQuery(
+                "SELECT int_field1, bool_field2, bigint_field5, char_field16, list_field19 FROM TABLE1");
+             ArrowVectorIterator iterator = JdbcToArrow.sqlToArrowVectorIterator(
+                     resultSet, config)) {
+            while (iterator.hasNext()) {
+                try (VectorSchemaRoot root = iterator.next()) {
+                    System.out.print(root.contentToTSVString());
+                }
+            }
+        }
+    } catch (SQLException | IOException e) {
+        e.printStackTrace();
+    }
+
+.. testoutput::
+
+    INT_FIELD1    BOOL_FIELD2    BIGINT_FIELD5    CHAR_FIELD16    LIST_FIELD19
+    101    true    1000000000300.0000000    some char text      [1,2,3]
+    102    true    100000000030.0000000    some char text      [1,2]
+    INT_FIELD1    BOOL_FIELD2    BIGINT_FIELD5    CHAR_FIELD16    LIST_FIELD19
+    103    true    10000000003.0000000    some char text      [1]
+
 Handling Data with Dictionaries
 *******************************
 
@@ -475,7 +761,7 @@ Reading and writing dictionary-encoded data requires separately tracking the dic
     import java.io.IOException;
     import java.nio.charset.StandardCharsets;
 
-    final DictionaryEncoding dictionaryEncoding = new DictionaryEncoding(
+    DictionaryEncoding dictionaryEncoding = new DictionaryEncoding(
             /*id=*/666L, /*ordered=*/false, /*indexType=*/
             new ArrowType.Int(8, true)
     );
