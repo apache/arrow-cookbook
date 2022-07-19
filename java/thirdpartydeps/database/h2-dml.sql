@@ -1,0 +1,14 @@
+INSERT INTO table1 VALUES (101, 1, 45, 12000, 1000000000300.0000001, 17345667789.111, 56478356785.345, 56478356785.345, PARSEDATETIME('12:45:35 GMT', 'HH:mm:ss z'),
+                           PARSEDATETIME('2018-02-12 GMT', 'yyyy-MM-dd z'), PARSEDATETIME('2018-02-12 12:45:35 GMT', 'yyyy-MM-dd HH:mm:ss z'),
+                           '736f6d6520746578742074686174206e6565647320746f20626520636f6e76657274656420746f2062696e617279', 'some text that needs to be converted to varchar',
+                           '736f6d6520746578742074686174206e6565647320746f20626520636f6e76657274656420746f2062696e617279', 'some text that needs to be converted to clob', 'some char text', 1, null, ARRAY[1, 2, 3]);
+
+INSERT INTO table1 VALUES (102, 1, 45, 12000, 100000000030.00000011, 17345667789.222, 56478356785.345, 56478356785.345, PARSEDATETIME('12:45:35 GMT', 'HH:mm:ss z'),
+                           PARSEDATETIME('2018-02-12 GMT', 'yyyy-MM-dd z'), PARSEDATETIME('2018-02-12 12:45:35 GMT', 'yyyy-MM-dd HH:mm:ss z'),
+                           '736f6d6520746578742074686174206e6565647320746f20626520636f6e76657274656420746f2062696e617279', 'some text that needs to be converted to varchar',
+                           '736f6d6520746578742074686174206e6565647320746f20626520636f6e76657274656420746f2062696e617279', 'some text that needs to be converted to clob', 'some char text', 1, null, ARRAY[1, 2]);
+
+INSERT INTO table1 VALUES (103, 1, 45, 12000, 10000000003.000000111, 17345667789.333, 56478356785.345, 56478356785.345, PARSEDATETIME('12:45:35 GMT', 'HH:mm:ss z'),
+                           PARSEDATETIME('2018-02-12 GMT', 'yyyy-MM-dd z'), PARSEDATETIME('2018-02-12 12:45:35 GMT', 'yyyy-MM-dd HH:mm:ss z'),
+                           '736f6d6520746578742074686174206e6565647320746f20626520636f6e76657274656420746f2062696e617279', 'some text that needs to be converted to varchar',
+                           '736f6d6520746578742074686174206e6565647320746f20626520636f6e76657274656420746f2062696e617279', 'some text that needs to be converted to clob', 'some char text', 1, null, ARRAY[1]);

@@ -1,0 +1,21 @@
+create table TABLE1 (
+    INT_FIELD1 int,
+    BOOL_FIELD2 boolean,
+    TINYINT_FIELD3 smallint,
+    SMALLINT_FIELD4 smallint,
+    BIGINT_FIELD5 bigint,
+    DECIMAL_FIELD6 numeric(14, 3),
+    DOUBLE_FIELD7 double,
+    REAL_FIELD8 real,
+    TIME_FIELD9 time,
+    DATE_FIELD10 date,
+    TIMESTAMP_FIELD11 timestamp,
+    BINARY_FIELD12 blob,
+    VARCHAR_FIELD13 varchar(256),
+    BLOB_FIELD14 blob,
+    CLOB_FIELD15 clob,
+    CHAR_FIELD16 char(16),
+    BIT_FIELD17 boolean,
+    NULL_FIELD18 null,
+    LIST_FIELD19 int array
+);
