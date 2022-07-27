@@ -304,6 +304,39 @@ test_that("read_json_arrow chunk works as expected", {
 unlink(tf)
 ```
 
+### Discussion
+
+When reading a nested json file, a flat data frame can be easily created by using the `tidyr` functions.
+
+```{r, read_json_arrow1}
+library(tidyr, warn.conflicts = FALSE)
+tf <- tempfile()
+writeLines('
+    { "hello": 3.5, "world": false, "foo": { "bar": [ 1, 2 ] } }
+    { "hello": 3.25, "world": null }
+    { "hello": 0.0, "world": true, "foo": { "bar": [ 3, 4, 5 ] } }
+  ', tf, useBytes = TRUE)
+nested_data <- read_json_arrow(tf)
+unnested_data <- nested_data %>%
+  unnest(foo) %>%
+  unnest_longer(bar)
+unnested_data
+```
+
+```{r, test_read_json_arrow1, opts.label = "test"}
+test_that("read_json_arrow1 chunk works as expected", {
+  expect_equivalent(
+    unnested_data,
+    data.frame(
+      hello = c(3.5, 3.5, 3.25, 0, 0, 0),
+      long = c(FALSE, FALSE, NA, TRUE, TRUE, TRUE),
+      lat = c(1, 2, NA, 3, 4, 5)
+    )
+  )
+})
+unlink(tf)
+```
+
 ## Write partitioned data
 
 You want to save data to disk in partitions based on columns in the data.
