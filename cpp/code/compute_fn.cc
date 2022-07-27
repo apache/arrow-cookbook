@@ -9,7 +9,7 @@
 // arrow dependencies
 #include <arrow/api.h>
 #include <arrow/compute/api.h>
-#include <arrow/compute/exec/key_hash.h>
+#include <arrow/util/hashing.h>
 
 #include "common.h"
 
@@ -18,48 +18,34 @@
 using std::shared_ptr;
 using std::vector;
 
-// arrow util types
+// >> commonly used arrow types
+//    |> general programming support
 using arrow::Result;
 using arrow::Status;
 using arrow::Datum;
 
-// arrow data types and helpers
-using arrow::UInt32Builder;
-using arrow::Int32Builder;
-
+//    |> arrow data types and helpers
+using arrow::Int64Builder;
 using arrow::Array;
 using arrow::ArraySpan;
 
 
-// aliases for types used in `NamedScalarFn`
+// >> aliases for types used to define a custom function (e.g. `NamedScalarFn`)
 //    |> kernel parameters
 using arrow::compute::KernelContext;
 using arrow::compute::ExecSpan;
 using arrow::compute::ExecResult;
 
-//    |> other context types
-using arrow::compute::ExecContext;
-using arrow::compute::LightContext;
-
-//    |> common types for compute functions
-using arrow::compute::FunctionRegistry;
+//    |> for defining compute functions and their compute kernels
 using arrow::compute::FunctionDoc;
 using arrow::compute::InputType;
 using arrow::compute::OutputType;
 using arrow::compute::Arity;
-
-//    |> the "kind" of function we want
 using arrow::compute::ScalarFunction;
 
-//    |> structs and classes for hashing
-using arrow::util::MiniBatch;
-using arrow::util::TempVectorStack;
-
-using arrow::compute::KeyColumnArray;
-using arrow::compute::Hashing32;
-
-//    |> functions used for hashing
-using arrow::compute::ColumnArrayFromArrayData;
+//    |> for adding to a function registry or using `CallFunction`
+using arrow::compute::FunctionRegistry;
+using arrow::compute::ExecContext;
 
 
 // ------------------------------
@@ -69,12 +55,13 @@ using arrow::compute::ColumnArrayFromArrayData;
 /**
  * Create a const instance of `FunctionDoc` that contains 3 attributes:
  *  1. Short description
- *  2. Long  description (limited to 78 characters)
+ *  2. Long  description (can be multiple lines, each limited to 78 characters in width)
  *  3. Name of input arguments
  */
 const FunctionDoc named_scalar_fn_doc {
-   "Unary function that calculates a hash for each row of the input"
-  ,"This function uses an xxHash-like algorithm which produces 32-bit hashes."
+   "Unary function that calculates a hash for each element of the input"
+  ,("This function uses the xxHash algorithm.\n"
+    "The result contains a 64-bit hash value for each input element.")
   ,{ "input_array" }
 };
 
@@ -93,7 +80,7 @@ struct NamedScalarFn {
 
   /**
    * A kernel implementation that expects a single array as input, and outputs an array of
-   * uint32 values. We write this implementation knowing what function we want to
+   * int64 values. We write this implementation knowing what function we want to
    * associate it with ("NamedScalarFn"), but that association is made later (see
    * `RegisterScalarFnKernels()` below).
    */
@@ -101,56 +88,35 @@ struct NamedScalarFn {
   Exec(KernelContext *ctx, const ExecSpan &input_arg, ExecResult *out) {
     StartRecipe("DefineAComputeKernel");
 
-    if (input_arg.num_values() != 1 or not input_arg[0].is_array()) {
+    // Validate inputs
+    if (input_arg.num_values() != 1 or !input_arg[0].is_array()) {
       return Status::Invalid("Unsupported argument types or shape");
     }
 
-    // >> Initialize stack-based memory allocator with an allocator and memory size
-    TempVectorStack stack_memallocator;
-    auto            input_dtype_width = input_arg[0].type()->bit_width();
-    if (input_dtype_width > 0) {
-      ARROW_RETURN_NOT_OK(
-        stack_memallocator.Init(
-           ctx->exec_context()->memory_pool()
-          ,input_dtype_width * max_batchsize
-        )
+    // The input ArraySpan manages data as 3 buffers; the data buffer has index `1`
+    constexpr int      bufndx_data = 1;
+    const     int64_t *hash_inputs = input_arg[0].array.GetValues<int64_t>(bufndx_data);
+    const     auto     input_len   = input_arg[0].array.length;
+
+    // Allocate an Arrow buffer for output
+    ARROW_ASSIGN_OR_RAISE(std::unique_ptr<Buffer> hash_buffer,
+                          AllocateBuffer(input_len * sizeof(int64_t)));
+
+    // Call hashing function, using both prime multipliers from xxHash
+    int64_t *hash_results = reinterpret_cast<int64_t*>(hash_buffer->mutable_data());
+    for (int val_ndx = 0; val_ndx < input_len; ++val_ndx) {
+      hash_results[val_ndx] = (
+          ScalarHelper<int64_t, 0>::ComputeHash(hash_inputs[val_ndx])
+        + ScalarHelper<int64_t, 1>::ComputeHash(hash_inputs[val_ndx])
       );
     }
 
-    // >> Prepare input data structure for propagation to hash function
-    // NOTE: "start row index" and "row count" can potentially be options in the future
-    ArraySpan hash_input    = input_arg[0].array;
-    int64_t   hash_startrow = 0;
-    int64_t   hash_rowcount = hash_input.length;
-    ARROW_ASSIGN_OR_RAISE(
-       KeyColumnArray input_keycol
-      ,ColumnArrayFromArrayData(hash_input.ToArrayData(), hash_startrow, hash_rowcount)
-    );
-
-    // >> Call hashing function
-    vector<uint32_t> hash_results;
-    hash_results.resize(hash_input.length);
-
-    LightContext hash_ctx;
-    hash_ctx.hardware_flags = ctx->exec_context()->cpu_info()->hardware_flags();
-    hash_ctx.stack          = &stack_memallocator;
-
-    Hashing32::HashMultiColumn({ input_keycol }, &hash_ctx, hash_results.data());
-
-    // >> Prepare results of hash function for kernel output argument
-    UInt32Builder builder;
-    builder.Reserve(hash_results.size());
-    builder.AppendValues(hash_results);
-
-    ARROW_ASSIGN_OR_RAISE(auto result_array, builder.Finish());
-    out->value = result_array->data();
+    // Use ArrayData (not ArraySpan) for ownership of result buffer
+    out->value = ArrayData{int64(), input_len, {nullptr, std::move(hash_buffer)}};
 
     EndRecipe("DefineAComputeKernel");
     return Status::OK();
   }
-
-
-  static constexpr uint32_t max_batchsize = MiniBatch::kMiniBatchLength;
 };
 
 
@@ -172,7 +138,7 @@ struct NamedScalarFn {
  */
 shared_ptr<ScalarFunction>
 RegisterScalarFnKernels() {
-  StartRecipe("AddKernelsToFunction");
+  StartRecipe("AddKernelToFunction");
   // Instantiate a function to be registered
   auto fn_named_scalar = std::make_shared<ScalarFunction>(
      "named_scalar_fn"
@@ -180,17 +146,16 @@ RegisterScalarFnKernels() {
     ,std::move(named_scalar_fn_doc)
   );
 
-  // Associate a kernel implementation with the function using
-  // `ScalarFunction::AddKernel()`
+  // Associate a function and kernel using `ScalarFunction::AddKernel()`
   DCHECK_OK(
     fn_named_scalar->AddKernel(
-       { InputType(arrow::int32()) }
-      ,OutputType(arrow::uint32())
+       { InputType(arrow::int64()) }
+      ,OutputType(arrow::int64())
       ,NamedScalarFn::Exec
     )
   );
+  EndRecipe("AddKernelToFunction");
 
-  EndRecipe("AddKernelsToFunction");
   return fn_named_scalar;
 }
 
@@ -209,9 +174,9 @@ RegisterNamedScalarFn(FunctionRegistry *registry) {
 
 // >> Convenience functions
 /**
- * An optional convenience function to easily invoke our compute function. This executes
- * our compute function by invoking `CallFunction` with the name that we used to register
- * the function ("named_scalar_fn" in this case).
+ * An optional, convenient invocation function to easily call our compute function. This
+ * executes our compute function by invoking `CallFunction` with the name that we used to
+ * register the function ("named_scalar_fn" in this case).
  */
 ARROW_EXPORT
 Result<Datum>
@@ -223,9 +188,9 @@ NamedScalarFn(const Datum &input_arg, ExecContext *ctx) {
 
 Result<shared_ptr<Array>>
 BuildIntArray() {
-  vector<int32_t> col_vals { 0, 1, 1, 2, 3, 5, 8, 13, 21, 34 };
+  vector<int64_t> col_vals { 0, 1, 1, 2, 3, 5, 8, 13, 21, 34 };
 
-  Int32Builder builder;
+  Int64Builder builder;
   ARROW_RETURN_NOT_OK(builder.Reserve(col_vals.size()));
   ARROW_RETURN_NOT_OK(builder.AppendValues(col_vals));
   return builder.Finish();
@@ -235,27 +200,22 @@ BuildIntArray() {
 class ComputeFunctionTest : public ::testing::Test {};
 
 TEST(ComputeFunctionTest, TestRegisterAndCallFunction) {
-  // >> Construct some test data
+  // >> Register the function first
+  StartRecipe("RegisterComputeFunction");
+  auto fn_registry = arrow::compute::GetFunctionRegistry();
+  RegisterNamedScalarFn(fn_registry);
+  EndRecipe("RegisterComputeFunction");
+
+  // >> Then we can call the function
+  StartRecipe("InvokeComputeFunction");
   auto build_result = BuildIntArray();
   if (not build_result.ok()) {
     std::cerr << build_result.status().message() << std::endl;
     return 1;
   }
 
-  // >> Peek at the data
-  auto col_vals = *build_result;
-  std::cout << col_vals->ToString() << std::endl;
-
-  // >> Invoke compute function
-  StartRecipe("RegisterAndCallComputeFunction");
-  //  |> First, register
-  auto fn_registry = arrow::compute::GetFunctionRegistry();
-  RegisterNamedScalarFn(fn_registry);
-
-
-  //  |> Then, invoke
-  Datum col_as_datum { col_vals };
-  auto fn_result = NamedScalarFn(col_as_datum);
+  Datum col_data { *build_result };
+  auto fn_result = NamedScalarFn(col_data);
   if (not fn_result.ok()) {
     std::cerr << fn_result.status().message() << std::endl;
     return 2;
@@ -264,7 +224,10 @@ TEST(ComputeFunctionTest, TestRegisterAndCallFunction) {
   auto result_data = fn_result->make_array();
   std::cout << "Success:"                      << std::endl;
   std::cout << "\t" << result_data->ToString() << std::endl;
+  EndRecipe("InvokeComputeFunction");
 
-  EndRecipe("RegisterAndCallComputeFunction");
+  // If we want to peek at the input data
+  std::cout << col_data.make_array()->ToString() << std::endl;
+
   return 0;
 }
