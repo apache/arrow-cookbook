@@ -108,7 +108,7 @@ In case we need to add metadata to our Field we could use:
     metadata.put("C", "Visa");
     Field document = new Field("document", new FieldType(true, new ArrowType.Utf8(), null, metadata), null);
 
-    System.out.print(document.getMetadata())
+    System.out.print(document.getMetadata());
 
 .. testoutput::
 
