@@ -19,12 +19,11 @@
 Defining and Using Compute Functions
 ====================================
 
-This section contains (or will contain) a number of recipes illustrating how to
-define new "compute functions" or how to use existing ones. Arrow contains a "Compute
-API," which primarily consists of a "registry" of functions that can be invoked.
-Currently, Arrow populates a default registry with a variety of useful functions. The
-recipes provided in this section show some approaches to define a compute function as well
-as how to invoke a compute function by name, given a registry.
+Arrow contains a "Compute API," which primarily consists of a "registry" of functions that
+can be invoked. Currently, Arrow populates a default registry with a variety of
+functions, which we call "compute functions". This section contains (or will contain) a
+number of recipes illustrating how to define compute functions or how to use existing
+ones. 
 
 
 .. contents::
@@ -32,8 +31,12 @@ as how to invoke a compute function by name, given a registry.
 Invoke a Compute Function
 =========================
 
-When invoking a compute function, the function must exist in a function registry. In this
-recipe, we use `CallFunction()` to invoke the function with name "named_scalar_fn".
+When invoking a compute function, the function must exist in a function registry. Here, we
+use :func:`arrow::compute::CallFunction` to invoke the function with name
+"named_scalar_fn". :func:`arrow::compute::CallFunction` uses the function registry
+referenced from the :class:`ExecContext` argument. If an :class:`ExecContext` is not
+specified, the default :class:`ExecContext` is used (which references a default
+:class:`FunctionRegistry`).
 
 .. recipe:: ../code/compute_fn.cc InvokeByCallFunction
   :caption: Use CallFunction() to invoke a compute function by name
@@ -42,12 +45,9 @@ recipe, we use `CallFunction()` to invoke the function with name "named_scalar_f
 .. note::
     This method allows us to specify arguments as a vector and a custom ExecContext.
 
-If an `ExecContext` is not passed to `CallFunction` (it is null), then the default
-FunctionRegistry will be used to call the function from.
-
-If we have defined a convenience function that wraps `CallFunction()`, then we can call
-that function instead. Various compute functions provided by Arrow have these convenience
-functions defined, such as `Add` or `Subtract`.
+Sometimes, a convenience function (such as :func:`arrow::compute::Add` or
+:func:`arrow::compute::Subtract`) is defined. These functions are usually implemented as
+wrappers around :func:`arrow::compute::CallFunction`.
 
 .. recipe:: ../code/compute_fn.cc InvokeByConvenienceFunction
   :caption: Use a convenience invocation function to call a compute function
@@ -69,22 +69,15 @@ To make a custom compute function available, there are 3 primary steps:
 Define Function Kernels
 -----------------------
 
-A kernel is a particular function that implements desired logic for a compute function.
-There are at least a couple of types of function kernels, such as initialization kernels
-and execution kernels. An initialization kernel prepares the initial state of a compute
-function, while an execution kernel executes the main processing logic of the compute
-function. The body of a function kernel may use other functions, but the kernel function
-itself is a singular instance that will be associated with the desired compute function.
-While compute functions can be associated with an initialization and execution kernel
-pair, this recipe only shows the definition of an execution kernel.
-
-The signature of an execution kernel is relatively standardized: it returns a `Status` and
-takes a context, some arguments, and a pointer to an output result. The context wraps an
-`ExecContext` and other metadata about the environment in which the kernel function should
-be executed. The input arguments are contained within an `ExecSpan` (newly added in place
-of `ExecBatch`), which holds non-owning references to argument data. Finally, the
-`ExecResult` pointed to should be set to an appropriate `ArraySpan` or `ArrayData`
-instance, depending on ownership semantics of the kernel's output.
+The signature of an execution kernel is relatively standardized: it returns a
+:class:`arrow::Status` and takes a context, some arguments, and a pointer to an output
+result. The context wraps an :class:`arrow::compute::ExecContext` and other metadata about
+the environment in which the kernel function should be executed. The input arguments are
+contained within an :class:`arrow::compute::ExecSpan` (newly added in place of
+:class:`arrow::compute::ExecBatch`), which holds non-owning references to argument data.
+Finally, the :class:`arrow::compute::ExecResult` pointed to should be set to an
+appropriate :class:`arrow::ArraySpan` or :class:`arrow::ArrayData` instance, depending on
+ownership semantics of the kernel's output.
 
 .. recipe:: ../code/compute_fn.cc DefineAComputeKernel
   :caption: Define an example compute kernel that uses ScalarHelper from hashing.h to hash
@@ -92,33 +85,35 @@ instance, depending on ownership semantics of the kernel's output.
   :dedent: 2
 
 This recipe shows basic validation of `input_arg` which contains a vector of input
-arguments. Then, the input `Array` is accessed from `input_arg` and a `Buffer` is
-allocated to hold output results. After the main loop is completed, the allocated `Buffer`
-is wrapped in an `ArrayData` instance and referenced by `out`.
+arguments. Then, the input :class:`arrow::Array` is accessed from `input_arg` and a
+:class:`arrow::Buffer` is allocated to hold output results. After the main loop is
+completed, the allocated :class:`arrow::Buffer` is wrapped in an :class:`arrow::ArrayData`
+instance and referenced by `out`.
 
 
 Associate Kernels with a Function
 ---------------------------------
 
-The process of adding kernels to a compute function is easy: (1) create an appropriate
-`Function` instance--`ScalarFunction` in this case--and (2) call the `AddKernel` function.
-The more difficult part of this process is repeating for the desired data types and
-knowing how the signatures work.
+Kernels are added to a compute function in 2 steps: (1) create an appropriate function
+object--:class:`arrow::compute::ScalarFunction` in this case--and (2) call the
+:func:`arrow::compute::ScalarFunction::AddKernel` function. The AddKernel function is
+repeated for each desired input data type.
 
 .. recipe:: ../code/compute_fn.cc AddKernelToFunction
   :caption: Instantiate a ScalarFunction and add our execution kernel to it
   :dedent: 2
 
-A `ScalarFunction` represents a "scalar" or "element-wise" compute function (see
-documentation on the Compute API). The signature used in this recipe passes:
+A :class:`arrow::compute::ScalarFunction` represents a "scalar" or "element-wise" compute
+function (see documentation on the Compute API). The signature used in this recipe passes:
 
 1. A function name (to be used when calling it)
 
 2. An "Arity" meaning how many input arguments it takes (like cardinality)
 
-3. A `FunctionDoc` instance (to associate some documentation programmatically)
+3. A :class:`arrow::compute::FunctionDoc` instance (to associate some documentation
+   programmatically)
 
-Then, `AddKernel` expects:
+Then, :func:`arrow::compute::ScalarFunction::AddKernel` expects:
 
 1. A vector of data types for each input argument
 
@@ -128,9 +123,10 @@ Then, `AddKernel` expects:
 
 4. The function to be used as the initialization kernel (optional)
 
-Note that the constructor for `ScalarFunction` is more interested in how many arguments to
-expect, and some information about the compute function itself; whereas, the function to
-add a kernel specifies data types and the functions to call at runtime.
+Note that the constructor for :class:`arrow::compute::ScalarFunction` is more interested
+in how many arguments to expect, and some information about the compute function itself;
+whereas, the function to add a kernel specifies data types and the functions to call at
+runtime.
 
 
 Add Function to Registry
@@ -144,8 +140,9 @@ Finally, adding the function to a registry is wonderfully straightforward.
   :dedent: 2
 
 In this recipe, we simply wrap the logic in a convenience function that: (1) creates a
-`ScalarFunction`, (2) adds our execution kernel to the compute function, and (3) returns
-the compute function. Then, we add the compute function to some registry. This recipe
-takes the `FunctionRegistry` as an argument so that it is easy to call from the same place
-that the Arrow codebase registers other provided functions. Otherwise, we can add our
-compute function to the default registry, or a custom registry.
+:class:`arrow::compute::ScalarFunction`, (2) adds our execution kernel to the compute
+function, and (3) returns the compute function. Then, we add the compute function to some
+registry. This recipe takes the :class:`arrow::compute::FunctionRegistry` as an argument
+so that it is easy to call from the same place that the Arrow codebase registers other
+provided functions. Otherwise, we can add our compute function to the default registry,
+or a custom registry.
