@@ -42,7 +42,7 @@ recipe, we use `CallFunction()` to invoke the function with name "named_scalar_f
 .. note::
     This method allows us to specify arguments as a vector and a custom ExecContext.
 
-If CallFunction is not provided an ExecContext (it is null), then the default builtin
+If an `ExecContext` is not passed to `CallFunction` (it is null), then the default
 FunctionRegistry will be used to call the function from.
 
 If we have defined a convenience function that wraps `CallFunction()`, then we can call
@@ -66,11 +66,16 @@ To make a custom compute function available, there are 3 primary steps:
 Define Function Kernels
 -----------------------
 
-A kernel function is a single function that implements the desired logic for the compute
-function. The body of the kernel function may use other functions, but the kernel function
+A kernel is a particular function that implements desired logic for a compute function.
+There are at least a couple of types of function kernels, such as initialization kernels
+and execution kernels. An initialization kernel prepares the initial state of a compute
+function, while an execution kernel executes the main processing logic of the compute
+function. The body of a function kernel may use other functions, but the kernel function
 itself is a singular instance that will be associated with the desired compute function.
+While compute functions can be associated with an initialization and execution kernel
+pair, this recipe only shows the definition of an execution kernel.
 
-The signature of a kernel function is relatively standardized: it returns a `Status` and
+The signature of an execution kernel is relatively standardized: it returns a `Status` and
 takes a context, some arguments, and a pointer to an output result. The context wraps an
 `ExecContext` and other metadata about the environment in which the kernel function should
 be executed. The input arguments are contained within an `ExecSpan` (newly added in place
@@ -82,3 +87,4 @@ instance, depending on ownership semantics of the kernel's output.
   :caption: Define an example compute kernel that uses ScalarHelper from hashing.h to hash
             input values
   :dedent: 2
+
