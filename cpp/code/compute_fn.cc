@@ -67,6 +67,7 @@ const FunctionDoc named_scalar_fn_doc {
 
 
 // >> Kernel implementations for a compute function
+// StartRecipe("DefineAComputeKernel");
 /**
  * Create implementations that will be associated with our compute function. When a
  * compute function is invoked, the compute API framework will delegate execution to an
@@ -86,7 +87,6 @@ struct NamedScalarFn {
    */
   static Status
   Exec(KernelContext *ctx, const ExecSpan &input_arg, ExecResult *out) {
-    StartRecipe("DefineAComputeKernel");
 
     // Validate inputs
     if (input_arg.num_values() != 1 or !input_arg[0].is_array()) {
@@ -113,11 +113,10 @@ struct NamedScalarFn {
 
     // Use ArrayData (not ArraySpan) for ownership of result buffer
     out->value = ArrayData{int64(), input_len, {nullptr, std::move(hash_buffer)}};
-
-    EndRecipe("DefineAComputeKernel");
     return Status::OK();
   }
 };
+// EndRecipe("DefineAComputeKernel");
 
 
 // ------------------------------
@@ -125,6 +124,7 @@ struct NamedScalarFn {
 
 
 // >> Function registration and kernel association
+// StartRecipe("AddKernelToFunction");
 /**
  * A convenience function that shows how we construct an instance of `ScalarFunction` that
  * will be registered in a function registry. The instance is constructed with: (1) a
@@ -138,7 +138,6 @@ struct NamedScalarFn {
  */
 shared_ptr<ScalarFunction>
 RegisterScalarFnKernels() {
-  StartRecipe("AddKernelToFunction");
   // Instantiate a function to be registered
   auto fn_named_scalar = std::make_shared<ScalarFunction>(
      "named_scalar_fn"
@@ -154,10 +153,10 @@ RegisterScalarFnKernels() {
       ,NamedScalarFn::Exec
     )
   );
-  EndRecipe("AddKernelToFunction");
 
   return fn_named_scalar;
 }
+// EndRecipe("AddKernelToFunction");
 
 
 // StartRecipe("AddFunctionToRegistry");

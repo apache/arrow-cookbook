@@ -38,12 +38,11 @@ referenced from the :class:`ExecContext` argument. If an :class:`ExecContext` is
 specified, the default :class:`ExecContext` is used (which references a default
 :class:`FunctionRegistry`).
 
-.. recipe:: ../code/compute_fn.cc InvokeByCallFunction
-  :caption: Use CallFunction() to invoke a compute function by name
-  :dedent: 2
-
-.. note::
-    This method allows us to specify arguments as a vector and a custom ExecContext.
+.. literalinclude:: ../code/compute_fn.cc
+   :language: cpp
+   :lines: 179-191
+   :caption: Use CallFunction() to invoke a compute function by name
+   :dedent: 2
 
 Sometimes, a convenience function (such as :func:`arrow::compute::Add` or
 :func:`arrow::compute::Subtract`) is defined. These functions are usually implemented as
@@ -79,10 +78,12 @@ Finally, the :class:`arrow::compute::ExecResult` pointed to should be set to an
 appropriate :class:`arrow::ArraySpan` or :class:`arrow::ArrayData` instance, depending on
 ownership semantics of the kernel's output.
 
-.. recipe:: ../code/compute_fn.cc DefineAComputeKernel
-  :caption: Define an example compute kernel that uses ScalarHelper from hashing.h to hash
-            input values
-  :dedent: 2
+.. literalinclude:: ../code/compute_fn.cc
+   :language: cpp
+   :lines: 71-118
+   :caption: Define an example compute kernel that uses ScalarHelper from hashing.h to
+             hash input values
+   :dedent: 2
 
 This recipe shows basic validation of `input_arg` which contains a vector of input
 arguments. Then, the input :class:`arrow::Array` is accessed from `input_arg` and a
@@ -99,9 +100,11 @@ object--:class:`arrow::compute::ScalarFunction` in this case--and (2) call the
 :func:`arrow::compute::ScalarFunction::AddKernel` function. The AddKernel function is
 repeated for each desired input data type.
 
-.. recipe:: ../code/compute_fn.cc AddKernelToFunction
-  :caption: Instantiate a ScalarFunction and add our execution kernel to it
-  :dedent: 2
+.. literalinclude:: ../code/compute_fn.cc
+   :language: cpp
+   :lines: 128-158
+   :caption: Instantiate a ScalarFunction and add our execution kernel to it
+   :dedent: 2
 
 A :class:`arrow::compute::ScalarFunction` represents a "scalar" or "element-wise" compute
 function (see documentation on the Compute API). The signature used in this recipe passes:
@@ -134,10 +137,12 @@ Add Function to Registry
 
 Finally, adding the function to a registry is wonderfully straightforward.
 
-.. recipe:: ../code/compute_fn.cc AddFunctionToRegistry
-  :caption: Use convenience function to get a ScalarFunction with associated kernels, then
-            add it to the given FunctionRegistry
-  :dedent: 2
+.. literalinclude:: ../code/compute_fn.cc
+   :language: cpp
+   :lines: 163-173
+   :caption: Use convenience function to get a ScalarFunction with associated kernels,
+             then add it to the given FunctionRegistry
+   :dedent: 2
 
 In this recipe, we simply wrap the logic in a convenience function that: (1) creates a
 :class:`arrow::compute::ScalarFunction`, (2) adds our execution kernel to the compute
