@@ -167,8 +167,11 @@ RegisterScalarFnKernels() {
  */
 void
 RegisterNamedScalarFn(FunctionRegistry *registry) {
+  StartRecipe("AddFunctionToRegistry");
+  // scalar_fn has type: shared_ptr<ScalarFunction>
   auto scalar_fn = RegisterScalarFnKernels();
   DCHECK_OK(registry->AddFunction(std::move(scalar_fn)));
+  EndRecipe("AddFunctionToRegistry");
 }
 
 
@@ -181,8 +184,12 @@ RegisterNamedScalarFn(FunctionRegistry *registry) {
 ARROW_EXPORT
 Result<Datum>
 NamedScalarFn(const Datum &input_arg, ExecContext *ctx) {
-  auto func_name = "named_scalar_fn";
-  return CallFunction(func_name, { input_arg }, ctx);
+  StartRecipe("InvokeByCallFunction");
+  auto func_name    = "named_scalar_fn";
+  auto result_datum = CallFunction(func_name, { input_arg }, ctx);
+  EndRecipe("InvokeByCallFunction");
+
+  return result_datum;
 }
 
 
@@ -201,13 +208,11 @@ class ComputeFunctionTest : public ::testing::Test {};
 
 TEST(ComputeFunctionTest, TestRegisterAndCallFunction) {
   // >> Register the function first
-  StartRecipe("RegisterComputeFunction");
   auto fn_registry = arrow::compute::GetFunctionRegistry();
   RegisterNamedScalarFn(fn_registry);
-  EndRecipe("RegisterComputeFunction");
 
   // >> Then we can call the function
-  StartRecipe("InvokeComputeFunction");
+  StartRecipe("InvokeByConvenienceFunction");
   auto build_result = BuildIntArray();
   if (not build_result.ok()) {
     std::cerr << build_result.status().message() << std::endl;
@@ -224,7 +229,7 @@ TEST(ComputeFunctionTest, TestRegisterAndCallFunction) {
   auto result_data = fn_result->make_array();
   std::cout << "Success:"                      << std::endl;
   std::cout << "\t" << result_data->ToString() << std::endl;
-  EndRecipe("InvokeComputeFunction");
+  EndRecipe("InvokeByConvenienceFunction");
 
   // If we want to peek at the input data
   std::cout << col_data.make_array()->ToString() << std::endl;
