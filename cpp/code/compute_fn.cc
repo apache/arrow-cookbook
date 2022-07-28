@@ -160,6 +160,7 @@ RegisterScalarFnKernels() {
 }
 
 
+// StartRecipe("AddFunctionToRegistry");
 /**
  * A convenience function that shows how we register a custom function with a
  * `FunctionRegistry`. To keep this simple and general, this function takes a pointer to a
@@ -167,15 +168,15 @@ RegisterScalarFnKernels() {
  */
 void
 RegisterNamedScalarFn(FunctionRegistry *registry) {
-  StartRecipe("AddFunctionToRegistry");
   // scalar_fn has type: shared_ptr<ScalarFunction>
   auto scalar_fn = RegisterScalarFnKernels();
   DCHECK_OK(registry->AddFunction(std::move(scalar_fn)));
-  EndRecipe("AddFunctionToRegistry");
 }
+// EndRecipe("AddFunctionToRegistry");
 
 
 // >> Convenience functions
+// StartRecipe("InvokeByCallFunction");
 /**
  * An optional, convenient invocation function to easily call our compute function. This
  * executes our compute function by invoking `CallFunction` with the name that we used to
@@ -184,13 +185,12 @@ RegisterNamedScalarFn(FunctionRegistry *registry) {
 ARROW_EXPORT
 Result<Datum>
 NamedScalarFn(const Datum &input_arg, ExecContext *ctx) {
-  StartRecipe("InvokeByCallFunction");
   auto func_name    = "named_scalar_fn";
   auto result_datum = CallFunction(func_name, { input_arg }, ctx);
-  EndRecipe("InvokeByCallFunction");
 
   return result_datum;
 }
+// EndRecipe("InvokeByCallFunction");
 
 
 Result<shared_ptr<Array>>
