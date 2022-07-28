@@ -88,3 +88,54 @@ instance, depending on ownership semantics of the kernel's output.
             input values
   :dedent: 2
 
+This recipe shows basic validation of `input_arg` which contains a vector of input
+arguments. Then, the input `Array` is accessed from `input_arg` and a `Buffer` is
+allocated to hold output results. After the main loop is completed, the allocated `Buffer`
+is wrapped in an `ArrayData` instance and referenced by `out`.
+
+
+Associate Kernels with a Function
+---------------------------------
+
+The process of adding kernels to a compute function is easy: (1) create an appropriate
+`Function` instance--`ScalarFunction` in this case--and (2) call the `AddKernel` function.
+The more difficult part of this process is repeating for the desired data types and
+knowing how the signatures work.
+
+.. recipe:: ../code/compute_fn.cc AddKernelToFunction
+  :caption: Instantiate a ScalarFunction and add our execution kernel to it
+  :dedent: 2
+
+A `ScalarFunction` represents a "scalar" or "element-wise" compute function (see
+documentation on the Compute API). The signature used in this recipe passes:
+1. A function name (to be used when calling it)
+2. An "Arity" meaning how many input arguments it takes (like cardinality)
+3. A `FunctionDoc` instance (to associate some documentation programmatically)
+
+Then, `AddKernel` expects:
+1. A vector of data types for each input argument
+2. An output data type for the result
+3. The function to be used as the execution kernel
+4. The function to be used as the initialization kernel (optional)
+
+Note that the constructor for `ScalarFunction` is more interested in how many arguments to
+expect, and some information about the compute function itself; whereas, the function to
+add a kernel specifies data types and the functions to call at runtime.
+
+
+Add Function to Registry
+------------------------
+
+Finally, adding the function to a registry is wonderfully straightforward.
+
+.. recipe:: ../code/compute_fn.cc AddFunctionToRegistry
+  :caption: Use convenience function to get a ScalarFunction with associated kernels, then
+            add it to the given FunctionRegistry
+  :dedent: 2
+
+In this recipe, we simply wrap the logic in a convenience function that: (1) creates a
+`ScalarFunction`, (2) adds our execution kernel to the compute function, and (3) returns
+the compute function. Then, we add the compute function to some registry. This recipe
+takes the `FunctionRegistry` as an argument so that it is easy to call from the same place
+that the Arrow codebase registers other provided functions. Otherwise, we can add our
+compute function to the default registry, or a custom registry.
