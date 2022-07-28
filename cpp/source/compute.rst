@@ -58,8 +58,11 @@ Adding a Custom Compute Function
 ================================
 
 To make a custom compute function available, there are 3 primary steps:
+
 1. Define kernels for the function (these implement the actual logic)
+
 2. Associate the kernels with a function object
+
 3. Add the function object to a function registry
 
 
@@ -108,14 +111,21 @@ knowing how the signatures work.
 
 A `ScalarFunction` represents a "scalar" or "element-wise" compute function (see
 documentation on the Compute API). The signature used in this recipe passes:
+
 1. A function name (to be used when calling it)
+
 2. An "Arity" meaning how many input arguments it takes (like cardinality)
+
 3. A `FunctionDoc` instance (to associate some documentation programmatically)
 
 Then, `AddKernel` expects:
+
 1. A vector of data types for each input argument
+
 2. An output data type for the result
+
 3. The function to be used as the execution kernel
+
 4. The function to be used as the initialization kernel (optional)
 
 Note that the constructor for `ScalarFunction` is more interested in how many arguments to
