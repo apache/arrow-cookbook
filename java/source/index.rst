@@ -38,6 +38,7 @@ To get started with Apache Arrow in Java, see the
    flight
    dataset
    data
+   avro
 
 Indices and tables
 ==================
