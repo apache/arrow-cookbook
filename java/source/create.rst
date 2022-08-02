@@ -188,3 +188,40 @@ Array of List
 .. _`FieldVector`: https://arrow.apache.org/docs/java/reference/org/apache/arrow/vector/FieldVector.html
 .. _`ValueVector`: https://arrow.apache.org/docs/java/vector.html
 .. _`dictionary-encoding`: https://arrow.apache.org/docs/format/Columnar.html#dictionary-encoded-layout
+
+Splicing
+========
+
+Splicing provides a way of copying data between same types of Vectors
+
+Splicing IntVector
+------------------
+
+In this example, we want to copy a portion of input Vector to a new Vector.
+Splicing provides a way of copying a portion of source Vector.
+
+.. testcode::
+
+    import org.apache.arrow.memory.BufferAllocator;
+    import org.apache.arrow.memory.RootAllocator;
+    import org.apache.arrow.vector.IntVector;
+    import org.apache.arrow.vector.util.TransferPair;
+
+
+    try (BufferAllocator allocator = new RootAllocator();
+             IntVector vector = new IntVector("intVector", allocator);) {
+            for (int i = 0; i < 10; i++) {
+                vector.setSafe(i, i);
+            }
+            vector.setValueCount(10);
+
+            TransferPair tp = vector.getTransferPair(allocator);
+            tp.splitAndTransfer(0, 5);
+            IntVector sliced = (IntVector) tp.getTo();
+            System.out.print(sliced);
+            sliced.clear();
+        }
+
+.. testoutput::
+
+    [0, 1, 2, 3, 4]
