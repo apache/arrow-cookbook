@@ -28,8 +28,7 @@ Avro encoded data can be converted into Arrow format.
 Avro to Arrow
 =============
 
-The example assumes that the avro data doesn't contain schema in the file
-to be converted into Arrow
+The example assumes that the Avro schema is stored separately from the Avro data itself.
 
 .. testcode::
 
