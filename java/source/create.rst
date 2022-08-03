@@ -208,18 +208,18 @@ In this example, we want to copy a portion of input Vector to a new Vector.
 
 
     try (BufferAllocator allocator = new RootAllocator();
-             IntVector vector = new IntVector("intVector", allocator);) {
-            for (int i = 0; i < 10; i++) {
-                vector.setSafe(i, i);
-            }
-            vector.setValueCount(10);
-
-            TransferPair tp = vector.getTransferPair(allocator);
-            tp.splitAndTransfer(0, 5);
-            IntVector sliced = (IntVector) tp.getTo();
-            System.out.print(sliced);
-            sliced.clear();
+         IntVector vector = new IntVector("intVector", allocator)) {
+        for (int i = 0; i < 10; i++) {
+            vector.setSafe(i, i);
         }
+        vector.setValueCount(10);
+
+        TransferPair tp = vector.getTransferPair(allocator);
+        tp.splitAndTransfer(0, 5);
+        try (IntVector sliced = (IntVector) tp.getTo()) {
+            System.out.print(sliced);
+        }
+    }
 
 .. testoutput::
 
