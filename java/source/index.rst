@@ -28,6 +28,8 @@ The Apache Arrow Cookbook is a collection of recipes which demonstrate how to so
 To get started with Apache Arrow in Java, see the
 `Installation Instructions <https://arrow.apache.org/docs/java/install.html>`_.
 
+This cookbook is tested with **Apache Arrow 9.0.0**.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
