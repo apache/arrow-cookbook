@@ -197,7 +197,7 @@ Splicing provides a way of copying complete or partial data between same types o
 Splicing IntVector
 ------------------
 
-In this example, we want to copy a portion of input Vector to a new Vector.
+In this example, we copy a portion of the input IntVector to a new IntVector.
 
 .. testcode::
 
