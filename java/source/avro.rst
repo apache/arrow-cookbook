@@ -17,9 +17,9 @@
 
 .. _arrow-avro:
 
-===============================
-Avro to Arrow
-===============================
+======
+Avro 
+======
 
 Avro encoded data can be converted into Arrow format.
 
@@ -61,12 +61,10 @@ The example assumes that the Avro schema is stored separately from the Avro data
                 }
             }
         }
-    } catch (FileNotFoundException e) {
+    } catch (Exception e) {
         e.printStackTrace();
-    } catch (IOException e) {
-        e.printStackTrace();
-    }
-
+    } 
+    
 .. testoutput::
 
     name    favorite_number    favorite_color
