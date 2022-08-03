@@ -185,9 +185,6 @@ Array of List
 
     [[1,2,3], [10,20,30], [100,200,300], [1000,2000,3000]]
 
-.. _`FieldVector`: https://arrow.apache.org/docs/java/reference/org/apache/arrow/vector/FieldVector.html
-.. _`ValueVector`: https://arrow.apache.org/docs/java/vector.html
-.. _`dictionary-encoding`: https://arrow.apache.org/docs/format/Columnar.html#dictionary-encoded-layout
 
 Splicing
 ========
@@ -224,3 +221,7 @@ In this example, we copy a portion of the input IntVector to a new IntVector.
 .. testoutput::
 
     [0, 1, 2, 3, 4]
+
+.. _`FieldVector`: https://arrow.apache.org/docs/java/reference/org/apache/arrow/vector/FieldVector.html
+.. _`ValueVector`: https://arrow.apache.org/docs/java/vector.html
+.. _`dictionary-encoding`: https://arrow.apache.org/docs/format/Columnar.html#dictionary-encoded-layout
