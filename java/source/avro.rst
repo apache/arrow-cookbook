@@ -46,18 +46,26 @@ to be converted into Arrow
 
     import java.io.File;
     import java.io.FileInputStream;
+    import java.io.FileNotFoundException;
+    import java.io.IOException;
 
-    BufferAllocator allocator = new RootAllocator(Long.MAX_VALUE);
-    AvroToArrowConfig config = new AvroToArrowConfigBuilder(allocator).build();
-
-    BinaryDecoder decoder = new DecoderFactory().binaryDecoder(new FileInputStream("./thirdpartydeps/avro/users.avro"), null);
-
-    Schema schema = new Schema.Parser().parse(new File("./thirdpartydeps/avro/user.avsc"));
-    AvroToArrowVectorIterator avroToArrowVectorIterator = AvroToArrow.avroToArrowIterator(schema, decoder, config);
-
-    while(avroToArrowVectorIterator.hasNext()) {
-        VectorSchemaRoot root = avroToArrowVectorIterator.next();
-        System.out.print(root.contentToTSVString());
+    try {
+        BinaryDecoder decoder = new DecoderFactory().binaryDecoder(new FileInputStream("./thirdpartydeps/avro/users.avro"), null);
+        Schema schema = new Schema.Parser().parse(new File("./thirdpartydeps/avro/user.avsc"));
+        try (BufferAllocator allocator = new RootAllocator()) {
+            AvroToArrowConfig config = new AvroToArrowConfigBuilder(allocator).build();
+            try (AvroToArrowVectorIterator avroToArrowVectorIterator = AvroToArrow.avroToArrowIterator(schema, decoder, config)) {
+                while(avroToArrowVectorIterator.hasNext()) {
+                    try (VectorSchemaRoot root = avroToArrowVectorIterator.next()) {
+                        System.out.print(root.contentToTSVString());
+                    }
+                }
+            }
+        }
+    } catch (FileNotFoundException e) {
+        e.printStackTrace();
+    } catch (IOException e) {
+        e.printStackTrace();
     }
 
 .. testoutput::
