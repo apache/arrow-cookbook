@@ -192,13 +192,12 @@ Array of List
 Splicing
 ========
 
-Splicing provides a way of copying data between same types of Vectors
+Splicing provides a way of copying complete or partial data between same types of Vectors
 
 Splicing IntVector
 ------------------
 
 In this example, we want to copy a portion of input Vector to a new Vector.
-Splicing provides a way of copying a portion of source Vector.
 
 .. testcode::
 
