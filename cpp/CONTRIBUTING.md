@@ -181,4 +181,4 @@ whenever a recipe is referenced.
 
 All participation in the Apache Arrow project is governed by the Apache
 Software Foundation’s
-`code of conduct <https://www.apache.org/foundation/policies/conduct.html>`_.
+`code of conduct <https://www.apache.org/foundation/policies/conduct.html>`\_.
