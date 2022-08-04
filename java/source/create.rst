@@ -198,29 +198,28 @@ In this example, we copy a portion of the input IntVector to a new IntVector.
 
 .. testcode::
 
-    import org.apache.arrow.memory.BufferAllocator;
-    import org.apache.arrow.memory.RootAllocator;
-    import org.apache.arrow.vector.IntVector;
-    import org.apache.arrow.vector.util.TransferPair;
+   import org.apache.arrow.memory.BufferAllocator;
+   import org.apache.arrow.memory.RootAllocator;
+   import org.apache.arrow.vector.IntVector;
+   import org.apache.arrow.vector.util.TransferPair;
 
-
-    try (BufferAllocator allocator = new RootAllocator();
-         IntVector vector = new IntVector("intVector", allocator)) {
-        for (int i = 0; i < 10; i++) {
-            vector.setSafe(i, i);
+   try (BufferAllocator allocator = new RootAllocator();
+       IntVector vector = new IntVector("intVector", allocator)) {
+       for (int i = 0; i < 10; i++) {
+           vector.setSafe(i, i);
         }
-        vector.setValueCount(10);
+       vector.setValueCount(10);
 
-        TransferPair tp = vector.getTransferPair(allocator);
-        tp.splitAndTransfer(0, 5);
-        try (IntVector sliced = (IntVector) tp.getTo()) {
-            System.out.print(sliced);
-        }
-    }
+       TransferPair tp = vector.getTransferPair(allocator);
+       tp.splitAndTransfer(0, 5);
+       try (IntVector sliced = (IntVector) tp.getTo()) {
+           System.out.print(sliced);
+       }
+   }
 
 .. testoutput::
 
-    [0, 1, 2, 3, 4]
+   [0, 1, 2, 3, 4]
 
 .. _`FieldVector`: https://arrow.apache.org/docs/java/reference/org/apache/arrow/vector/FieldVector.html
 .. _`ValueVector`: https://arrow.apache.org/docs/java/vector.html
