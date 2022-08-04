@@ -71,6 +71,11 @@
             <version>${arrow.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.arrow</groupId>
+            <artifactId>arrow-avro</artifactId>
+            <version>${arrow.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>30.1.1-jre</version>
