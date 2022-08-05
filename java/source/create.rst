@@ -213,6 +213,13 @@ In this example, we copy a portion of the input IntVector to a new IntVector.
        TransferPair tp = vector.getTransferPair(allocator);
        tp.splitAndTransfer(0, 5);
        try (IntVector sliced = (IntVector) tp.getTo()) {
+           System.out.println(sliced);
+       }
+       
+       tp = vector.getTransferPair(allocator);
+       // copy 6 elements from index 2
+       tp.splitAndTransfer(2, 6);
+       try (IntVector sliced = (IntVector) tp.getTo()) {
            System.out.print(sliced);
        }
    }
@@ -220,36 +227,6 @@ In this example, we copy a portion of the input IntVector to a new IntVector.
 .. testoutput::
 
    [0, 1, 2, 3, 4]
-   
-Splicing IntVector non-zero Index
-----------------------------------
-
-In this example, we copy a portion of input IntVector from a non-zero Index.
-The example copies 6 elements starting from index 2.
-
-.. testcode::
-
-   import org.apache.arrow.memory.BufferAllocator;
-   import org.apache.arrow.memory.RootAllocator;
-   import org.apache.arrow.vector.IntVector;
-   import org.apache.arrow.vector.util.TransferPair;
-
-   try (BufferAllocator allocator = new RootAllocator();
-       IntVector vector = new IntVector("intVector", allocator);) {
-       for (int i = 0; i < 10; i++) {
-           vector.setSafe(i, i);
-       }
-       vector.setValueCount(10);
-
-       TransferPair tp = vector.getTransferPair(allocator);
-       tp.splitAndTransfer(2, 6);
-       IntVector sliced = (IntVector) tp.getTo();
-       System.out.print(sliced);
-       sliced.clear();
-   }
-
-.. testoutput::
-
    [2, 3, 4, 5, 6, 7]
    
 .. _`FieldVector`: https://arrow.apache.org/docs/java/reference/org/apache/arrow/vector/FieldVector.html
