@@ -229,6 +229,11 @@ The example copies 6 elements starting from index 2.
 
 .. testcode::
 
+   import org.apache.arrow.memory.BufferAllocator;
+   import org.apache.arrow.memory.RootAllocator;
+   import org.apache.arrow.vector.IntVector;
+   import org.apache.arrow.vector.util.TransferPair;
+
    try (BufferAllocator allocator = new RootAllocator();
        IntVector vector = new IntVector("intVector", allocator);) {
        for (int i = 0; i < 10; i++) {
@@ -243,6 +248,10 @@ The example copies 6 elements starting from index 2.
        sliced.clear();
    }
 
+.. testoutput::
+
+   [2, 3, 4, 5, 6, 7]
+   
 .. _`FieldVector`: https://arrow.apache.org/docs/java/reference/org/apache/arrow/vector/FieldVector.html
 .. _`ValueVector`: https://arrow.apache.org/docs/java/vector.html
 .. _`dictionary-encoding`: https://arrow.apache.org/docs/format/Columnar.html#dictionary-encoded-layout
