@@ -1,13 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor
+  license agreements. See the NOTICE file distributed with this work for additional
+  information regarding copyright ownership. The ASF licenses this file to
+  You under the Apache License, Version 2.0 (the "License"); you may not use
+  this file except in compliance with the License. You may obtain a copy of
+  the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required
+  by applicable law or agreed to in writing, software distributed under the
+  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+  OF ANY KIND, either express or implied. See the License for the specific
+  language governing permissions and limitations under the License. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>org.example</groupId>
     <artifactId>demo</artifactId>
     <version>1.0-SNAPSHOT</version>
-
     <build>
     <extensions>
       <extension>
@@ -17,20 +25,11 @@
       </extension>
     </extensions>
     </build>
-
     <properties>
         <maven.compiler.source>injected_by_ci</maven.compiler.source>
         <maven.compiler.target>injected_by_ci</maven.compiler.target>
         <arrow.version>injected_by_ci</arrow.version>
     </properties>
-
-    <repositories>
-        <repository>
-            <id>arrow-nightly</id>
-            <url>https://nightlies.apache.org/arrow/java</url>
-        </repository>
-    </repositories>
-
     <dependencies>
         <dependency>
             <groupId>org.apache.arrow</groupId>
@@ -50,7 +49,7 @@
         <dependency>
             <groupId>org.apache.arrow</groupId>
             <artifactId>flight-core</artifactId>
-            <version>6.0.0</version>
+            <version>${arrow.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>io.netty</groupId>
@@ -70,6 +69,11 @@
         <dependency>
             <groupId>org.apache.arrow</groupId>
             <artifactId>arrow-jdbc</artifactId>
+            <version>${arrow.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.arrow</groupId>
+            <artifactId>arrow-avro</artifactId>
             <version>${arrow.version}</version>
         </dependency>
         <dependency>

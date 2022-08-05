@@ -1,3 +1,20 @@
+.. Licensed to the Apache Software Foundation (ASF) under one
+.. or more contributor license agreements.  See the NOTICE file
+.. distributed with this work for additional information
+.. regarding copyright ownership.  The ASF licenses this file
+.. to you under the Apache License, Version 2.0 (the
+.. "License"); you may not use this file except in compliance
+.. with the License.  You may obtain a copy of the License at
+
+..   http://www.apache.org/licenses/LICENSE-2.0
+
+.. Unless required by applicable law or agreed to in writing,
+.. software distributed under the License is distributed on an
+.. "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+.. KIND, either express or implied.  See the License for the
+.. specific language governing permissions and limitations
+.. under the License.
+
 ===================
 Working with Schema
 ===================
@@ -20,7 +37,7 @@ Fields are used to denote the particular columns of tabular data.
     import org.apache.arrow.vector.types.pojo.FieldType;
 
     Field name = new Field("name", FieldType.nullable(new ArrowType.Utf8()), null);
-    System.out.print(name)
+    System.out.print(name);
 
 .. testoutput::
 
@@ -33,7 +50,7 @@ Fields are used to denote the particular columns of tabular data.
     import org.apache.arrow.vector.types.pojo.FieldType;
 
     Field age = new Field("age", FieldType.nullable(new ArrowType.Int(32, true)), null);
-    System.out.print(age)
+    System.out.print(age);
 
 .. testoutput::
 
@@ -52,7 +69,7 @@ Fields are used to denote the particular columns of tabular data.
     childFields.add(childField);
     Field points = new Field("points", listType, childFields);
 
-    System.out.print(points)
+    System.out.print(points);
 
 .. testoutput::
 
@@ -108,7 +125,7 @@ In case we need to add metadata to our Field we could use:
     metadata.put("C", "Visa");
     Field document = new Field("document", new FieldType(true, new ArrowType.Utf8(), null, metadata), null);
 
-    System.out.print(document.getMetadata())
+    System.out.print(document.getMetadata());
 
 .. testoutput::
 
