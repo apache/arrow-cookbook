@@ -509,7 +509,6 @@ The main class to help us to convert ResultSet to VectorSchemaRoot is
                 }
             }
         }
-
     } catch (SQLException | IOException e) {
         e.printStackTrace();
     }
@@ -521,7 +520,7 @@ The main class to help us to convert ResultSet to VectorSchemaRoot is
     102    true    100000000030
     103    true    10000000003
 
-ResultSet with Array to VectorSchemaRoot Conversion
+Configuring Array subtypes
 ---------------------------------------------------
 
 JdbcToArrow accepts configuration through `JdbcToArrowConfig
@@ -591,7 +590,7 @@ For example, the type of the elements of array columns can be specified by
     102    true    100000000030    some char text      [1,2]
     103    true    10000000003    some char text      [1]
 
-ResultSet per Batches to VectorSchemaRoot Conversion
+Configuring batch size
 ----------------------------------------------------
 
 The maximum rowCount to read each time is configured by default in 1024. This
@@ -661,19 +660,22 @@ can be customized by setting values as needed by ``setTargetBatchSize``.
     INT_FIELD1    BOOL_FIELD2    BIGINT_FIELD5    CHAR_FIELD16    LIST_FIELD19
     103    true    10000000003    some char text      [1]
 
-ResultSet with Precision/Scale to VectorSchemaRoot Conversion
+Configuring numeric (decimal) precision and scale
 -------------------------------------------------------------
 
-There is a configuration about precision & scale for column data type needed
-(i.e. ``JdbcFieldInfo(Types.DECIMAL, /*precision*/ 20, /*scale*/ 7))``) but this
-configuration required exact matching of every row to the established scale
-for the column, and throws ``UnsupportedOperationException`` when there is a mismatch,
-aborting ResultSet processing,
+By default, the scale of any decimal values must exactly match the defined
+scale of the Arrow type of the column, or else an UnsupportedOperationException
+will be thrown with a message like ``BigDecimal scale must equal that in the Arrow
+vector``will be thrown during conversion.
 
-In this example we have BigInt data type configured on H2 Database, this is
-converted to (``/*scale*/0)`` by default, then we have a ``/*scale*/7`` configured on
-our code, this will be the error message for these differences: ``Caused by: java.lang.UnsupportedOperationException: BigDecimal scale must equal that in the Arrow vector: 0 != 7``
-if not applying ``setBigDecimalRoundingMode``
+This can happen because Arrow infers the type from the ResultSet metadata, which
+is not accurate for all database drivers. The JDBC adapter lets you avoid this
+by either overriding the decimal scale, or by providing a RoundingMode via
+``setBigDecimalRoundingMode`` to convert values to the expected scale.
+
+In this example, we have a BigInt column. By default, the inferred scale
+is 0. We override the scale to 7 and then set a RoundingMode to convert
+values to the given scale.
 
 .. testcode::
 
