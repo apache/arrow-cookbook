@@ -41,6 +41,7 @@ This cookbook is tested with **Apache Arrow 9.0.0**.
    dataset
    data
    avro
+   jdbc
 
 Indices and tables
 ==================
