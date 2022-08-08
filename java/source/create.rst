@@ -213,6 +213,13 @@ In this example, we copy a portion of the input IntVector to a new IntVector.
        TransferPair tp = vector.getTransferPair(allocator);
        tp.splitAndTransfer(0, 5);
        try (IntVector sliced = (IntVector) tp.getTo()) {
+           System.out.println(sliced);
+       }
+       
+       tp = vector.getTransferPair(allocator);
+       // copy 6 elements from index 2
+       tp.splitAndTransfer(2, 6);
+       try (IntVector sliced = (IntVector) tp.getTo()) {
            System.out.print(sliced);
        }
    }
@@ -220,7 +227,8 @@ In this example, we copy a portion of the input IntVector to a new IntVector.
 .. testoutput::
 
    [0, 1, 2, 3, 4]
-
+   [2, 3, 4, 5, 6, 7]
+   
 .. _`FieldVector`: https://arrow.apache.org/docs/java/reference/org/apache/arrow/vector/FieldVector.html
 .. _`ValueVector`: https://arrow.apache.org/docs/java/vector.html
 .. _`dictionary-encoding`: https://arrow.apache.org/docs/format/Columnar.html#dictionary-encoded-layout
