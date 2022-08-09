@@ -17,9 +17,9 @@
 
 .. _arrow-jdbc:
 
-====
-Jdbc
-====
+==================
+Arrow JDBC Adapter
+==================
 
 The `Arrow Java JDBC module <https://arrow.apache.org/docs/java/jdbc.html>`_
 converts JDBC ResultSets into Arrow VectorSchemaRoots.
@@ -152,8 +152,8 @@ For example, the type of the elements of array columns can be specified by
 Configuring batch size
 ======================
 
-The maximum rowCount to read each time is configured by default in 1024. This
-can be customized by setting values as needed by ``setTargetBatchSize``.
+By default, the adapter will read up to 1024 rows in a batch. This
+can be customized via ``setTargetBatchSize``.
 
 .. testcode::
 
@@ -225,7 +225,7 @@ Configuring numeric (decimal) precision and scale
 By default, the scale of any decimal values must exactly match the defined
 scale of the Arrow type of the column, or else an UnsupportedOperationException
 will be thrown with a message like ``BigDecimal scale must equal that in the Arrow
-vector``will be thrown during conversion.
+vector``.
 
 This can happen because Arrow infers the type from the ResultSet metadata, which
 is not accurate for all database drivers. The JDBC adapter lets you avoid this
