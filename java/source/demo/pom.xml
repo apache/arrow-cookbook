@@ -26,9 +26,9 @@
     </extensions>
     </build>
     <properties>
-        <maven.compiler.source>injected_by_ci</maven.compiler.source>
-        <maven.compiler.target>injected_by_ci</maven.compiler.target>
-        <arrow.version>injected_by_ci</arrow.version>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <arrow.version>9.0.0</arrow.version>
     </properties>
     <dependencies>
         <dependency>
