@@ -179,37 +179,6 @@ test_that("dplyr_func_warning", {
 })
 ```
 
-It should be noted that to work with functions which do have mappings, you must 
-refer to them by
-their function names.  If you use the `package::function()` syntax, this will 
-result in a warning about the data being pulled back into R before the output is
-calculated.
-
-```{r, dplyr_str_to_lower_r, warning=TRUE}
-arrow_table(starwars) %>%
-  select(name) %>%
-  mutate(name_lower = stringr::str_to_lower(name)) %>%
-  head() %>%
-  collect()
-```
-
-```{r, test_dplyr_str_to_lower_r, opts.label = "test"}
-
-test_that("dplyr_str_to_lower_r", {
-  
-  expect_warning(
-    arrow_table(starwars) %>%
-      select(name) %>%
-      mutate(name_lower = stringr::str_to_lower(name)) %>%
-      head() %>%
-      collect(),
-    "Expression stringr::str_to_lower(name) not supported in Arrow; pulling data into R",
-    fixed = TRUE
-  )
-  
-})
-
-```
 
 ## Use arrow functions in dplyr verbs in arrow
 
