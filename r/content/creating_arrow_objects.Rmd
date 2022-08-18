@@ -15,7 +15,6 @@
 <!-- specific language governing permissions and limitations -->
 <!-- under the License. -->
 
-
 # Creating Arrow Objects {#creating-arrow-objects}
 
 ## Create an Arrow Array from an R object
