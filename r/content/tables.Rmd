@@ -1,3 +1,22 @@
+<!---
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+
 # Manipulating Data - Tables
 
 ## Introduction
@@ -179,37 +198,6 @@ test_that("dplyr_func_warning", {
 })
 ```
 
-It should be noted that to work with functions which do have mappings, you must 
-refer to them by
-their function names.  If you use the `package::function()` syntax, this will 
-result in a warning about the data being pulled back into R before the output is
-calculated.
-
-```{r, dplyr_str_to_lower_r, warning=TRUE}
-arrow_table(starwars) %>%
-  select(name) %>%
-  mutate(name_lower = stringr::str_to_lower(name)) %>%
-  head() %>%
-  collect()
-```
-
-```{r, test_dplyr_str_to_lower_r, opts.label = "test"}
-
-test_that("dplyr_str_to_lower_r", {
-  
-  expect_warning(
-    arrow_table(starwars) %>%
-      select(name) %>%
-      mutate(name_lower = stringr::str_to_lower(name)) %>%
-      head() %>%
-      collect(),
-    "Expression stringr::str_to_lower(name) not supported in Arrow; pulling data into R",
-    fixed = TRUE
-  )
-  
-})
-
-```
 
 ## Use arrow functions in dplyr verbs in arrow
 
