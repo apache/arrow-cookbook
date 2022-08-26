@@ -76,9 +76,7 @@ arrow::Result<std::shared_ptr<arrow::Table>> ReadRecipeTable(
     const std::shared_ptr<arrow::io::RandomAccessFile>& in_file) {
   ARROW_ASSIGN_OR_RAISE(std::shared_ptr<arrow::ipc::RecordBatchStreamReader> reader,
                         arrow::ipc::RecordBatchStreamReader::Open(in_file));
-  std::shared_ptr<arrow::Table> table;
-  ARROW_RETURN_NOT_OK(reader->ReadAll(&table));
-  return table;
+  return reader->ToTable();
 }
 
 arrow::Result<std::shared_ptr<arrow::Table>> LoadExistingRecipeOutputTable(

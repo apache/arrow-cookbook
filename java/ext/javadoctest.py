@@ -1,3 +1,19 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 import pathlib
 import subprocess
@@ -5,6 +21,13 @@ import subprocess
 from sphinx.ext.doctest import (Any, Dict, DocTestBuilder, TestcodeDirective,
                                 TestoutputDirective, doctest, sphinx)
 from sphinx.locale import __
+
+
+class JavaTestcodeDirective(TestcodeDirective):
+    def run(self):
+        node_list = super().run()
+        node_list[0]["language"] = "java"
+        return node_list
 
 
 class JavaDocTestBuilder(DocTestBuilder):
@@ -52,7 +75,7 @@ class JavaDocTestBuilder(DocTestBuilder):
         # JDK11 support '-' This allows the pipe to work as expected without requiring a shell
         # Migrating to /dev/stdin to also support JDK9+
         proc_jshell_process = subprocess.Popen(
-            ["jshell", "--class-path", stdout_dependency, "-s", "/dev/stdin"],
+            ["jshell", "-R--add-opens=java.base/java.nio=ALL-UNNAMED", "--class-path", stdout_dependency, "-s", "/dev/stdin"],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             text=True,
@@ -76,7 +99,7 @@ class JavaDocTestBuilder(DocTestBuilder):
         return output
 
 def setup(app) -> Dict[str, Any]:
-    app.add_directive("testcode", TestcodeDirective)
+    app.add_directive("testcode", JavaTestcodeDirective)
     app.add_directive("testoutput", TestoutputDirective)
     app.add_builder(JavaDocTestBuilder)
     # this config value adds to sys.path

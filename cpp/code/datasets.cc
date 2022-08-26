@@ -1,3 +1,20 @@
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+
 #include <arrow/api.h>
 #include <arrow/dataset/api.h>
 #include <arrow/filesystem/api.h>
@@ -46,7 +63,8 @@ class DatasetReadingTest : public ::testing::Test {
         std::make_shared<arrow::dataset::ParquetFileFormat>();
 
     arrow::dataset::FileSystemDatasetWriteOptions write_options;
-    write_options.existing_data_behavior = arrow::dataset::ExistingDataBehavior::kDeleteMatchingPartitions;
+    write_options.existing_data_behavior =
+        arrow::dataset::ExistingDataBehavior::kDeleteMatchingPartitions;
     write_options.filesystem = std::move(fs);
     write_options.partitioning = std::move(partitioning);
     write_options.base_dir = airquality_partitioned_dir_;
@@ -76,9 +94,9 @@ class DatasetReadingTest : public ::testing::Test {
   std::string airquality_partitioned_dir_;
 };
 
-TEST_F(DatasetReadingTest, DatasetRead) {
+arrow::Status DatasetRead(const std::string& airquality_basedir) {
   StartRecipe("ListPartitionedDataset");
-  const std::string& directory_base = airquality_basedir();
+  const std::string& directory_base = airquality_basedir;
 
   // Create a filesystem
   std::shared_ptr<arrow::fs::LocalFileSystem> fs =
@@ -94,8 +112,8 @@ TEST_F(DatasetReadingTest, DatasetRead) {
 
   // List out the files so we can see how our data is partitioned.
   // This step is not necessary for reading a dataset
-  ASSERT_OK_AND_ASSIGN(std::vector<arrow::fs::FileInfo> file_infos,
-                       fs->GetFileInfo(selector));
+  ARROW_ASSIGN_OR_RAISE(std::vector<arrow::fs::FileInfo> file_infos,
+                        fs->GetFileInfo(selector));
   int num_printed = 0;
   for (const auto& path : file_infos) {
     if (path.IsFile()) {
@@ -106,7 +124,6 @@ TEST_F(DatasetReadingTest, DatasetRead) {
       }
     }
   }
-
   EndRecipe("ListPartitionedDataset");
   StartRecipe("CreatingADataset");
   // Create a file format which describes the format of the files.
@@ -117,11 +134,11 @@ TEST_F(DatasetReadingTest, DatasetRead) {
       std::make_shared<arrow::dataset::ParquetFileFormat>();
 
   // Create a partitioning factory.  A partitioning factory will be used by a dataset
-  // factory to infer the partitioning schema from the filenames.  All we need to specify
-  // is the flavor of partitioning which, in our case, is "hive".
+  // factory to infer the partitioning schema from the filenames.  All we need to
+  // specify is the flavor of partitioning which, in our case, is "hive".
   //
-  // Alternatively, we could manually create a partitioning scheme from a schema.  This is
-  // typically not necessary for hive partitioning as inference works well.
+  // Alternatively, we could manually create a partitioning scheme from a schema.  This
+  // is typically not necessary for hive partitioning as inference works well.
   std::shared_ptr<arrow::dataset::PartitioningFactory> partitioning_factory =
       arrow::dataset::HivePartitioning::MakeFactory();
 
@@ -129,14 +146,14 @@ TEST_F(DatasetReadingTest, DatasetRead) {
   options.partitioning = partitioning_factory;
 
   // Create a dataset factory
-  ASSERT_OK_AND_ASSIGN(
+  ARROW_ASSIGN_OR_RAISE(
       std::shared_ptr<arrow::dataset::DatasetFactory> dataset_factory,
       arrow::dataset::FileSystemDatasetFactory::Make(fs, selector, format, options));
 
   // Create the dataset, this will scan the dataset directory to find all the files
   // and may scan some file metadata in order to determine the dataset schema.
-  ASSERT_OK_AND_ASSIGN(std::shared_ptr<arrow::dataset::Dataset> dataset,
-                       dataset_factory->Finish());
+  ARROW_ASSIGN_OR_RAISE(std::shared_ptr<arrow::dataset::Dataset> dataset,
+                        dataset_factory->Finish());
 
   rout << "We discovered the following schema for the dataset:" << std::endl
        << std::endl
@@ -146,14 +163,19 @@ TEST_F(DatasetReadingTest, DatasetRead) {
 
   // Create a scanner
   arrow::dataset::ScannerBuilder scanner_builder(dataset);
-  ASSERT_OK(scanner_builder.UseThreads(true));
-  ASSERT_OK_AND_ASSIGN(std::shared_ptr<arrow::dataset::Scanner> scanner,
-                       scanner_builder.Finish());
+  ARROW_RETURN_NOT_OK(scanner_builder.UseThreads(true));
+  ARROW_ASSIGN_OR_RAISE(std::shared_ptr<arrow::dataset::Scanner> scanner,
+                        scanner_builder.Finish());
 
   // Scan the dataset.  There are a variety of other methods available on the scanner as
   // well
-  ASSERT_OK_AND_ASSIGN(std::shared_ptr<arrow::Table> table, scanner->ToTable());
+  ARROW_ASSIGN_OR_RAISE(std::shared_ptr<arrow::Table> table, scanner->ToTable());
   rout << "Read in a table with " << table->num_rows() << " rows and "
        << table->num_columns() << " columns";
   EndRecipe("ScanningADataset");
+  return arrow::Status::OK();
+}
+
+TEST_F(DatasetReadingTest, TestDatasetRead) {
+  ASSERT_OK(DatasetRead(airquality_basedir()));
 }

@@ -1,13 +1,38 @@
-Bulding the Java Cookbook
-=========================
+.. Licensed to the Apache Software Foundation (ASF) under one
+.. or more contributor license agreements.  See the NOTICE file
+.. distributed with this work for additional information
+.. regarding copyright ownership.  The ASF licenses this file
+.. to you under the Apache License, Version 2.0 (the
+.. "License"); you may not use this file except in compliance
+.. with the License.  You may obtain a copy of the License at
 
+..   http://www.apache.org/licenses/LICENSE-2.0
+
+.. Unless required by applicable law or agreed to in writing,
+.. software distributed under the License is distributed on an
+.. "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+.. KIND, either express or implied.  See the License for the
+.. specific language governing permissions and limitations
+.. under the License.
+
+Building the Java Cookbook
+=========================
 The Java cookbook uses the Sphinx documentation system.
 
-Running ``make java`` from the cookbook root directory (the one where
-the ``README.rst`` exists) will install all necessary dependencies
-and will compile the cookbook to HTML.
+Dependencies
+-------------------------
+The following are required to successfully build the Java cookbook:
 
-For java cookbook we are running these with Java Shell tool -
+Python
+^^^^^^^^^^^^^^^^^^^^^^^^^
+The cookbook build tooling depends upon Python, and the ability to
+install needed packages via pip, to build the Java cookbook.  The
+dependency packages managed via pip by build scripts are found at
+`requirements.txt <requirements.txt>`_.
+
+Java Shell
+^^^^^^^^^^^^^^^^^^^^^^^^^
+For Java cookbook we are running these with Java Shell tool -
 `JShell <https://docs.oracle.com/en/java/javase/11/jshell/introduction-jshell.html>`_
 
 .. code-block:: bash
@@ -21,6 +46,13 @@ For java cookbook we are running these with Java Shell tool -
     > jshell --version
     jshell 11.0.14
 
+
+Build Process
+-------------------------
+Run ``make java`` from the cookbook root directory (the one where
+the ``README.rst`` exists) to install all necessary dependencies
+and compile the cookbook to HTML.
+
 You will see the compiled result inside the ``build/java`` directory.
 
 Testing Java Recipes
@@ -29,8 +61,8 @@ Testing Java Recipes
 All recipes in the cookbook must be tested. The cookbook uses
 ``javadoctest`` to verify the recipes.
 
-Running ``make javatest`` from the cookbook root directory
-will verify that the code for all the recipes runs correctly
+Run ``make javatest`` from the cookbook root directory
+to verify that the code for all the recipes runs correctly
 and provides the expected output.
 
 Adding Java Recipes

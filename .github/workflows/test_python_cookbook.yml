@@ -24,7 +24,7 @@ on:
     paths:
      - "python/**"
      - ".github/workflows/test_python_cookbook.yml"
-     
+
 concurrency:
   group: ${{ github.repository }}-${{ github.ref }}-${{ github.workflow }}
   cancel-in-progress: true
@@ -36,9 +36,10 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Install dependencies
-        run: sudo apt install libcurl4-openssl-dev libssl-dev python3-pip
+        run: |
+          sudo apt update
+          sudo apt install libcurl4-openssl-dev libssl-dev python3-pip
       - name: Run tests
         run: make pytest
       - name: Build cookbook
         run: make py
-
