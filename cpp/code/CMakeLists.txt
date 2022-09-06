@@ -25,12 +25,13 @@ endif()
 
 # Add Arrow and other required packages
 find_package(Arrow REQUIRED)
-
-if(${ARROW_VERSION} VERSION_GREATER "9.0.0")
-    find_package(ArrowDataset REQUIRED)
-    find_package(ArrowFlight REQUIRED)
-    find_package(Parquet REQUIRED)
+if(NOT ${ARROW_VERSION} VERSION_GREATER "9.0.0")
+  get_filename_component(ARROW_CMAKE_BASE_DIR ${Arrow_CONFIG} DIRECTORY)
+  list(INSERT CMAKE_MODULE_PATH 0 ${ARROW_CMAKE_BASE_DIR})
 endif()
+find_package(ArrowDataset REQUIRED)
+find_package(ArrowFlight REQUIRED)
+find_package(Parquet REQUIRED)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_CLANG_TIDY "clang-tidy")
