@@ -23,8 +23,15 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
 endif()
 
-# Add Arrow
-find_package(Arrow REQUIRED COMPONENTS dataset flight parquet)
+# Add Arrow and other required packages
+find_package(Arrow REQUIRED)
+if(NOT ${ARROW_VERSION} VERSION_GREATER "9.0.0")
+  get_filename_component(ARROW_CMAKE_BASE_DIR ${Arrow_CONFIG} DIRECTORY)
+  list(INSERT CMAKE_MODULE_PATH 0 ${ARROW_CMAKE_BASE_DIR})
+endif()
+find_package(ArrowDataset REQUIRED)
+find_package(ArrowFlight REQUIRED)
+find_package(Parquet REQUIRED)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_CLANG_TIDY "clang-tidy")
@@ -42,14 +49,18 @@ function(RECIPE TARGET)
             common.cc
             main.cc
     )
-    target_link_libraries(
+    if(TARGET Arrow::arrow_shared)
+        target_link_libraries(
             ${TARGET}
-            arrow_shared
-            arrow_dataset
-            arrow_flight
-            parquet
-            gtest
-    )
+            ArrowDataset::arrow_dataset_shared
+            ArrowFlight::arrow_flight_shared gtest
+        )
+    else()
+        target_link_libraries(parquet_shared INTERFACE arrow_shared)
+        target_link_libraries(arrow_dataset_shared INTERFACE parquet_shared)
+        target_link_libraries(arrow_flight_shared INTERFACE arrow_shared)
+        target_link_libraries(${TARGET} arrow_dataset_shared arrow_flight_shared gtest)
+    endif()
     if (MSVC)
         target_compile_options(${TARGET} PRIVATE /W4 /WX)
     else ()
