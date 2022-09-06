@@ -48,7 +48,7 @@ function(RECIPE TARGET)
             common.cc
             main.cc
     )
-    if(${ARROW_VERSION} VERSION_GREATER "9.0.0")
+    if(TARGET Arrow::arrow_shared)
         set(ARROW_SHARED_NAME Arrow::arrow_shared)
     else()
         set(ARROW_SHARED_NAME arrow_shared)
