@@ -50,18 +50,17 @@ function(RECIPE TARGET)
             main.cc
     )
     if(TARGET Arrow::arrow_shared)
-        set(ARROW_SHARED_NAME Arrow::arrow_shared)
-    else()
-        set(ARROW_SHARED_NAME arrow_shared)
-    endif()
-    target_link_libraries(
+        target_link_libraries(
             ${TARGET}
-            ${ARROW_SHARED_NAME}
-            arrow_dataset
-            arrow_flight
-            parquet
-            gtest
-    )
+            ArrowDataset::arrow_dataset_shared
+            ArrowFlight::arrow_flight_shared gtest
+        )
+    else()
+        target_link_libraries(parquet_shared INTERFACE arrow_shared)
+        target_link_libraries(arrow_dataset_shared INTERFACE parquet_shared)
+        target_link_libraries(arrow_flight_shared INTERFACE arrow_shared)
+        target_link_libraries(${TARGET} arrow_dataset_shared arrow_flight_shared gtest)
+    endif()
     if (MSVC)
         target_compile_options(${TARGET} PRIVATE /W4 /WX)
     else ()
