@@ -30,8 +30,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test_cpp:
-    name: "Test C++ Cookbook"
+  test_cpp_stable:
+    name: "Test C++ Cookbook on Arrow stable"
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -66,3 +66,29 @@ jobs:
           name: cpp_book
           path: build/cpp
 
+  test_cpp_dev:
+    name: "Test C++ Cookbook on Arrow Nightlies"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+      - uses: actions/checkout@v1
+      - name: Setup environment
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          activate-environment: cookbook-cpp-dev
+          environment-file: cpp/dev.yml
+          auto-activate-base: false
+      - name: Test
+        run:
+          echo ${CONDA_PREFIX}
+      - name: Build cookbook
+        run:
+          make cpp
+      - name: Upload cpp book
+        uses: actions/upload-artifact@v1
+        with:
+          name: cpp_book
+          path: build/cpp

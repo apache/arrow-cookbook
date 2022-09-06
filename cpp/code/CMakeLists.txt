@@ -23,8 +23,14 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
 endif()
 
-# Add Arrow
-find_package(Arrow REQUIRED COMPONENTS dataset flight parquet)
+# Add Arrow and other required packages
+find_package(Arrow REQUIRED)
+
+if(${ARROW_VERSION} VERSION_GREATER "9.0.0")
+    find_package(ArrowDataset REQUIRED)
+    find_package(ArrowFlight REQUIRED)
+    find_package(Parquet REQUIRED)
+endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_CLANG_TIDY "clang-tidy")
@@ -42,9 +48,14 @@ function(RECIPE TARGET)
             common.cc
             main.cc
     )
+    if(${ARROW_VERSION} VERSION_GREATER "9.0.0")
+        set(ARROW_SHARED_NAME Arrow::arrow_shared)
+    else()
+        set(ARROW_SHARED_NAME arrow_shared)
+    endif()
     target_link_libraries(
             ${TARGET}
-            arrow_shared
+            ${ARROW_SHARED_NAME}
             arrow_dataset
             arrow_flight
             parquet
