@@ -25,6 +25,12 @@
       </extension>
     </extensions>
     </build>
+    <repositories>
+        <repository>
+            <id>arrow-apache-nightlies</id>
+            <url>https://nightlies.apache.org/arrow/java</url>
+        </repository>
+    </repositories>
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>

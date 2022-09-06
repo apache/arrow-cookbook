@@ -36,7 +36,13 @@ sys.path.append(os.path.abspath("../ext"))
 project = 'Apache Arrow Java Cookbook'
 copyright = '2022, Apache Software Foundation'
 author = 'The Apache Software Foundation'
-
+if os.getenv("ARROW_NIGHTLY"):
+    # TODO: Fix version to use 10.0.0-SNAPSHOT once ARROW-17628 is implemented
+    # If run with Arrow Dev use the latest nightlies version
+    version = "9.0.0.dev638"
+else:
+    version = "9.0.0"
+print(f"Running with Arrow version: {version}")
 
 # -- General configuration ---------------------------------------------------
 
