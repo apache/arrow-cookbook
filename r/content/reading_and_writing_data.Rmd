@@ -24,7 +24,7 @@
 This chapter contains recipes related to reading and writing data using Apache 
 Arrow.  When reading files into R using Apache Arrow, you can choose to read in 
 a single file as a data frame, an Arrow Table object, or an Arrow Dataset object. 
-You can read in partitioned or multi-files as an Arrow Dataset object.
+You can also read in partitioned or multi-files as an Arrow Dataset object.
 
 There are a number of circumstances in which you may want to read in the data as an 
 Arrow Table or Dataset:
@@ -63,7 +63,7 @@ air_df
 ```
 ```{r, test_asdf_table, opts.label = "test"}
 test_that("asdf_table chunk works as expected", {
-  expect_identical(air_df, airquality) 
+  expect_identical(air_df, airquality)
 })
 ```
 
@@ -155,7 +155,7 @@ You want to specify which columns to include when reading in a Parquet file.
 ### Solution
 
 ```{r, read_parquet_filter}
-# Create table to read back in 
+# Create table to read back in
 dist_time <- arrow_table(data.frame(distance = c(12.2, 15.7, 14.2), time = c(43, 44, 40)))
 # Write to Parquet
 write_parquet(dist_time, "dist_time.parquet")
@@ -299,7 +299,7 @@ You want to read a JSON file.
 ### Solution
 
 ```{r, read_json_arrow}
-# Create a file to read back in 
+# Create a file to read back in
 tf <- tempfile()
 writeLines('
     {"country": "United Kingdom", "code": "GB", "long": -3.44, "lat": 55.38}
