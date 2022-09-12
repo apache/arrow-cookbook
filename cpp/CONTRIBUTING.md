@@ -136,7 +136,8 @@ output by running `make html` in the `cpp` directory.
 ## Using Conda
 
 If you are using conda then there is file `cpp/requirements.yml` which can be
-used to create an environment for recipe development with the command:
+used to create an environment for recipe development using the latest stable
+Arrow version with the command:
 
 ```
 conda env create -f cpp/environment.yml
@@ -155,6 +156,15 @@ To update dependencies modify `cpp/requirements.yml` and then run
 cd cpp
 conda-lock --file environment.yml --kind explicit -p linux-aarch64 -p linux-64 -p osx-arm64
 ```
+
+You can also create a conda environment to test your cookbooks against the Arrow Nightly
+builds using the file `cpp/dev.yml`. Using the command:
+
+```
+conda env create -f cpp/dev.yml
+```
+
+This will create a conda environment called cookbook-cpp-dev instead.
 
 # Development Philosophy
 
