@@ -25,6 +25,24 @@ Dataset
 
 .. contents::
 
+Arrow Java Dataset offer native functionalities consuming native artifacts such as:
+    - JNI Arrow C++ Dataset: libarrow_dataset_jni (dylib/so):
+        To create C++ natively objects Schema, Dataset, Scanner and export that as a references (long id).
+    - JNI Arrow C Data Interface: libarrow_cdata_jni (dylib/so):
+        To get C++ Recordbacth.
+
+Current supported file format Datasets are:
+    - Parquet
+    - Arrow IPC
+    - ORC
+
+Consider that file format input is an URI it means HDFS/S3 are also supported.
+
+.. note::
+
+    The ScanOptions batchSize argument takes effect only if it is set to a value
+    smaller than the number of rows in the recordbatch.
+
 Constructing Datasets
 =====================
 
@@ -213,6 +231,87 @@ Query Data Content For File
    2    Gladis
    3    Juan
 
+Lets try to read a parquet gzip compressed file with 06 row groups:
+
+.. code-block::
+
+   $ parquet-tools meta data4_3rg_gzip.parquet
+
+   file schema: schema
+   age:         OPTIONAL INT64 R:0 D:1
+   name:        OPTIONAL BINARY L:STRING R:0 D:1
+   row group 1: RC:4 TS:182 OFFSET:4
+   row group 2: RC:4 TS:190 OFFSET:420
+   row group 3: RC:3 TS:179 OFFSET:838
+
+In this case, we are configuring ScanOptions batchSize argument equals to 20 rows, it's greater than
+04 rows used on the file, then 04 rows is used on the program execution instead of 20 rows requested.
+
+.. testcode::
+
+   import org.apache.arrow.dataset.file.FileFormat;
+   import org.apache.arrow.dataset.file.FileSystemDatasetFactory;
+   import org.apache.arrow.dataset.jni.NativeMemoryPool;
+   import org.apache.arrow.dataset.scanner.ScanOptions;
+   import org.apache.arrow.dataset.scanner.Scanner;
+   import org.apache.arrow.dataset.source.Dataset;
+   import org.apache.arrow.dataset.source.DatasetFactory;
+   import org.apache.arrow.memory.BufferAllocator;
+   import org.apache.arrow.memory.RootAllocator;
+   import org.apache.arrow.vector.VectorSchemaRoot;
+   import org.apache.arrow.vector.ipc.ArrowReader;
+
+   import java.io.IOException;
+
+   String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data4_3rg_gzip.parquet";
+   ScanOptions options = new ScanOptions(/*batchSize*/ 20);
+   try (
+       BufferAllocator allocator = new RootAllocator();
+       DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
+       Dataset dataset = datasetFactory.finish();
+       Scanner scanner = dataset.newScan(options)
+   ) {
+       scanner.scan().forEach(scanTask -> {
+           try (ArrowReader reader = scanTask.execute()) {
+               int totalBatchSize = 0;
+               final int[] count = {1};
+               while (reader.loadNextBatch()) {
+                   try (VectorSchemaRoot root = reader.getVectorSchemaRoot()) {
+                       totalBatchSize += root.getRowCount();
+                       System.out.println("Number of rows per batch["+ count[0]++ +"]: " + root.getRowCount());
+                       System.out.print(root.contentToTSVString());
+                   }
+               }
+               System.out.println("Total batch size: " + totalBatchSize);
+           } catch (IOException e) {
+               e.printStackTrace();
+           }
+       });
+   } catch (Exception e) {
+       e.printStackTrace();
+   }
+
+.. testoutput::
+
+   Number of rows per batch[1]: 4
+   age    name
+   10    Jean
+   10    Lu
+   10    Kei
+   10    Sophia
+   Number of rows per batch[2]: 4
+   age    name
+   10    Mara
+   20    Arit
+   20    Neil
+   20    Jason
+   Number of rows per batch[3]: 3
+   age    name
+   20    John
+   20    Peter
+   20    Ismael
+   Total batch size: 11
+
 Query Data Content For Directory
 ********************************
 
@@ -264,6 +363,9 @@ Consider that we have these files: data1: 3 rows, data2: 3 rows and data3: 250 r
    Batch: 3, RowCount: 100
    Batch: 4, RowCount: 100
    Batch: 5, RowCount: 50
+   Batch: 6, RowCount: 4
+   Batch: 7, RowCount: 4
+   Batch: 8, RowCount: 3
 
 Query Data Content with Projection
 **********************************
@@ -317,5 +419,136 @@ In case we need to project only certain columns we could configure ScanOptions w
    Gladis
    Juan
 
+Query IPC File
+==============
+
+Let query information for a IPC file.
+
+Query Data Content For File
+***************************
+
+Reading an IPC file that contains 03 Recordbatch with 03 rows written each one.
+
+In this case, we are configuring ScanOptions batchSize argument equals to 05 rows, it's greater than
+03 rows used on the file, then 03 rows is used on the program execution instead of 05 rows requested.
+
+.. testcode::
+
+   import org.apache.arrow.dataset.file.FileFormat;
+   import org.apache.arrow.dataset.file.FileSystemDatasetFactory;
+   import org.apache.arrow.dataset.jni.NativeMemoryPool;
+   import org.apache.arrow.dataset.scanner.ScanOptions;
+   import org.apache.arrow.dataset.scanner.Scanner;
+   import org.apache.arrow.dataset.source.Dataset;
+   import org.apache.arrow.dataset.source.DatasetFactory;
+   import org.apache.arrow.memory.BufferAllocator;
+   import org.apache.arrow.memory.RootAllocator;
+   import org.apache.arrow.vector.VectorSchemaRoot;
+   import org.apache.arrow.vector.ipc.ArrowReader;
+
+   import java.io.IOException;
+
+   String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/arrowfiles/random_access.arrow";
+   ScanOptions options = new ScanOptions(/*batchSize*/ 5);
+   try (
+       BufferAllocator allocator = new RootAllocator();
+       DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(), FileFormat.ARROW_IPC, uri);
+       Dataset dataset = datasetFactory.finish();
+       Scanner scanner = dataset.newScan(options)
+   ) {
+       scanner.scan().forEach(scanTask -> {
+           try (ArrowReader reader = scanTask.execute()) {
+               final int[] count = {1};
+               while (reader.loadNextBatch()) {
+                   try (VectorSchemaRoot root = reader.getVectorSchemaRoot()) {
+                       System.out.println("Number of rows per batch["+ count[0]++ +"]: " + root.getRowCount());
+                   }
+               }
+           } catch (IOException e) {
+               e.printStackTrace();
+           }
+       });
+   } catch (Exception e) {
+       e.printStackTrace();
+   }
+
+.. testoutput::
+
+   Number of rows per batch[1]: 3
+   Number of rows per batch[2]: 3
+   Number of rows per batch[3]: 3
+
+Query ORC File
+==============
+
+Let query information for a ORC file.
+
+Query Data Content For File
+***************************
+
+Reading an ORC ZLib compressed file that contains 385 stripe with 5000 rows written each one.
+
+.. code-block::
+
+   $ orc-metadata demo-11-zlib.orc | more
+
+   { "name": "demo-11-zlib.orc",
+     "type": "struct<_col0:int,_col1:string,_col2:string,_col3:string,_col4:int,_col5:string,_col6:int,_col7:int,_col8:int>",
+     "stripe count": 385,
+     "compression": "zlib", "compression block": 262144,
+     "stripes": [
+       { "stripe": 0, "rows": 5000,
+         "offset": 3, "length": 1031,
+         "index": 266, "data": 636, "footer": 129
+       },
+   ...
+
+In this case, we are configuring ScanOptions batchSize argument equals to 4000 rows, it's lower than
+5000 rows used on the file, then 4000 rows is used on the program execution.
+
+.. testcode::
+
+   import org.apache.arrow.dataset.file.FileFormat;
+   import org.apache.arrow.dataset.file.FileSystemDatasetFactory;
+   import org.apache.arrow.dataset.jni.NativeMemoryPool;
+   import org.apache.arrow.dataset.scanner.ScanOptions;
+   import org.apache.arrow.dataset.scanner.Scanner;
+   import org.apache.arrow.dataset.source.Dataset;
+   import org.apache.arrow.dataset.source.DatasetFactory;
+   import org.apache.arrow.memory.BufferAllocator;
+   import org.apache.arrow.memory.RootAllocator;
+   import org.apache.arrow.vector.VectorSchemaRoot;
+   import org.apache.arrow.vector.ipc.ArrowReader;
+
+   import java.io.IOException;
+
+   String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/orc/data1-zlib.orc";
+   ScanOptions options = new ScanOptions(/*batchSize*/ 4000);
+   try (
+       BufferAllocator allocator = new RootAllocator();
+       DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(), FileFormat.ORC, uri);
+       Dataset dataset = datasetFactory.finish();
+       Scanner scanner = dataset.newScan(options)
+   ) {
+       scanner.scan().forEach(scanTask -> {
+           try (ArrowReader reader = scanTask.execute()) {
+               int totalBatchSize = 0;
+               while (reader.loadNextBatch()) {
+                   try (VectorSchemaRoot root = reader.getVectorSchemaRoot()) {
+                       totalBatchSize += root.getRowCount();
+                   }
+               }
+               System.out.println("Total batch size: " + totalBatchSize);
+           } catch (IOException e) {
+               e.printStackTrace();
+           }
+       });
+   } catch (Exception e) {
+       e.printStackTrace();
+   }
+
+.. testoutput::
+
+   Total batch size: 1920800
 
 .. _Arrow Java Dataset: https://arrow.apache.org/docs/dev/java/dataset.html
