@@ -36,7 +36,8 @@ sys.path.append(os.path.abspath("../ext"))
 project = 'Apache Arrow Java Cookbook'
 copyright = '2022, Apache Software Foundation'
 author = 'The Apache Software Foundation'
-if os.getenv("ARROW_NIGHTLY"):
+arrow_nightly=os.getenv("ARROW_NIGHTLY")
+if arrow_nightly and arrow_nightly != '0':
     version = "10.0.0-SNAPSHOT"
 else:
     version = "9.0.0"
