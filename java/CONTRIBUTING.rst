@@ -55,6 +55,10 @@ and compile the cookbook to HTML.
 
 You will see the compiled result inside the ``build/java`` directory.
 
+If the environment variable ``ARROW_NIGHTLY`` is defined the cookbooks
+will be run against the latest development version of Arrow published by
+the `Nightly jobs. <https://arrow.apache.org/docs/java/install.html#installing-nightly-packages>`_
+
 Testing Java Recipes
 ====================
 
