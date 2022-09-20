@@ -37,6 +37,12 @@ jobs:
       matrix:
         python-version: [ '3.9' ]
         java-version: [ '11', '17', '18' ]
+        include:
+          - arrow_nightly: ''
+          - arrow_nightly: '1'
+            java-version: '18'
+    env:
+      ARROW_NIGHTLY: ${{matrix.arrow_nightly]}}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
