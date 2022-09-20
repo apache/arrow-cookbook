@@ -25,18 +25,10 @@ Dataset
 
 .. contents::
 
-Arrow Java Dataset offer native functionalities consuming native artifacts such as:
-    - JNI Arrow C++ Dataset: libarrow_dataset_jni (dylib/so):
-        To create C++ natively objects Schema, Dataset, Scanner and export that as a references (long id).
-    - JNI Arrow C Data Interface: libarrow_cdata_jni (dylib/so):
-        To get C++ Recordbacth.
-
-Current supported file format Datasets are:
-    - Parquet
-    - Arrow IPC
-    - ORC
-
-Consider that file format input is an URI it means HDFS/S3 are also supported.
+Currently supported file formats are:
+- Apache Arrow (`.arrow`)
+- Apache ORC (`.orc`)
+- Apache Parquet (`.parquet`)
 
 .. note::
 
@@ -231,7 +223,7 @@ Query Data Content For File
    2    Gladis
    3    Juan
 
-Lets try to read a parquet gzip compressed file with 06 row groups:
+Let's try to read a Parquet file with gzip compression and 6 row groups:
 
 .. code-block::
 
@@ -419,18 +411,14 @@ In case we need to project only certain columns we could configure ScanOptions w
    Gladis
    Juan
 
-Query IPC File
-==============
+Query Arrow Files
+=================
 
-Let query information for a IPC file.
 
 Query Data Content For File
 ***************************
 
-Reading an IPC file that contains 03 Recordbatch with 03 rows written each one.
-
-In this case, we are configuring ScanOptions batchSize argument equals to 05 rows, it's greater than
-03 rows used on the file, then 03 rows is used on the program execution instead of 05 rows requested.
+Let's read an Arrow file with 3 record batches, each with 3 rows.
 
 .. testcode::
 
@@ -481,12 +469,11 @@ In this case, we are configuring ScanOptions batchSize argument equals to 05 row
 Query ORC File
 ==============
 
-Let query information for a ORC file.
 
 Query Data Content For File
 ***************************
 
-Reading an ORC ZLib compressed file that contains 385 stripe with 5000 rows written each one.
+Let's read an ORC file with zlib compression 385 stripes, each with 5000 rows.
 
 .. code-block::
 
