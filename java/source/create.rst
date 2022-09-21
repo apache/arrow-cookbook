@@ -187,12 +187,12 @@ Array of List
 
 
 Slicing
-========
+=======
 
 Slicing provides a way of copying a range of rows between two vectors of the same type.
 
 Slicing IntVector
-------------------
+-----------------
 
 In this example, we copy a portion of the input IntVector to a new IntVector.
 
