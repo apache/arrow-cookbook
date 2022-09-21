@@ -186,12 +186,12 @@ Array of List
    [[1,2,3], [10,20,30], [100,200,300], [1000,2000,3000]]
 
 
-Splicing
+Slicing
 ========
 
-Splicing provides a way of copying a range of rows between two vectors of the same type.
+Slicing provides a way of copying a range of rows between two vectors of the same type.
 
-Splicing IntVector
+Slicing IntVector
 ------------------
 
 In this example, we copy a portion of the input IntVector to a new IntVector.
