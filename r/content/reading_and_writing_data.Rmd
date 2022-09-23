@@ -22,15 +22,15 @@
 ## Introduction
 
 This chapter contains recipes related to reading and writing data using Apache 
-Arrow.  When reading files into R using Apache Arrow, you can choose to read in 
-a single file as a data frame, an Arrow Table object, or an Arrow Dataset object. 
-You can also read in partitioned or multi-files as an Arrow Dataset object.
+Arrow.  When reading files into R using Apache Arrow, you can read in 
+a single file as a data frame or an Arrow Table, and you can read in partitioned or multi-files
+as an Arrow Dataset.
 
 There are a number of circumstances in which you may want to read in the data as an 
-Arrow Table or Dataset:
+Arrow Table or Arrow Dataset:
 
 * your data file is large and if you load it into memory, it may lead to performance issues
-* your data files are partitioned among numerous files and are too large to load into memory
+* your data are partitioned among numerous files and are too large to load into memory
 * you want faster performance from your `dplyr` queries
 * you want to be able to take advantage of Arrow's compute functions
 
