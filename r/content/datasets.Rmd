@@ -21,21 +21,21 @@
 
 ## Introduction
 
-While Arrow allows you to work with single files imported as Tables, you can 
-also work with Datasets.  These differ from tables as they can be split across 
-multiple files/folders via partitioning, which means that you avoid problems 
+While Arrow allows you to work with single files imported as Arrow Tables, you can 
+also work with multi-files imported as an Arrow Dataset.  This allows you to split data across 
+multiple files/folders using partitioning, avoiding problems 
 associated with storing all your data in a single file.  This can provide 
-further advantages to using Arrow, as you can now conduct analyses which only 
-read in the necessary files.
+further advantages when using Arrow, as Arrow will only 
+read in the necessary files needed for any given analysis.
 
-It's possible to have datasets in Parquet, Feather (aka Arrow), and CSV (or 
-other text-delimited formats).  If you are choosing a dataset format, we 
+It's possible to have partitioned data in Parquet, Feather (aka Arrow), and CSV (or 
+other text-delimited) formats.  If you are choosing a partitioned or multi-file format, we 
 recommend Parquet or Feather, which will likely lead to improved performance 
 when compared to CSVs due to their capabilities around metadata and compression.
 
-## Write a dataset to disk (Parquet)
+## Write a Dataset to disk (Parquet)
 
-You want to write a dataset to disk in a single Parquet file.
+You want to write an Arrow Dataset to disk in a single Parquet file.
 
 ### Solution
 
@@ -173,7 +173,7 @@ You want to write a dataset to disk in a single CSV file.
 
 ```{r, write_dataset_csv}
 # Need to update this example as we can't write list columns to CSV :(
-write_dataset(dataset = starwars, path = "starwars_data_csv", format = "csv")
+write_dataset(dataset = starwars |> select(!where(is.list)), path = "starwars_data_csv", format = "csv")
 ```
 
 ```{r, test_write_dataset_csv, opts.label = "test"}
@@ -204,7 +204,7 @@ open_dataset("starwars_csv", format = "csv")
 
 ```{r, test_read_csv_datset, opts.label = "test"}
 
-test_that("read_csv_datset works as expected", {
+test_that("read_csv_dataset works as expected", {
   
   dataset <- open_dataset("starwars_csv", format = "csv")
   expect_s3_class(dataset, "FileSystemDataset")
