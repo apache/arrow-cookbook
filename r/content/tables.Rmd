@@ -23,13 +23,13 @@
 
 One of the aims of the Arrow project is to reduce duplication between different 
 data frame implementations.  The underlying implementation of a data frame is a 
-conceptually different thing to the code that you run to work with it - the API.
+conceptually different thing to the code- or the application programming interface (API)-that you write to work with it.
 
-You may have seen this before in packages like `dbplyr` which allow you to use 
+You may have seen this before in packages like dbplyr which allow you to use 
 the dplyr API to interact with SQL databases.
 
-The `arrow` package has been written so that the underlying Arrow table-like 
-objects can be manipulated via use of the dplyr API via the dplyr verbs.
+The Arrow R package has been written so that the underlying Arrow Table-like 
+objects can be manipulated using the dplyr API, which allows you to use dplyr verbs.
 
 For example, here's a short pipeline of data manipulation which uses dplyr exclusively:
   
@@ -41,7 +41,7 @@ starwars %>%
   select(name, height_ft)
 ```
 
-And the same results as using arrow with dplyr syntax:
+And the same results as using Arrow with dplyr syntax:
   
 ```{r, dplyr_arrow}
 arrow_table(starwars) %>%
@@ -73,11 +73,11 @@ test_that("dplyr_raw and dplyr_arrow chunk provide the same results", {
 
 
 You'll notice we've used `collect()` in the Arrow pipeline above.  That's because 
-one of the ways in which `arrow` is efficient is that it works out the instructions
+one of the ways in which Arrow is efficient is that it works out the instructions
 for the calculations it needs to perform (_expressions_) and only runs them 
-using arrow once you actually pull the data into your R session.  This means 
+using Arrow once you actually pull the data into your R session.  This means 
 instead of doing lots of separate operations, it does them all at once in a 
-more optimised way, _lazy evaluation_.
+more optimised way. This is called _lazy evaluation_.
 
 It also means that you are able to manipulate data that is larger than you can 
 fit into memory on the machine you're running your code on, if you only pull 
@@ -86,13 +86,13 @@ which can operate on chunks of data.
 
 You can also have data which is split across multiple files.  For example, you
 might have files which are stored in multiple Parquet or Feather files, 
-partitioned across different directories.  You can open multi-file datasets 
+partitioned across different directories.  You can open partitioned or multi-file datasets 
 using `open_dataset()` as discussed in a previous chapter, and then manipulate 
-this data using arrow before even reading any of it into R.
+this data using Arrow before even reading any of the data into R.
 
-## Use dplyr verbs in arrow
+## Use dplyr verbs in Arrow
 
-You want to use a dplyr verb in arrow.
+You want to use a dplyr verb in Arrow.
 
 ### Solution
 
@@ -120,7 +120,7 @@ test_that("dplyr_verb works as expected", {
 
 ### Discussion
 
-You can use most of the dplyr verbs directly from arrow.  
+You can use most of the dplyr verbs directly from Arrow.  
 
 ### See also
 
@@ -131,9 +131,9 @@ the [pkgdown site](https://dplyr.tidyverse.org/articles/dplyr.html).
 You can see more information about using `arrow_table()` to create Arrow Tables
 and `collect()` to view them as R data frames in [Creating Arrow Objects](creating-arrow-objects.html#creating-arrow-objects).
 
-## Use R functions in dplyr verbs in arrow
+## Use R functions in dplyr verbs in Arrow
 
-You want to use an R function inside a dplyr verb in arrow.
+You want to use an R function inside a dplyr verb in Arrow.
 
 ### Solution
 
@@ -159,10 +159,10 @@ test_that("dplyr_str_detect", {
 
 ### Discussion
 
-The arrow package allows you to use dplyr verbs containing expressions which 
+The Arrow R package allows you to use dplyr verbs containing expressions which 
 include base R and many tidyverse functions, but call Arrow functions under the hood.
 If you find any base R or tidyverse functions which you would like to see a 
-mapping of in arrow, please 
+mapping of in Arrow, please 
 [open an issue on the project JIRA](https://issues.apache.org/jira/projects/ARROW/issues).
 
 The following packages (amongst some from others) have had many function 
@@ -199,7 +199,7 @@ test_that("dplyr_func_warning", {
 ```
 
 
-## Use arrow functions in dplyr verbs in arrow
+## Use Arrow functions in dplyr verbs in Arrow
 
 You want to use a function which is implemented in Arrow's C++ library but either:
 
@@ -313,7 +313,7 @@ Although not all Arrow C++ compute functions require options to be specified,
 most do.  For these functions to work in R, they must be linked up 
 with the appropriate libarrow options C++ class via the R 
 package's C++ code.  At the time of writing, all compute functions available in
-the development version of the arrow R package had been associated with their options
+the development version of the Arrow R package had been associated with their options
 classes.  However, as the Arrow C++ library's functionality extends, compute 
 functions may be added which do not yet have an R binding.  If you find a C++ 
 compute function which you wish to use from the R package, please [open an issue
