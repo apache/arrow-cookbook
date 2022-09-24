@@ -22,20 +22,19 @@
 ## Introduction
 
 While Arrow allows you to work with single files imported as Arrow Tables, you can 
-also work with multi-files imported as an Arrow Dataset.  This allows you to split data across 
-multiple files/folders using partitioning, avoiding problems 
-associated with storing all your data in a single file.  This can provide 
+also work with multi-files imported as an Arrow Dataset.  Partitioning allows you to split data across 
+multiple files/folders, avoiding problems associated with storing all your data in a single file.  This can provide 
 further advantages when using Arrow, as Arrow will only 
-read in the necessary files needed for any given analysis.
+read in the necessary partitioned files needed for any given analysis.
 
-It's possible to have partitioned data in Parquet, Feather (aka Arrow), and CSV (or 
-other text-delimited) formats.  If you are choosing a partitioned or multi-file format, we 
-recommend Parquet or Feather, which will likely lead to improved performance 
+It's possible to read in partitioned data in Parquet, Feather (aka Arrow), and CSV (or 
+other text-delimited) formats.  If you are choosing a partitioned or multifile format, we 
+recommend Parquet or Feather, both of which can have improved performance 
 when compared to CSVs due to their capabilities around metadata and compression.
 
-## Write a Dataset to disk (Parquet)
+## Write a data to disk (Parquet)
 
-You want to write an Arrow Dataset to disk in a single Parquet file.
+You want to write data to disk in a single Parquet file.
 
 ### Solution
 
@@ -58,14 +57,16 @@ test_that("write_dataset_basic works as expected", {
 
 The default format for `open_dataset()` is Parquet. 
 
-## Write a dataset to disk - partitioned based on a variable
+## Write a multifile dataset to disk partitioned based on a variable
 
-You want to write a dataset to disk partitioned across multiple files.
+You want to write data to disk partitioned across multiple files.
 
 ### Solution
 
 ```{r, write_dataset_partitioned}
-write_dataset(dataset = starwars, path = "starwars_data_partitioned", partitioning = "homeworld")
+write_dataset(dataset = starwars,
+  path = "starwars_data_partitioned",
+  partitioning = "homeworld")
 ```
 
 
@@ -95,7 +96,7 @@ Note that in the example above, when there was an `NA` value in the `homeworld`
 column, these values are written to the `homeworld=__HIVE_DEFAULT_PARTITION__`
 directory.
 
-You can specify multiple partitioning variables to add extra layers of partitioning.
+You can specify multiple partitioning variables to add extra levels of partitioning.
 
 ```{r, write_dataset_partitioned_deeper}
 write_dataset(
@@ -126,7 +127,8 @@ either via the `partitioning` variable as above, or by using `dplyr::group_by()`
 
 ```{r, write_dataset_partitioned_groupby}
 library(dplyr)
-write_dataset(dataset = group_by(starwars, homeworld, species), path = "starwars_groupby")
+write_dataset(dataset = group_by(starwars, homeworld, species),
+  path = "starwars_groupby")
 ```
 
 ```{r, test_write_dataset_partitioned_groupby, opts.label = "test"}
@@ -144,14 +146,16 @@ test_that("write_dataset_partitioned_groupby works as expected", {
 # Take a look at the files in this directory
 list.files("starwars_groupby", recursive = TRUE)
 ```
-## Write a dataset to disk - Feather format
+## Write data to disk - Feather format
 
-You want to write a dataset to disk in a single Feather file.
+You want to write data to disk in a single Feather file.
 
 ### Solution
 
 ```{r, write_dataset_feather}
-write_dataset(dataset = starwars, path = "starwars_data_feather", format = "feather")
+write_dataset(dataset = starwars,
+  path = "starwars_data_feather",
+  format = "feather")
 ```
 
 ```{r, test_write_dataset_feather, opts.label = "test"}
@@ -165,15 +169,17 @@ test_that("write_dataset_feather works as expected", {
 
 ```
 
-## Write a dataset to disk - CSV format
+## Write data to disk - CSV format
 
-You want to write a dataset to disk in a single CSV file.
+You want to write data to disk in a single CSV file.
 
 ### Solution
 
 ```{r, write_dataset_csv}
 # Need to update this example as we can't write list columns to CSV :(
-write_dataset(dataset = starwars |> select(!where(is.list)), path = "starwars_data_csv", format = "csv")
+write_dataset(dataset = starwars |> select(!where(is.list)),
+  path = "starwars_data_csv",
+  format = "csv")
 ```
 
 ```{r, test_write_dataset_csv, opts.label = "test"}
@@ -187,9 +193,9 @@ test_that("write_dataset_csv works as expected", {
 
 ```
 
-## Read in a CSV dataset
+## Read in CSV data as an Arrow Dataset
 
-You want to read in a CSV dataset
+You want to read in CSV data as an Arrow Dataset
 
 ### Solution
 
