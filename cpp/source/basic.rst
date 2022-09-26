@@ -41,9 +41,9 @@ tedious:
   :caption: Checking the status of every function manually
   :dedent: 2
 
-The macro :c:macro:`ARROW_RETURN_NOT_OK` will take care of some of this
-boilerplate for you.  It will run the contained expression and check the resulting
-``Status`` or ``Result`` object.  If it failed then it will return the failure.
+The macros :c:macro:`ARROW_RETURN_NOT_OK` and :c:macro:`ARROW_ASSIGN_OR_RAISE` will take care of some of these
+boilerplates for you.  They will run the contained expression and check the resulting
+``Status`` or ``Result`` object.  If they failed then they will return the failure.
 
 .. recipe:: ../code/basic_arrow.cc ReturnNotOk
   :caption: Using ARROW_RETURN_NOT_OK to check the status
@@ -63,6 +63,14 @@ efficiently:
  * :cpp:func:`arrow::VisitScalarInline`
  * :cpp:func:`arrow::VisitArrayInline`
 
+Alternatively, you can implement a visitor class that inherits the base visitor classes provided.
+
+ * :cpp:class:`arrow::TypeVisitor`
+ * :cpp:class:`arrow::ScalarVisitor`
+ * :cpp:class:`arrow::ArrayVisitor`
+
+Visitor classes can be used with the Accept function of their corresponding classes.
+
 Generate Random Data
 --------------------
 
@@ -78,7 +86,7 @@ excessively verbose. Fortunately, Arrow provides type traits that allow you to
 write templated functions to handle subsets of types. The example below
 demonstrates a table sum function that can handle any integer or floating point 
 array with only a single visitor implementation by leveraging
-:cpp:type:`arrow::enable_if_number`.
+:cpp:type:`arrow::is_number_type`.
 
 .. literalinclude:: ../code/basic_arrow.cc
    :language: cpp

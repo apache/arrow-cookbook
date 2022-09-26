@@ -28,7 +28,7 @@ arrow::Status CreatingArrays() {
   ARROW_RETURN_NOT_OK(builder.Append(1));
   ARROW_RETURN_NOT_OK(builder.Append(2));
   ARROW_RETURN_NOT_OK(builder.Append(3));
-  ARROW_ASSIGN_OR_RAISE(std::shared_ptr<arrow::Array> arr, builder.Finish())
+  ARROW_ASSIGN_OR_RAISE(auto arr, builder.Finish())
   rout << arr->ToString() << std::endl;
   EndRecipe("CreatingArrays");
   return arrow::Status::OK();
@@ -40,11 +40,11 @@ arrow::Status CreatingArraysPtr() {
   arrow::Int64Builder long_builder = arrow::Int64Builder();
   std::array<int64_t, 4> values = {1, 2, 3, 4};
   ARROW_RETURN_NOT_OK(long_builder.AppendValues(values.data(), values.size()));
-  ARROW_ASSIGN_OR_RAISE(std::shared_ptr<arrow::Array> arr, long_builder.Finish());
+  ARROW_ASSIGN_OR_RAISE(auto arr, long_builder.Finish());
   rout << arr->ToString() << std::endl;
 
   // Vectors
-  arrow::StringBuilder str_builder = arrow::StringBuilder();
+  arrow::StringBuilder str_builder;
   std::vector<std::string> strvals = {"x", "y", "z"};
   ARROW_RETURN_NOT_OK(str_builder.AppendValues(strvals));
   ARROW_ASSIGN_OR_RAISE(arr, str_builder.Finish());
@@ -65,13 +65,12 @@ arrow::Status CreatingArraysPtr() {
 /// For demonstration purposes, this only covers DoubleType and ListType
 class RandomBatchGenerator {
  public:
-  std::shared_ptr<arrow::Schema> schema;
-
-  RandomBatchGenerator(std::shared_ptr<arrow::Schema> schema) : schema(schema){};
+  RandomBatchGenerator(std::shared_ptr<arrow::Schema> schema)
+      : schema(std::move(schema)){};
 
   arrow::Result<std::shared_ptr<arrow::RecordBatch>> Generate(int32_t num_rows) {
     num_rows_ = num_rows;
-    for (std::shared_ptr<arrow::Field> field : schema->fields()) {
+    for (const std::shared_ptr<arrow::Field>& field : schema->fields()) {
       ARROW_RETURN_NOT_OK(arrow::VisitTypeInline(*field->type(), this));
     }
 
@@ -120,6 +119,7 @@ class RandomBatchGenerator {
   }
 
  protected:
+  std::shared_ptr<arrow::Schema> schema_;
   std::random_device rd_{};
   std::mt19937 gen_{rd_()};
   std::vector<std::shared_ptr<arrow::Array>> arrays_;
