@@ -35,8 +35,8 @@ arrow::Status ReturnNotOkMacro() {
     if (!st.ok()) {
       return st;
     }
-    auto res = builder.Finish();
     std::shared_ptr<arrow::Array> arr;
+    arrow::Result<std::shared_ptr<arrow::Array>> res = builder.Finish();
     if (res.ok()) {
       arr = std::move(res).ValueUnsafe();
     }
@@ -56,11 +56,11 @@ arrow::Status ReturnNotOk() {
     arrow::NullBuilder builder;
     ARROW_RETURN_NOT_OK(builder.Reserve(2));
     ARROW_RETURN_NOT_OK(builder.AppendNulls(-1));
-    ARROW_ASSIGN_OR_RAISE(auto arr, builder.Finish());
+    ARROW_ASSIGN_OR_RAISE(std::shared_ptr<arrow::Array> arr, builder.Finish());
     rout << "Appended -1 null values?" << std::endl;
     return arrow::Status::OK();
   };
-  auto st = test_fn();
+  arrow::Status st = test_fn();
   rout << st << std::endl;
   EndRecipe("ReturnNotOk");
   EXPECT_FALSE(st.ok());
@@ -79,7 +79,7 @@ class TableSummation {
 
  public:
   arrow::Result<double> Compute(std::shared_ptr<arrow::RecordBatch> batch) {
-    for (const auto& array : batch->columns()) {
+    for (const std::shared_ptr<arrow::Array>& array : batch->columns()) {
       ARROW_RETURN_NOT_OK(arrow::VisitArrayInline(*array, this));
     }
     return partial;
@@ -89,7 +89,7 @@ class TableSummation {
   template <typename ArrayType, typename T = typename ArrayType::TypeClass>
   arrow::Status Visit(const ArrayType& array) {
     if constexpr (arrow::is_number_type<T>::value) {
-      for (auto value : array) {
+      for (std::optional<typename T::c_type> value : array) {
         if (value.has_value()) {
           partial += static_cast<double>(value.value());
         }
@@ -104,7 +104,7 @@ class TableSummation {
 
 arrow::Status VisitorSummationExample() {
   StartRecipe("VisitorSummationExample");
-  auto schema = arrow::schema({
+  std::shared_ptr<arrow::Schema> schema = arrow::schema({
       arrow::field("a", arrow::int32()),
       arrow::field("b", arrow::float64()),
   });
@@ -123,11 +123,12 @@ arrow::Status VisitorSummationExample() {
   ARROW_ASSIGN_OR_RAISE(auto b_arr, b_builder.Finish());
   columns.push_back(b_arr);
 
-  auto batch = arrow::RecordBatch::Make(schema, num_rows, columns);
+  std::shared_ptr<arrow::RecordBatch> batch =
+      arrow::RecordBatch::Make(schema, num_rows, columns);
 
   // Call
   TableSummation summation;
-  ARROW_ASSIGN_OR_RAISE(auto total, summation.Compute(batch));
+  ARROW_ASSIGN_OR_RAISE(double total, summation.Compute(batch));
 
   rout << "Total is " << total;
 
