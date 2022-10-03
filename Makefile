@@ -36,6 +36,10 @@ help:
 pydeps:
 	@echo ">>> Installing Python Dependencies <<<\n"
 	cd python && pip install -r requirements.txt
+ifeq ($(ARROW_NIGHTLY), 1)
+	pip install --upgrade --extra-index-url https://pypi.fury.io/arrow-nightlies/ --prefer-binary --pre pyarrow
+endif
+
 
 javadeps:
 	@echo ">>> Installing Java Dependencies <<<\n"
