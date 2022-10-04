@@ -36,6 +36,17 @@ Running ``make pytest`` from the cookbook root directory
 will verify that the code for all the recipes runs correctly
 and provides the expected output.
 
+If the environment variable ``ARROW_NIGHTLY`` is set to ``1``
+the cookbooks will be run against the latest development version of
+Arrow published by the `Nightly jobs. <https://arrow.apache.org/docs/python/install.html#installing-nightly-packages>`_
+
+Example to run the cookbooks using the nightly jobs:
+
+```
+$ ARROW_NIGHTLY=1
+$ make pytest
+```
+
 Adding Python Recipes
 =====================
 

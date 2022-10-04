@@ -38,6 +38,10 @@ copyright = "2022, Apache Software Foundation"
 author = "The Apache Software Foundation"
 
 
+import pyarrow
+version = pyarrow.__version__
+print(f"Running with Arrow version: {version}")
+
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
