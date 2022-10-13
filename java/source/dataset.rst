@@ -25,16 +25,6 @@ Dataset
 
 .. contents::
 
-Currently supported file formats are:
-- Apache Arrow (`.arrow`)
-- Apache ORC (`.orc`)
-- Apache Parquet (`.parquet`)
-
-.. note::
-
-    The ScanOptions batchSize argument takes effect only if it is set to a value
-    smaller than the number of rows in the recordbatch.
-
 Constructing Datasets
 =====================
 
@@ -54,7 +44,7 @@ We can construct a dataset with an auto-inferred schema.
    import java.util.stream.StreamSupport;
 
    String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data1.parquet";
-   ScanOptions options = new ScanOptions(/*batchSize*/ 100);
+   ScanOptions options = new ScanOptions(/*batchSize*/ 32768);
    try (
        BufferAllocator allocator = new RootAllocator();
        DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
@@ -86,7 +76,7 @@ Let construct our dataset with predefined schema.
    import java.util.stream.StreamSupport;
 
    String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data1.parquet";
-   ScanOptions options = new ScanOptions(/*batchSize*/ 100);
+   ScanOptions options = new ScanOptions(/*batchSize*/ 32768);
    try (
        BufferAllocator allocator = new RootAllocator();
        DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
@@ -151,7 +141,7 @@ From a Dataset
    import org.apache.arrow.vector.types.pojo.Schema;
 
    String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data1.parquet";
-   ScanOptions options = new ScanOptions(/*batchSize*/ 1);
+   ScanOptions options = new ScanOptions(/*batchSize*/ 32768);
    try (
        BufferAllocator allocator = new RootAllocator();
        DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
@@ -194,7 +184,7 @@ Query Data Content For File
    import java.io.IOException;
 
    String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data1.parquet";
-   ScanOptions options = new ScanOptions(/*batchSize*/ 100);
+   ScanOptions options = new ScanOptions(/*batchSize*/ 32768);
    try (
        BufferAllocator allocator = new RootAllocator();
        DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
@@ -223,7 +213,7 @@ Query Data Content For File
    2    Gladis
    3    Juan
 
-Let's try to read a Parquet file with gzip compression and 6 row groups:
+Let's try to read a Parquet file with gzip compression and 3 row groups:
 
 .. code-block::
 
@@ -235,9 +225,6 @@ Let's try to read a Parquet file with gzip compression and 6 row groups:
    row group 1: RC:4 TS:182 OFFSET:4
    row group 2: RC:4 TS:190 OFFSET:420
    row group 3: RC:3 TS:179 OFFSET:838
-
-In this case, we are configuring ScanOptions batchSize argument equals to 20 rows, it's greater than
-04 rows used on the file, then 04 rows is used on the program execution instead of 20 rows requested.
 
 .. testcode::
 
@@ -256,7 +243,7 @@ In this case, we are configuring ScanOptions batchSize argument equals to 20 row
    import java.io.IOException;
 
    String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data4_3rg_gzip.parquet";
-   ScanOptions options = new ScanOptions(/*batchSize*/ 20);
+   ScanOptions options = new ScanOptions(/*batchSize*/ 32768);
    try (
        BufferAllocator allocator = new RootAllocator();
        DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
@@ -266,11 +253,11 @@ In this case, we are configuring ScanOptions batchSize argument equals to 20 row
        scanner.scan().forEach(scanTask -> {
            try (ArrowReader reader = scanTask.execute()) {
                int totalBatchSize = 0;
-               final int[] count = {1};
+               int count = 1;
                while (reader.loadNextBatch()) {
                    try (VectorSchemaRoot root = reader.getVectorSchemaRoot()) {
                        totalBatchSize += root.getRowCount();
-                       System.out.println("Number of rows per batch["+ count[0]++ +"]: " + root.getRowCount());
+                       System.out.println("Number of rows per batch["+ count++ +"]: " + root.getRowCount());
                        System.out.print(root.contentToTSVString());
                    }
                }
@@ -333,11 +320,11 @@ Consider that we have these files: data1: 3 rows, data2: 3 rows and data3: 250 r
         Scanner scanner = dataset.newScan(options)
    ) {
        scanner.scan().forEach(scanTask-> {
-           final int[] count = {1};
+           int count = 1;
            try (ArrowReader reader = scanTask.execute()) {
                while (reader.loadNextBatch()) {
                    try (VectorSchemaRoot root = reader.getVectorSchemaRoot()) {
-                       System.out.println("Batch: " + count[0]++ + ", RowCount: " + root.getRowCount());
+                       System.out.println("Batch: " + count++ + ", RowCount: " + root.getRowCount());
                    }
                }
            } catch (IOException e) {
@@ -382,7 +369,7 @@ In case we need to project only certain columns we could configure ScanOptions w
 
    String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data1.parquet";
    String[] projection = new String[] {"name"};
-   ScanOptions options = new ScanOptions(/*batchSize*/ 100, Optional.of(projection));
+   ScanOptions options = new ScanOptions(/*batchSize*/ 32768, Optional.of(projection));
    try (
        BufferAllocator allocator = new RootAllocator();
        DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
@@ -437,7 +424,7 @@ Let's read an Arrow file with 3 record batches, each with 3 rows.
    import java.io.IOException;
 
    String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/arrowfiles/random_access.arrow";
-   ScanOptions options = new ScanOptions(/*batchSize*/ 5);
+   ScanOptions options = new ScanOptions(/*batchSize*/ 32768);
    try (
        BufferAllocator allocator = new RootAllocator();
        DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(), FileFormat.ARROW_IPC, uri);
@@ -446,10 +433,10 @@ Let's read an Arrow file with 3 record batches, each with 3 rows.
    ) {
        scanner.scan().forEach(scanTask -> {
            try (ArrowReader reader = scanTask.execute()) {
-               final int[] count = {1};
+               int count = 1;
                while (reader.loadNextBatch()) {
                    try (VectorSchemaRoot root = reader.getVectorSchemaRoot()) {
-                       System.out.println("Number of rows per batch["+ count[0]++ +"]: " + root.getRowCount());
+                       System.out.println("Number of rows per batch["+ count++ +"]: " + root.getRowCount());
                    }
                }
            } catch (IOException e) {
@@ -490,9 +477,6 @@ Let's read an ORC file with zlib compression 385 stripes, each with 5000 rows.
        },
    ...
 
-In this case, we are configuring ScanOptions batchSize argument equals to 4000 rows, it's lower than
-5000 rows used on the file, then 4000 rows is used on the program execution.
-
 .. testcode::
 
    import org.apache.arrow.dataset.file.FileFormat;
@@ -510,7 +494,7 @@ In this case, we are configuring ScanOptions batchSize argument equals to 4000 r
    import java.io.IOException;
 
    String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/orc/data1-zlib.orc";
-   ScanOptions options = new ScanOptions(/*batchSize*/ 4000);
+   ScanOptions options = new ScanOptions(/*batchSize*/ 32768);
    try (
        BufferAllocator allocator = new RootAllocator();
        DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(), FileFormat.ORC, uri);

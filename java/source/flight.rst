@@ -279,6 +279,8 @@ Flight Client and Server
            }
        } catch (InterruptedException e) {
            e.printStackTrace();
+       } catch (Exception e) {
+           e.printStackTrace();
        }
    }
 

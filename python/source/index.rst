@@ -28,7 +28,7 @@ how to solve many common tasks that users might need to perform
 when working with arrow data.  The examples in this cookbook will also
 serve as robust and well performing solutions to those tasks.
 
-This cookbook is tested with **pyarrow 9.0.0**.
+This cookbook is tested with pyarrow |version|.
 
 .. toctree::
    :maxdepth: 2
