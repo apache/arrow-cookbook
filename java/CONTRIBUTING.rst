@@ -55,17 +55,6 @@ and compile the cookbook to HTML.
 
 You will see the compiled result inside the ``build/java`` directory.
 
-.. code-block:: bash
-
-   $ cd arrow-cookbook
-   $ make java
-     ...
-     build succeeded.
-     ...
-     The HTML pages are in build/html.
-     mkdir -p build/java
-     cp -r java/build/html/* build/java
-
 If the environment variable ``ARROW_NIGHTLY`` is defined and not 0
 the cookbooks will be run against the latest development version of
 Arrow published by the `Nightly jobs. <https://arrow.apache.org/docs/java/install.html#installing-nightly-packages>`_
@@ -79,38 +68,6 @@ All recipes in the cookbook must be tested. The cookbook uses
 Run ``make javatest`` from the cookbook root directory
 to verify that the code for all the recipes runs correctly
 and provides the expected output.
-
-.. code-block:: bash
-
-   $ cd arrow-cookbook
-   $ # SDK 11+
-   $ java --version
-   $ jshell --version
-   $ make javatest
-     ...
-     1 items passed all tests:
-        7 tests in default
-     7 tests in 1 items.
-     7 passed and 0 failed.
-     Test passed.
-     ...
-     Doctest summary
-     ===============
-        44 tests
-         0 failures in tests
-         0 failures in setup code
-         0 failures in cleanup code
-     build succeeded.
-
-Please note: In case you need to test the recipes with nightly version
-please export environment variable needed:
-
-.. code-block:: bash
-
-   $ export ARROW_NIGHTLY=1
-   $ echo $ARROW_NIGHTLY
-     1
-   $ make javatest
 
 Adding Java Recipes
 ===================
