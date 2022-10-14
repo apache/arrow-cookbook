@@ -70,7 +70,10 @@ install_arrow_version <- function(version_to_install) {
   installed_version <- get_installed_version("arrow")
 
   # Only install the latest released version if it's not already installed
-  if (version_to_install == latest_release && installed_version != latest_release) {
+  if (Sys.getenv("ARROW_NIGHTLY")) {
+    Sys.setenv(NOT_CRAN = TRUE)
+    install.packages("arrow", repos = c(arrow = "https://nightlies.apache.org/arrow/r", getOption("repos")))
+  } else if (version_to_install == latest_release && installed_version != latest_release) {
     Sys.setenv(NOT_CRAN = TRUE)
     install.packages("arrow")
     # Otherwise install the build version specified if not already installed
