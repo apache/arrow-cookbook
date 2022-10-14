@@ -67,7 +67,7 @@ install_arrow_version <- function(version_to_install) {
   latest_release <- package_version(available.packages()["arrow", ]["Version"])
   latest_nightly <- package_version(available.packages(repos = "https://nightlies.apache.org/arrow/r")["arrow", ]["Version"])
   installed_version <- get_installed_version("arrow")
-  use_nightly  <- !is.na(Sys.getenv("ARROW_NIGHTLY", NA)
+  use_nightly <- !is.na(Sys.getenv("ARROW_NIGHTLY", NA))
 
   # Only install the latest released version if it's not already installed
   if (use_nightly && installed_version != latest_nightly) {
