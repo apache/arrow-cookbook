@@ -67,18 +67,16 @@ install_arrow_version <- function(version_to_install) {
   latest_release <- package_version(available.packages()["arrow", ]["Version"])
   latest_nightly <- package_version(available.packages(repos = "https://nightlies.apache.org/arrow/r")["arrow", ]["Version"])
   installed_version <- get_installed_version("arrow")
+  use_nightly  <- !is.na(Sys.getenv("ARROW_NIGHTLY", NA)
 
   # Only install the latest released version if it's not already installed
-  if (!is.na(Sys.getenv("ARROW_NIGHTLY", NA)) && installed_version != latest_nightly) {
+  if (use_nightly && installed_version != latest_nightly) {
     Sys.setenv(NOT_CRAN = TRUE)
     install.packages("arrow", repos = c(arrow = "https://nightlies.apache.org/arrow/r", getOption("repos")))
-  } else if (version_to_install == latest_release && installed_version != latest_release) {
+  } else if (!use_nightly && version_to_install == latest_release && installed_version != latest_release) {
     Sys.setenv(NOT_CRAN = TRUE)
     install.packages("arrow")
-    # Otherwise install the build version specified if not already installed
-    # TODO: refactor this to install the specific version from the nightlies if
-    # a binary is available (#29)
-  } else if (installed_version != version_to_install) {
+  } else if (!use_nightly && installed_version != version_to_install) {
     remotes::install_version("arrow", version = version_to_install)
   }
 }
