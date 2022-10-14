@@ -64,13 +64,12 @@ install_arrow_version <- function(version_to_install) {
   Sys.setenv("ARROW_HOME" = "")
   on.exit(Sys.setenv("ARROW_HOME" = old_home))
   
-  # TODO: refactor this to get the latest available version on the nightlies
-  # given we set NOT_CRAN = TRUE (#29)
   latest_release <- package_version(available.packages()["arrow", ]["Version"])
+  latest_nightly <- package_version(available.packages(repos = "https://nightlies.apache.org/arrow/r")["arrow", ]["Version"])
   installed_version <- get_installed_version("arrow")
 
   # Only install the latest released version if it's not already installed
-  if (Sys.getenv("ARROW_NIGHTLY", FALSE) == "1") {
+  if (!is.na(Sys.getenv("ARROW_NIGHTLY", NA)) && installed_version != latest_nightly) {
     Sys.setenv(NOT_CRAN = TRUE)
     install.packages("arrow", repos = c(arrow = "https://nightlies.apache.org/arrow/r", getOption("repos")))
   } else if (version_to_install == latest_release && installed_version != latest_release) {
