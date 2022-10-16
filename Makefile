@@ -63,7 +63,11 @@ ifdef arrow_r_version
 else
 	cd ./r && Rscript ./scripts/install_dependencies.R
 endif
+ifeq ($(ARROW_NIGHTLY), 1)
+	pip install --upgrade --extra-index-url https://pypi.fury.io/arrow-nightlies/ --prefer-binary --pre pyarrow
+else
 	pip install pyarrow
+endif
 
 
 r: rdeps

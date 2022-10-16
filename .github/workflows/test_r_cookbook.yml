@@ -31,14 +31,38 @@ concurrency:
 
 jobs:
   test_r:
-    name: "Test R Cookbook"
+    name: "Test R Cookbook on Arrow stable"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
       - name: Setup R
-        uses: r-lib/actions/setup-r@v1
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
       - name: Setup pandoc
-        uses: r-lib/actions/setup-pandoc@v1
+        uses: r-lib/actions/setup-pandoc@v2
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install libcurl4-openssl-dev libssl-dev
+      - name: Run tests
+        run: make rtest
+      - name: Build cookbooks
+        run: make r
+
+  test_r_nightlies:
+    name: "Test R Cookbook on Arrow Nightlies"
+    runs-on: ubuntu-latest
+    env:
+      ARROW_NIGHTLY: 1
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+      - name: Setup pandoc
+        uses: r-lib/actions/setup-pandoc@v2
       - name: Install dependencies
         run: |
           sudo apt update
