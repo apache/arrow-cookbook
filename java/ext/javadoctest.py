@@ -54,6 +54,7 @@ class JavaDocTestBuilder(DocTestBuilder):
                 "dependency:build-classpath",
                 "-DincludeTypes=jar",
                 "-Dmdep.outputFile=.cp.tmp",
+                f"-Darrow.version={self.env.config.version}",
             ],
             cwd=path_arrow_project,
             text=True,
