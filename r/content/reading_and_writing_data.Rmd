@@ -21,20 +21,23 @@
 
 ## Introduction
 
-This chapter contains recipes related to reading and writing data using Apache 
-Arrow.  When reading files into R using Apache Arrow, you can read in 
-a single file as a data frame or an Arrow Table, and you can read in partitioned or multiple
-as an Arrow Dataset.
+This chapter contains recipes related to reading and writing data using Apache Arrow. 
+When reading files into R using Apache Arrow, you can read:
+
+* a single file into memory as a data frame or an Arrow Table
+* a single file that is too large to fit in memory as an Arrow Dataset
+* multiple and partitioned files as an Arrow Dataset
 
 There are a number of circumstances in which you may want to read in the data as an 
 Arrow Table or Arrow Dataset:
 
-* your data file is large and if you load it into memory, it may lead to performance issues
+* your data file is large and if you load it into memory, it may lead to performance issue
+* your single data file is too large to load into memory
 * your data are partitioned among numerous files and are too large to load into memory
 * you want faster performance from your `dplyr` queries
 * you want to be able to take advantage of Arrow's compute functions
 
-## Convert from a data frame to an Arrow Table
+## Convert data from a data frame to an Arrow Table
 
 You want to convert an existing `data.frame` or `tibble` object into an Arrow Table.
 
@@ -73,7 +76,7 @@ You can use either `as.data.frame()` or `dplyr::collect()` to do this.
 
 ## Write a Parquet file
 
-You want to write Parquet files to disk.
+You want to write a single Parquet file to disk.
 
 ### Solution
 
@@ -91,7 +94,7 @@ test_that("write_parquet chunk works as expected", {
  
 ## Read a Parquet file
 
-You want to read a Parquet file.
+You want to read a single Parquet file into memory.
 
 ### Solution
 
@@ -136,12 +139,12 @@ test_that("read_parquet_table_class works as expected", {
 
 ## Read a Parquet file from S3 
 
-You want to read a Parquet file from S3.
+You want to read a single Parquet file from S3 into memory.
 
 ### Solution
 
 ```{r, read_parquet_s3, eval = FALSE}
-df <- read_parquet(file = "s3://ursa-labs-taxi-data/2019/06/data.parquet")
+df <- read_parquet(file = "s3://voltrondata-labs-datasets/nyc-taxi/year=2019/month=6/part-0.parquet")
 ```
 
 ### See also
@@ -150,7 +153,7 @@ For more in-depth instructions, including how to work with S3 buckets which requ
 
 ## Filter columns while reading a Parquet file 
 
-You want to specify which columns to include when reading in a Parquet file.
+You want to specify which columns to include when reading in a single Parquet file into memory.
 
 ### Solution
 
@@ -170,9 +173,9 @@ test_that("read_parquet_filter works as expected", {
 })
 ```
 
-## Write an IPC/Feather V2 file
+## Write a Feather V2/Arrow IPC file
 
-You want to read in a Feather file.
+You want to write a single Feather V2 file (also called Arrow IPC file).
 
 ### Solution
 
@@ -205,7 +208,7 @@ unlink("my_table.feather")
 
 ## Read a Feather file
 
-You want to read a Feather file.
+You want to read a single Feather file into memory.
 
 ### Solution
 
@@ -260,9 +263,9 @@ test_that("read_ipc_stream chunk works as expected", {
 unlink("my_table.arrows")
 ```
 
-## Write CSV files  
+## Write a CSV file 
 
-You want to write Arrow data to a CSV file.
+You want to write Arrow data to a single CSV file.
 
 ### Solution
 
@@ -275,9 +278,9 @@ test_that("write_csv_arrow chunk works as expected", {
 })
 ```
 
-## Read CSV files
+## Read a CSV file
 
-You want to read a CSV file.
+You want to read a single CSV file into memory.
 
 ### Solution
 
@@ -292,9 +295,9 @@ test_that("read_csv_arrow chunk works as expected", {
 unlink("cars.csv")
 ```
 
-## Read JSON files 
+## Read a JSON file
 
-You want to read a JSON file.
+You want to read a JSON file into memory.
 
 ### Solution
 
@@ -327,7 +330,7 @@ unlink(tf)
 
 ## Write partitioned data
 
-You want to save data to disk in partitions based on columns in the data.
+You want to save multiple data files to disk in partitions based on columns in the data.
 
 ### Solution
 
@@ -359,7 +362,7 @@ list.files("airquality_partitioned/Month=5/Day=10")
 
 ## Read partitioned data
 
-You want to read partitioned data.
+You want to read multiple, partitioned data files as an Arrow Dataset.
 
 ### Solution
 
