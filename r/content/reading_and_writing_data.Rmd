@@ -23,7 +23,7 @@
 
 This chapter contains recipes related to reading and writing data using Apache 
 Arrow.  When reading files into R using Apache Arrow, you can read in 
-a single file as a data frame or an Arrow Table, and you can read in partitioned or multi-files
+a single file as a data frame or an Arrow Table, and you can read in partitioned or multiple
 as an Arrow Dataset.
 
 There are a number of circumstances in which you may want to read in the data as an 
