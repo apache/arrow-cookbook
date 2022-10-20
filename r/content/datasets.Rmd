@@ -22,7 +22,7 @@
 ## Introduction
 
 While Arrow allows you to work with single files imported as Arrow Tables, you can 
-also work with multi-files imported as an Arrow Dataset.  Partitioning allows you to split data across 
+also work with multiple files imported as an Arrow Dataset.  Partitioning allows you to split data across 
 multiple files/folders, avoiding problems associated with storing all your data in a single file.  This can provide 
 further advantages when using Arrow, as Arrow will only 
 read in the necessary partitioned files needed for any given analysis.
