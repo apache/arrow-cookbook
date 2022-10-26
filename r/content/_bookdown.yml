@@ -25,11 +25,11 @@ edit: https://github.com/apache/arrow-cookbook/edit/main/r/content/%s
 rmd_files: [
   "index.Rmd",
   "reading_and_writing_data.Rmd",
+  "datasets.Rmd",
   "creating_arrow_objects.Rmd",
   "specify_data_types_and_schemas.Rmd",
   "arrays.Rmd",
   "tables.Rmd",
-  "datasets.Rmd",
   "python.Rmd",
   "flight.Rmd"
 ]
