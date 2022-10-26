@@ -43,19 +43,3 @@ jobs:
         run: make pytest
       - name: Build cookbook
         run: make py
-
-  test_py_dev:
-    name: "Test Python Cookbook on Arrow Nightlies"
-    runs-on: ubuntu-latest
-    env:
-      ARROW_NIGHTLY: 1
-    steps:
-      - uses: actions/checkout@v1
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install libcurl4-openssl-dev libssl-dev python3-pip
-      - name: Run tests
-        run: make pytest
-      - name: Build cookbook
-        run: make py
