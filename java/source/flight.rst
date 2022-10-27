@@ -277,8 +277,6 @@ Flight Client and Server
                flightServer.shutdown();
                System.out.println("C8: Server shut down successfully");
            }
-       } catch (InterruptedException e) {
-           e.printStackTrace();
        } catch (Exception e) {
            e.printStackTrace();
        }
