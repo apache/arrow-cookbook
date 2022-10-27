@@ -37,12 +37,7 @@ jobs:
       matrix:
         python-version: [ '3.9' ]
         java-version: [ '11', '17', '18' ]
-        arrow_nightly: ['0', '1']
-        exclude:
-          - java-version: '11'
-            arrow_nightly: '1'
-          - java-version: '17'
-            arrow_nightly: '1'
+        arrow_nightly: ['0']
     env:
       ARROW_NIGHTLY: ${{ matrix.arrow_nightly }}
     steps:
