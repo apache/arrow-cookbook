@@ -40,7 +40,7 @@ arrow_nightly=os.getenv("ARROW_NIGHTLY")
 if arrow_nightly and arrow_nightly != '0':
     version = "10.0.0-SNAPSHOT"
 else:
-    version = "9.0.0"
+    version = "10.0.0"
 print(f"Running with Arrow version: {version}")
 
 # -- General configuration ---------------------------------------------------
