@@ -17,22 +17,29 @@
   under the License.
 -->
 
-# Reading and Writing Data
+# Reading and Writing Data - Single Files
 
 ## Introduction
 
-This chapter contains recipes related to reading and writing data using Apache 
-Arrow.  When reading files into R using Apache Arrow, you can choose to read in 
-your file as either a data frame or as an Arrow Table object.
+When reading files into R using Apache Arrow, you can read:
 
+* a single file into memory as a data frame or an Arrow Table
+* a single file that is too large to fit in memory as an Arrow Dataset
+* multiple and partitioned files as an Arrow Dataset
 
-There are a number of circumstances in which you may want to read in the data as an Arrow Table:
+This chapter contains recipes related to using Apache Arrow to read and 
+write single file data into memory as an Arrow Table. There are a number of circumstances in
+which you may want to read in single file data as an Arrow Table:
 
-* your dataset is large and if you load it into memory, it may lead to performance issues
+* your data file is large and having performance issues
 * you want faster performance from your `dplyr` queries
 * you want to be able to take advantage of Arrow's compute functions
 
-## Convert from a data frame to an Arrow Table
+If a single data file is too large to load into memory, you can use the Arrow Dataset API. 
+Recipes for using `open_dataset()` and `write_dataset()` are in the Reading and Writing Data - Multiple Files
+chapter.
+
+## Convert data from a data frame to an Arrow Table
 
 You want to convert an existing `data.frame` or `tibble` object into an Arrow Table.
 
@@ -61,7 +68,7 @@ air_df
 ```
 ```{r, test_asdf_table, opts.label = "test"}
 test_that("asdf_table chunk works as expected", {
-  expect_identical(air_df, airquality) 
+  expect_identical(air_df, airquality)
 })
 ```
 
@@ -71,7 +78,7 @@ You can use either `as.data.frame()` or `dplyr::collect()` to do this.
 
 ## Write a Parquet file
 
-You want to write Parquet files to disk.
+You want to write a single Parquet file to disk.
 
 ### Solution
 
@@ -89,7 +96,7 @@ test_that("write_parquet chunk works as expected", {
  
 ## Read a Parquet file
 
-You want to read a Parquet file.
+You want to read a single Parquet file into memory.
 
 ### Solution
 
@@ -123,6 +130,7 @@ my_table_arrow <- read_parquet("my_table.parquet", as_data_frame = FALSE)
 my_table_arrow
 ```
 
+
 ```{r, read_parquet_table_class}
 class(my_table_arrow)
 ```
@@ -134,12 +142,12 @@ test_that("read_parquet_table_class works as expected", {
 
 ## Read a Parquet file from S3 
 
-You want to read a Parquet file from S3.
+You want to read a single Parquet file from S3 into memory.
 
 ### Solution
 
 ```{r, read_parquet_s3, eval = FALSE}
-df <- read_parquet(file = "s3://ursa-labs-taxi-data/2019/06/data.parquet")
+df <- read_parquet(file = "s3://voltrondata-labs-datasets/nyc-taxi/year=2019/month=6/part-0.parquet")
 ```
 
 ### See also
@@ -148,12 +156,12 @@ For more in-depth instructions, including how to work with S3 buckets which requ
 
 ## Filter columns while reading a Parquet file 
 
-You want to specify which columns to include when reading in a Parquet file.
+You want to specify which columns to include when reading in a single Parquet file into memory.
 
 ### Solution
 
 ```{r, read_parquet_filter}
-# Create table to read back in 
+# Create table to read back in
 dist_time <- arrow_table(data.frame(distance = c(12.2, 15.7, 14.2), time = c(43, 44, 40)))
 # Write to Parquet
 write_parquet(dist_time, "dist_time.parquet")
@@ -168,9 +176,9 @@ test_that("read_parquet_filter works as expected", {
 })
 ```
 
-## Write an IPC/Feather V2 file
+## Write a Feather V2/Arrow IPC file
 
-You want to read in a Feather file.
+You want to write a single Feather V2 file (also called Arrow IPC file).
 
 ### Solution
 
@@ -197,13 +205,11 @@ write_feather(mtcars, "my_table.feather", version = 1)
 test_that("write_feather1 chunk works as expected", {
   expect_true(file.exists("my_table.feather"))
 })
-
-unlink("my_table.feather")
 ```
 
-## Read a Feather file
+## Read a Feather/Arrow IPC file
 
-You want to read a Feather file.
+You want to read a single Feather V1 or V2 file into memory (also called Arrow IPC file).
 
 ### Solution
 
@@ -217,9 +223,9 @@ test_that("read_feather chunk works as expected", {
 unlink("my_table.arrow")
 ```
 
-## Write streaming IPC files
+## Write streaming Arrow IPC files
 
-You want to write to the IPC stream format.
+You want to write to the Arrow IPC stream format.
 
 ### Solution
 
@@ -240,9 +246,9 @@ test_that("write_ipc_stream chunk works as expected", {
 })
 ```
 
-## Read streaming IPC files
+## Read streaming Arrow IPC files
 
-You want to read from the IPC stream format.
+You want to read from the Arrow IPC stream format.
 
 ### Solution
 ```{r, read_ipc_stream}
@@ -258,9 +264,9 @@ test_that("read_ipc_stream chunk works as expected", {
 unlink("my_table.arrows")
 ```
 
-## Write CSV files  
+## Write a CSV file 
 
-You want to write Arrow data to a CSV file.
+You want to write Arrow data to a single CSV file.
 
 ### Solution
 
@@ -273,9 +279,9 @@ test_that("write_csv_arrow chunk works as expected", {
 })
 ```
 
-## Read CSV files
+## Read a CSV file
 
-You want to read a CSV file.
+You want to read a single CSV file into memory.
 
 ### Solution
 
@@ -290,14 +296,14 @@ test_that("read_csv_arrow chunk works as expected", {
 unlink("cars.csv")
 ```
 
-## Read JSON files 
+## Read a JSON file
 
-You want to read a JSON file.
+You want to read a JSON file into memory.
 
 ### Solution
 
 ```{r, read_json_arrow}
-# Create a file to read back in 
+# Create a file to read back in
 tf <- tempfile()
 writeLines('
     {"country": "United Kingdom", "code": "GB", "long": -3.44, "lat": 55.38}
@@ -323,76 +329,9 @@ test_that("read_json_arrow chunk works as expected", {
 unlink(tf)
 ```
 
-## Write partitioned data
+## Write a compressed single data file
 
-You want to save data to disk in partitions based on columns in the data.
-
-### Solution
-
-```{r, write_dataset}
-write_dataset(airquality, "airquality_partitioned", partitioning = c("Month", "Day"))
-list.files("airquality_partitioned")
-```
-```{r, test_write_dataset, opts.label = "test"}
-test_that("write_dataset chunk works as expected", {
-  # Partition by month
-  expect_identical(list.files("airquality_partitioned"), c("Month=5", "Month=6", "Month=7", "Month=8", "Month=9"))
-  # We have enough files
-  expect_equal(length(list.files("airquality_partitioned", recursive = TRUE)), 153)
-})
-```
-As you can see, this has created folders based on the first partition variable supplied, `Month`.
-
-If you take a look in one of these folders, you will see that the data is then partitioned by the second partition variable, `Day`.
-
-```{r}
-list.files("airquality_partitioned/Month=5")
-```
-
-Each of these folders contains 1 or more Parquet files containing the relevant partition of the data.
-
-```{r}
-list.files("airquality_partitioned/Month=5/Day=10")
-```
-
-## Read partitioned data
-
-You want to read partitioned data.
-
-### Solution
-
-```{r, open_dataset}
-# Read data from directory
-air_data <- open_dataset("airquality_partitioned")
-
-# View data
-air_data
-```
-```{r, test_open_dataset, opts.label = "test"}
-test_that("open_dataset chunk works as expected", {
-  expect_equal(nrow(air_data), 153)
-  expect_equal(arrange(collect(air_data), Month, Day), arrange(airquality, Month, Day), ignore_attr = TRUE)
-})
-```
-
-```{r}
-unlink("airquality_partitioned", recursive = TRUE)
-```
-
-```{r, include = FALSE}
-# cleanup
-unlink("my_table.arrow")
-unlink("my_table.arrows")
-unlink("cars.csv")
-unlink("my_table.feather")
-unlink("my_table.parquet")
-unlink("dist_time.parquet")
-unlink("airquality_partitioned", recursive = TRUE)
-```
-
-## Write compressed data
-
-You want to save a file, compressed with a specified compression algorithm.
+You want to save a single file, compressed with a specified compression algorithm.
 
 ### Solution
 
@@ -407,35 +346,7 @@ write_parquet(iris, file.path(td, "iris.parquet"), compression = "gzip")
 
 ```{r, test_parquet_gzip, opts.label = "test"}
 test_that("parquet_gzip", {
-  file.exists(file.path(td, "iris.parquet"))
-})
-```
-
-### Discussion
-
-Note that `write_parquet()` by default already uses compression.  See 
-`default_parquet_compression()` to see what the default configured on your 
-machine is.
-
-You can also supply the `compression` argument to `write_dataset()`, as long as 
-the compression algorithm is compatible with the chosen format.
-
-```{r, dataset_gzip}
-# Create a temporary directory
-td <- tempfile()
-dir.create(td)
-
-# Write dataset to file
-write_dataset(iris, path = td, compression = "gzip")
-```
-
-```{r}
-# View files in the directory
-list.files(td, recursive = TRUE)
-```
-```{r, test_dataset_gzip, opts.label = "test"}
-test_that("dataset_gzip", {
-  file.exists(file.path(td, "part-0.parquet"))
+  expect_true(file.exists(file.path(td, "iris.parquet")))
 })
 ```
 
@@ -446,11 +357,10 @@ on the supported compression algorithms and default settings, see:
 
 * `?write_parquet()`
 * `?write_feather()`
-* `?write_dataset()`
 
 ## Read compressed data
 
-You want to read in data which has been compressed.
+You want to read in a single data file which has been compressed.
 
 ### Solution
 
@@ -459,13 +369,11 @@ You want to read in data which has been compressed.
 td <- tempfile()
 dir.create(td)
 
-# Write dataset which is to be read back in
+# Write data which is to be read back in
 write_parquet(iris, file.path(td, "iris.parquet"), compression = "gzip")
 
 # Read in data
-ds <- read_parquet(file.path(td, "iris.parquet")) %>%
-  collect()
-
+ds <- read_parquet(file.path(td, "iris.parquet"))
 ds
 ```
 
@@ -482,7 +390,7 @@ test_that("read_parquet_compressed", {
 ### Discussion
 
 Note that Arrow automatically detects the compression and you do not have to 
-supply it in the call to `open_dataset()` or the `read_*()` functions.
+supply it in the call to the `read_*()` or the `open_dataset()` functions.
 
 Although the CSV format does not support compression itself, Arrow supports 
 reading in CSV data which has been compressed, if the file extension is `.gz`.
@@ -492,12 +400,11 @@ reading in CSV data which has been compressed, if the file extension is `.gz`.
 td <- tempfile()
 dir.create(td)
 
-# Write dataset which is to be read back in
+# Write data which is to be read back in
 write.csv(iris, gzfile(file.path(td, "iris.csv.gz")), row.names = FALSE, quote = FALSE)
 
 # Read in data
-ds <- open_dataset(td, format = "csv") %>%
-  collect()
+ds <- read_csv_arrow(file.path(td, "iris.csv.gz"))
 ds
 ```
 
@@ -511,4 +418,12 @@ test_that("read_compressed_csv", {
 })
 ```
 
-
+```{r cleanup_singlefiles, include = FALSE}
+# cleanup
+unlink("my_table.arrow")
+unlink("my_table.arrows")
+unlink("cars.csv")
+unlink("my_table.feather")
+unlink("my_table.parquet")
+unlink("dist_time.parquet")
+```
