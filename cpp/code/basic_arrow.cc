@@ -87,7 +87,7 @@ class TableSummation {
 
   template <typename ArrayType, typename T = typename ArrayType::TypeClass>
   arrow::enable_if_number<T, arrow::Status> Visit(const ArrayType& array) {
-    for (arrow::util::optional<typename T::c_type> value : array) {
+    for (std::optional<typename T::c_type> value : array) {
       if (value.has_value()) {
         partial += static_cast<double>(value.value());
       }

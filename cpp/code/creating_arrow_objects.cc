@@ -87,7 +87,7 @@ class RandomBatchGenerator {
     auto builder = arrow::DoubleBuilder();
     std::normal_distribution<> d{/*mean=*/5.0, /*stddev=*/2.0};
     for (int32_t i = 0; i < num_rows_; ++i) {
-      builder.Append(d(gen_));
+      ARROW_RETURN_NOT_OK(builder.Append(d(gen_)));
     }
     ARROW_ASSIGN_OR_RAISE(auto array, builder.Finish());
     arrays_.push_back(array);
@@ -98,11 +98,11 @@ class RandomBatchGenerator {
     // Generate offsets first, which determines number of values in sub-array
     std::poisson_distribution<> d{/*mean=*/4};
     auto builder = arrow::Int32Builder();
-    builder.Append(0);
+    ARROW_RETURN_NOT_OK(builder.Append(0));
     int32_t last_val = 0;
     for (int32_t i = 0; i < num_rows_; ++i) {
       last_val += d(gen_);
-      builder.Append(last_val);
+      ARROW_RETURN_NOT_OK(builder.Append(last_val));
     }
     ARROW_ASSIGN_OR_RAISE(auto offsets, builder.Finish());
 
