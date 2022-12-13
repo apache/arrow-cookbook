@@ -52,7 +52,7 @@ jobs:
       run:
         shell: bash -l {0}
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
       - name: Setup environment
         uses: conda-incubator/setup-miniconda@v2
         with:
@@ -67,7 +67,7 @@ jobs:
         run:
           make cpp
       - name: Upload cpp book
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: cpp_book
           path: build/cpp
@@ -78,7 +78,7 @@ jobs:
     env:
       ARROW_NIGHTLY: 1
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
       - name: Install dependencies
         run: |
           sudo apt update
