@@ -26,18 +26,22 @@ the version of Apache Arrow to be available on conda.
 ## Requirements
 
 For the CPP cookbooks we use conda lock files that have to be updated
-when we want to update the Release. You can create a virtualenv using
-the `requirements.txt` file provided on this folder.
+when we want to update the version of Arrow used.
+
+The script requires `conda-lock` to be installed.
+As an example you can create a virtual environment with the following
+commands but you can use conda too. The only requirement
+is for `conda-lock` to be available.
 
 ```
 python -m venv cookbook-release
 source cookbook-release/bin/activate
-pip install -r dev/release/requirements.txt
+pip install conda-lock
 ```
 
 ## Usage
 
-Execture the `01-prepare.sh` script with two arguments `current_version`
+Execute the `01-prepare.sh` script with two arguments `current_version`
 and `new_version`.
 
 ```
