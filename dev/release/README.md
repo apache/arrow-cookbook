@@ -41,32 +41,31 @@ pip install conda-lock
 
 ## Usage
 
-Execute the `01-prepare.sh` script with two arguments `current_version`
+Execute the `01-bump-versions.sh` script with two arguments `current_version`
 and `new_version`.
 
 ```
-./dev/release/01-prepare.sh 10.0.1 11.0.0
+./dev/release/01-bump-versions.sh 10.0.1 11.0.0
 ```
 
 The script will:
 
 - Update the version for Java, Python and CPP cookbooks.
 - Update the conda lock files for the CPP cookbooks.
-- Create a tag for the stable Release.
 - Commit to the current branch with the updated versions.
 
-You can push the Release tag:
+Now you should create a Pull Request to merge the changes against the main branch.
+
+Once the Pull Request is merged you can run the `02-update.sh` from the updated
+main branch. This script requires a single argument with the `new_version`:
 
 ```
-git push -u apache apache-arrow-<version>
+./dev/release/02-update.sh 11.0.0
 ```
 
-And you can create a PR to merge the main branch changes.
+The script will:
 
-Once this is done and approved you can update the stable branch rebasing main:
-
-```
-git checkout stable
-git rebase main
-git push -u apache stable
-```
+- Regenerate the stable branch from main. Take into account that this will
+delete and create a new stable branch.
+- Create a tag for the stable Release.
+- Push both the new stable branch and the tag.

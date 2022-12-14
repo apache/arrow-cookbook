@@ -49,14 +49,12 @@ update_versions() {
   popd
 
   pushd "${ARROW_COOKBOOK_DIR}/cpp"
-  sed -i.bak -E -e \
-    "s/arrow-cpp==${base_version}/arrow-cpp==${next_version}/" \
+  sed -i.bak -E \
+    -e "s/arrow-cpp==${base_version}/arrow-cpp==${next_version}/" \
+    -e "s/pyarrow==${base_version}/pyarrow==${next_version}/" \
     environment.yml
   rm -f environment.yml.bak
-  sed -i.bak -E -e \
-    "s/pyarrow==${base_version}/pyarrow==${next_version}/" \
-    environment.yml
-  rm -f environment.yml.bak
+
   conda-lock --file environment.yml --kind explicit -p linux-aarch64 -p linux-64 -p osx-arm64
   git add environment.yml
   git add conda-linux-64.lock

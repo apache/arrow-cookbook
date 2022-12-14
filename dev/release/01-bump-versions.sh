@@ -32,24 +32,6 @@ old_version=$1
 new_version=$2
 version_tag="apache-arrow-${new_version}"
 
-: ${PREPARE_DEFAULT:=1}
-: ${PREPARE_VERSION_PRE_TAG:=${PREPARE_DEFAULT}}
-: ${PREPARE_TAG:=${PREPARE_DEFAULT}}
-
-
-if [ ${PREPARE_TAG} -gt 0 ]; then
-  if [ $(git tag -l "${version_tag}") ]; then
-    echo "Delete existing git tag $version_tag"
-    git tag -d "${version_tag}"
-  fi
-fi
-
-if [ ${PREPARE_VERSION_PRE_TAG} -gt 0 ]; then
-  echo "Prepare ${new_version} on tag ${version_tag}"
-  update_versions "${old_version}" "${new_version}"
-  git commit -m "MINOR: [Release] Update versions for ${new_version}"
-fi
-
-if [ ${PREPARE_TAG} -gt 0 ]; then
-  git tag -a "${version_tag}" -m "[Release] Apache Arrow Release ${new_version}"
-fi
+echo "Prepare ${new_version}"
+update_versions "${old_version}" "${new_version}"
+git commit -m "MINOR: [Release] Update versions for ${new_version}"
