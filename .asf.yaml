@@ -16,6 +16,10 @@
 # under the License.
 
 github:
+  enabled_merge_buttons:
+    merge: false
+    rebase: false
+    squash: true
   features:
     issues: true
   protected_branches:

@@ -55,3 +55,8 @@ how to make your recipes testable.
 All participation in the Apache Arrow project is governed by the Apache
 Software Foundation’s [code of
 conduct](https://www.apache.org/foundation/policies/conduct.html).
+
+## Merging Pull Requests
+
+We use the GitHub UI to merge Pull Requests instead of a script as we do on the
+main Arrow repository. The repo is configured to use `Squash and merge`.
