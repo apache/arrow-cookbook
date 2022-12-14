@@ -32,13 +32,9 @@ update_versions() {
   popd
 
   pushd "${ARROW_COOKBOOK_DIR}/java/source"
-  sed -i.bak -E -e \
-    "s/version = \"${base_version}\"/version = \"${next_version}\"/" \
-    conf.py
-  rm -f conf.py.bak
-
-  sed -i.bak -E -e \
-    "s/version = \"${next_version}-SNAPSHOT\"/version = \"${nightly_version_snapshot}\"/" \
+  sed -i.bak -E \
+    -e "s/version = \"${base_version}\"/version = \"${next_version}\"/" \
+    -e "s/version = \"${next_version}-SNAPSHOT\"/version = \"${nightly_version_snapshot}\"/" \
     conf.py
   rm -f conf.py.bak
   git add conf.py
