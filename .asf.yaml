@@ -16,6 +16,10 @@
 # under the License.
 
 github:
+  enabled_merge_buttons:
+    merge: false
+    rebase: false
+    squash: true
   features:
     issues: true
   protected_branches:
@@ -26,6 +30,7 @@ github:
 
 notifications:
   commits:      commits@arrow.apache.org
+  issues_status: issues@arrow.apache.org
   issues:       github@arrow.apache.org
   pullrequests: github@arrow.apache.org
 
