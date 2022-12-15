@@ -20,9 +20,9 @@ channels:
 dependencies:
   - python=3.9
   - compilers
-  - arrow-cpp >=10,<11
+  - arrow-cpp==10.0.1
   - sphinx
   - gtest
   - gmock
-  - pyarrow >=10,<11
+  - pyarrow==10.0.1
   - clang-tools
