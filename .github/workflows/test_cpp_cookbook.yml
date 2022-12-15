@@ -37,7 +37,7 @@ jobs:
       run:
         shell: bash -l {0}
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
       - name: Cache conda
         uses: actions/cache@v2
         env:
@@ -61,7 +61,7 @@ jobs:
         run:
           make cpp
       - name: Upload cpp book
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: cpp_book
           path: build/cpp

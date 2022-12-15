@@ -10,11 +10,11 @@ jobs:
     name: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
       - name: Setup R
-        uses: r-lib/actions/setup-r@v1
+        uses: r-lib/actions/setup-r@v2
       - name: Setup pandoc
-        uses: r-lib/actions/setup-pandoc@v1
+        uses: r-lib/actions/setup-pandoc@v2
       - name: Install dependencies
         run: |
           sudo apt update
@@ -26,7 +26,7 @@ jobs:
       - name: Copy .asf.yaml
         run: cp .asf.yaml build/.asf.yaml
       - name: Upload book artifact
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: build_book
           path: build/
@@ -38,7 +38,7 @@ jobs:
       run:
         shell: bash -l {0}
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
       - name: Cache conda
         uses: actions/cache@v2
         env:
@@ -63,7 +63,7 @@ jobs:
         run:
           make cpp
       - name: Upload cpp book
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: cpp_book
           path: build/cpp
@@ -74,7 +74,7 @@ jobs:
     needs: [make_cookbooks, make_cpp]
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: gh-pages
       - name: Prepare branch
