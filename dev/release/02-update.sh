@@ -38,7 +38,7 @@ if [ ${current_branch} != "main" ]; then
     exit 1
 fi
 
-if [ $(git branch -l "stable") ]; then
+if [ "$(git branch -l "stable")" != "" ]; then
     echo "Removing old stable branch locally and remotely"
     git branch -d stable
     git push -u apache --delete stable
@@ -48,7 +48,7 @@ echo "Creating and pushing new stable branch from main"
 git branch stable
 git push -u apache stable
 
-if [ $(git tag -l "${version_tag}") ]; then
+if [ "$(git tag -l "${version_tag}")" != "" ]; then
   echo "Delete existing git tag $version_tag"
   git tag -d "${version_tag}"
 fi

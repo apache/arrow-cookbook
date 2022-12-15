@@ -66,6 +66,6 @@ main branch. This script requires a single argument with the `new_version`:
 The script will:
 
 - Regenerate the stable branch from main. Take into account that this will
-delete and create a new stable branch.
+  delete and create a new stable branch.
 - Create a tag for the stable Release.
 - Push both the new stable branch and the tag.
