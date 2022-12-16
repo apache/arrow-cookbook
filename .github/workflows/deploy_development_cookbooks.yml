@@ -80,7 +80,8 @@ jobs:
       - name: Prepare branch
         run: |
           git checkout --orphan gh-pages-tmp
-          git rm -rf ./dev
+          git rm -rf --ignore-unmatch ./dev
+          mkdir dev
       - name: Download book artifact
         uses: actions/download-artifact@v1.0.0
         with:
