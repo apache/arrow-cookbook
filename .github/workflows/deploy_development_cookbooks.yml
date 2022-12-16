@@ -71,7 +71,7 @@ jobs:
   deploy_dev_cookbooks:
     name: deploy
     runs-on: ubuntu-latest
-    needs: [make_cookbooks, make_cpp]
+    needs: [make_dev_cookbooks, make_dev_cpp]
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
