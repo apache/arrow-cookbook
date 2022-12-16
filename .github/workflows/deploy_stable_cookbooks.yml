@@ -80,10 +80,8 @@ jobs:
       - name: Prepare branch
         run: |
           git checkout --orphan gh-pages-tmp
-          git rm -rf .
-          # Maintain dev cookbook
-          git restore --staged dev
-          git restore dev
+          # Remove everything except dev cookbook
+          git rm -rf !("dev")
       - name: Download book artifact
         uses: actions/download-artifact@v1.0.0
         with:
