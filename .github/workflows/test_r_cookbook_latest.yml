@@ -30,8 +30,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test_r:
-    name: "Test R Cookbook on Arrow stable"
+  test_r_latest:
+    name: "Test R Cookbook on Arrow latest"
     runs-on: ubuntu-latest
     env:
       ARROW_NIGHTLY: 1

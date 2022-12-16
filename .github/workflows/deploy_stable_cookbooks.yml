@@ -6,7 +6,7 @@ on:
 name: Deploy Stable Cookbooks
 
 jobs:
-  make_cookbooks:
+  make_stable_cookbooks:
     name: build
     runs-on: ubuntu-latest
     steps:
@@ -26,12 +26,12 @@ jobs:
       - name: Copy .asf.yaml
         run: cp .asf.yaml build/.asf.yaml
       - name: Upload book artifact
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: build_book
           path: build/
 
-  make_cpp:
+  make_stable_cpp:
     name: build c++
     runs-on: ubuntu-latest
     defaults:
@@ -63,12 +63,12 @@ jobs:
         run:
           make cpp
       - name: Upload cpp book
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: cpp_book
           path: build/cpp
 
-  deploy_cookbooks:
+  deploy_stable_cookbooks:
     name: deploy
     runs-on: ubuntu-latest
     needs: [make_cookbooks, make_cpp]

@@ -30,7 +30,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test_cpp_stable:
+  test_cpp_latest:
     name: "Test C++ Cookbook on Arrow latest"
     runs-on: ubuntu-latest
     defaults:

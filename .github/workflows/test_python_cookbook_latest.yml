@@ -30,7 +30,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test_py_stable:
+  test_py_latest:
     name: "Test Python Cookbook on Arrow latest"
     runs-on: ubuntu-latest
     env:

@@ -30,7 +30,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test_java_linux:
+  test_java_linux_latest:
     name: "Test Java Cookbook Latest On Linux"
     runs-on: ubuntu-latest
     strategy:
@@ -58,7 +58,7 @@ jobs:
       - name: Build cookbook
         run: make java
 
-  test_java_osx:
+  test_java_osx_latest:
     name: "Test Java Cookbook on MacOS"
     runs-on: macos-latest
     strategy:

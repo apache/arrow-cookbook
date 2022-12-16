@@ -30,7 +30,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test_r:
+  test_r_stable:
     name: "Test R Cookbook on Arrow stable"
     runs-on: ubuntu-latest
     steps:
