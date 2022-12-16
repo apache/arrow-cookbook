@@ -23,7 +23,7 @@ on:
        - main
     paths:
      - "cpp/**"
-     - ".github/workflows/test_cpp_cookbook.yml"
+     - ".github/workflows/test_cpp_cookbook_latest.yml"
 
 concurrency:
   group: ${{ github.repository }}-${{ github.ref }}-${{ github.workflow }}

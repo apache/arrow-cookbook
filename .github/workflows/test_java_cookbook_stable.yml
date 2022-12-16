@@ -23,7 +23,7 @@ on:
        - stable
     paths:
      - "java/**"
-     - ".github/workflows/test_java_cookbook.yml"
+     - ".github/workflows/test_java_cookbook_stable.yml"
 
 concurrency:
   group: ${{ github.repository }}-${{ github.ref }}-${{ github.workflow }}

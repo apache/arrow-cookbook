@@ -23,7 +23,7 @@ on:
        - main
     paths:
      - "r/**"
-     - ".github/workflows/test_r_cookbook.yml"
+     - ".github/workflows/test_r_cookbook_latest.yml"
 
 concurrency:
   group: ${{ github.repository }}-${{ github.ref }}-${{ github.workflow }}
