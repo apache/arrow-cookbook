@@ -9,6 +9,8 @@ jobs:
   make_dev_cookbooks:
     name: build
     runs-on: ubuntu-latest
+    env:
+      ARROW_NIGHTLY: 1
     steps:
       - uses: actions/checkout@v3
       - name: Setup R
@@ -53,8 +55,8 @@ jobs:
         with:
           auto-update-conda: true
           python-version: 3.9
-          activate-environment: cookbook-cpp
-          environment-file: cpp/environment.yml
+          activate-environment: cookbook-cpp-dev
+          environment-file: cpp/dev.yml
           auto-activate-base: false
       - name: Test
         run:
