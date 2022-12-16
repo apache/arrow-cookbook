@@ -3,18 +3,18 @@ on:
      branches:
        - main
 
-name: Deploy Cookbooks
+name: Deploy development Cookbooks
 
 jobs:
   make_cookbooks:
     name: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v1
       - name: Setup R
-        uses: r-lib/actions/setup-r@v2
+        uses: r-lib/actions/setup-r@v1
       - name: Setup pandoc
-        uses: r-lib/actions/setup-pandoc@v2
+        uses: r-lib/actions/setup-pandoc@v1
       - name: Install dependencies
         run: |
           sudo apt update
@@ -26,7 +26,7 @@ jobs:
       - name: Copy .asf.yaml
         run: cp .asf.yaml build/.asf.yaml
       - name: Upload book artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v1
         with:
           name: build_book
           path: build/
@@ -38,7 +38,7 @@ jobs:
       run:
         shell: bash -l {0}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v1
       - name: Cache conda
         uses: actions/cache@v2
         env:
@@ -63,7 +63,7 @@ jobs:
         run:
           make cpp
       - name: Upload cpp book
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v1
         with:
           name: cpp_book
           path: build/cpp
@@ -74,23 +74,23 @@ jobs:
     needs: [make_cookbooks, make_cpp]
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
         with:
           ref: gh-pages
       - name: Prepare branch
         run: |
           git checkout --orphan gh-pages-tmp
-          git rm -rf .
+          git rm -rf ./dev
       - name: Download book artifact
         uses: actions/download-artifact@v1.0.0
         with:
           name: build_book
-          path: .
+          path: ./dev
       - name: Download cpp book
         uses: actions/download-artifact@v1.0.0
         with:
           name: cpp_book
-          path: ./cpp
+          path: ./dev/cpp
       - name: Push changes to gh-pages/asf-site branch
         run: |
           git config --global user.name 'GitHub Actions'

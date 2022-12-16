@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Test Java Cookbook On Linux
+name: Test Java Cookbook Latest
 
 on:
   pull_request:
@@ -23,7 +23,7 @@ on:
        - main
     paths:
      - "java/**"
-     - ".github/workflows/test_java_linux_cookbook.yml"
+     - ".github/workflows/test_java_cookbook.yml"
 
 concurrency:
   group: ${{ github.repository }}-${{ github.ref }}-${{ github.workflow }}
@@ -31,13 +31,13 @@ concurrency:
 
 jobs:
   test_java_linux:
-    name: "Test Java Cookbook On Linux"
+    name: "Test Java Cookbook Latest On Linux"
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: [ '3.9' ]
         java-version: [ '11', '17', '18' ]
-        arrow_nightly: ['0']
+        arrow_nightly: ['1']
     env:
       ARROW_NIGHTLY: ${{ matrix.arrow_nightly }}
     steps:
@@ -53,6 +53,30 @@ jobs:
         run: |
           sudo apt update
           sudo apt install libcurl4-openssl-dev libssl-dev
+      - name: Run tests
+        run: make javatest
+      - name: Build cookbook
+        run: make java
+
+  test_java_osx:
+    name: "Test Java Cookbook on MacOS"
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        python-version: [ '3.9' ]
+        java-version: [ '11', '17', '18' ]
+        arrow_nightly: ['1']
+    env:
+      ARROW_NIGHTLY: ${{ matrix.arrow_nightly }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.java-version }}
       - name: Run tests
         run: make javatest
       - name: Build cookbook

@@ -15,23 +15,51 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Test Java Cookbook on MacOS
+name: Test Java Cookbook Stable
 
 on:
   pull_request:
     branches:
-       - main
+       - stable
     paths:
      - "java/**"
-     - ".github/workflows/test_java_osx_cookbook.yml"
-     
+     - ".github/workflows/test_java_cookbook.yml"
+
 concurrency:
   group: ${{ github.repository }}-${{ github.ref }}-${{ github.workflow }}
   cancel-in-progress: true
 
 jobs:
+  test_java_linux:
+    name: "Test Java Cookbook Stable On Linux"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ '3.9' ]
+        java-version: [ '11', '17', '18' ]
+        arrow_nightly: ['0']
+    env:
+      ARROW_NIGHTLY: ${{ matrix.arrow_nightly }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.java-version }}
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install libcurl4-openssl-dev libssl-dev
+      - name: Run tests
+        run: make javatest
+      - name: Build cookbook
+        run: make java
+
   test_java_osx:
-    name: "Test Java Cookbook on MacOS"
+    name: "Test Java Cookbook Stable on MacOS"
     runs-on: macos-latest
     strategy:
       matrix:

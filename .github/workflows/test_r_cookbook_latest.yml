@@ -15,31 +15,39 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Test Python Cookbook
+name: Test R Cookbook Latest
 
 on:
   pull_request:
     branches:
        - main
     paths:
-     - "python/**"
-     - ".github/workflows/test_python_cookbook.yml"
+     - "r/**"
+     - ".github/workflows/test_r_cookbook.yml"
 
 concurrency:
   group: ${{ github.repository }}-${{ github.ref }}-${{ github.workflow }}
   cancel-in-progress: true
 
 jobs:
-  test_py_stable:
-    name: "Test Python Cookbook on Arrow stable"
+  test_r:
+    name: "Test R Cookbook on Arrow stable"
     runs-on: ubuntu-latest
+    env:
+      ARROW_NIGHTLY: 1
     steps:
       - uses: actions/checkout@v3
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+      - name: Setup pandoc
+        uses: r-lib/actions/setup-pandoc@v2
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install libcurl4-openssl-dev libssl-dev python3-pip
+          sudo apt install libcurl4-openssl-dev libssl-dev
       - name: Run tests
-        run: make pytest
-      - name: Build cookbook
-        run: make py
+        run: make rtest
+      - name: Build cookbooks
+        run: make r

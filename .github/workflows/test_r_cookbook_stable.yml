@@ -15,12 +15,12 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Test R Cookbook
+name: Test R Cookbook Stable
 
 on:
   pull_request:
     branches:
-       - main
+       - stable
     paths:
      - "r/**"
      - ".github/workflows/test_r_cookbook.yml"

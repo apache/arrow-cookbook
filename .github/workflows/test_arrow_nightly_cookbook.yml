@@ -94,7 +94,7 @@ jobs:
     strategy:
       matrix:
         python-version: [ '3.9' ]
-        java-version: [ '18' ]
+        java-version: [ '11', '17', '18' ]
         arrow_nightly: ['1']
     env:
       ARROW_NIGHTLY: ${{ matrix.arrow_nightly }}
@@ -118,7 +118,7 @@ jobs:
     strategy:
       matrix:
         python-version: [ '3.9' ]
-        java-version: [ '18' ]
+        java-version: [ '11', '17', '18' ]
         arrow_nightly: ['1']
     env:
       ARROW_NIGHTLY: ${{ matrix.arrow_nightly }}
