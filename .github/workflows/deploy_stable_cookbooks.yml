@@ -78,10 +78,12 @@ jobs:
         with:
           ref: gh-pages
       - name: Prepare branch
-        # TODO maintain dev cookbook instead of deleting all
         run: |
           git checkout --orphan gh-pages-tmp
           git rm -rf .
+          # Maintain dev cookbook
+          git restore --staged dev
+          git restore dev
       - name: Download book artifact
         uses: actions/download-artifact@v1.0.0
         with:
