@@ -15,23 +15,24 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Test C++ Cookbook Latest
+name: Test C++ Cookbook
 
 on:
   pull_request:
     branches:
        - main
+       - stable
     paths:
      - "cpp/**"
-     - ".github/workflows/test_cpp_cookbook_latest.yml"
+     - ".github/workflows/test_cpp_cookbook.yml"
 
 concurrency:
   group: ${{ github.repository }}-${{ github.ref }}-${{ github.workflow }}
   cancel-in-progress: true
 
 jobs:
-  test_cpp_latest:
-    name: "Test C++ Cookbook on Arrow latest"
+  test_cpp:
+    name: "Test C++ Cookbook on Arrow"
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -47,12 +48,21 @@ jobs:
           path: ~/conda_pkgs_dir
           key:
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('cpp/conda-linux-64.lock') }}
-      - name: Setup environment
+      - name: Setup latest environment
+        if: github.event.pull_request.base.ref == 'main'
         uses: conda-incubator/setup-miniconda@v2
         with:
           auto-update-conda: true
           activate-environment: cookbook-cpp-dev
           environment-file: cpp/dev.yml
+          auto-activate-base: false
+      - name: Setup stable environment
+        if: github.event.pull_request.base.ref == 'stable'
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          activate-environment: cookbook-cpp
+          environment-file: cpp/environment.yml
           auto-activate-base: false
       - name: Test
         run:

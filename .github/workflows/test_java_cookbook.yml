@@ -15,31 +15,29 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Test Java Cookbook Stable
+name: Test Java Cookbook
 
 on:
   pull_request:
     branches:
+       - main
        - stable
     paths:
      - "java/**"
-     - ".github/workflows/test_java_cookbook_stable.yml"
+     - ".github/workflows/test_java_cookbook.yml"
 
 concurrency:
   group: ${{ github.repository }}-${{ github.ref }}-${{ github.workflow }}
   cancel-in-progress: true
 
 jobs:
-  test_java_linux_stable:
-    name: "Test Java Cookbook Stable On Linux"
+  test_java_linux:
+    name: "Test Java Cookbook On Linux"
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: [ '3.9' ]
         java-version: [ '11', '17', '18' ]
-        arrow_nightly: ['0']
-    env:
-      ARROW_NIGHTLY: ${{ matrix.arrow_nightly }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
@@ -54,20 +52,29 @@ jobs:
           sudo apt update
           sudo apt install libcurl4-openssl-dev libssl-dev
       - name: Run tests
-        run: make javatest
+        run: |
+          if [ "${{ github.base_ref }}" == "main" ]; then
+            export ARROW_NIGHTLY=1
+          else
+            export ARROW_NIGHTLY=0
+          fi
+          make javatest
       - name: Build cookbook
-        run: make java
+        run: |
+          if [ "${{ github.base_ref }}" == "main" ]; then
+            export ARROW_NIGHTLY=1
+          else
+            export ARROW_NIGHTLY=0
+          fi
+          make java
 
-  test_java_osx_stable:
-    name: "Test Java Cookbook Stable on MacOS"
+  test_java_osx:
+    name: "Test Java Cookbook on MacOS"
     runs-on: macos-latest
     strategy:
       matrix:
         python-version: [ '3.9' ]
         java-version: [ '11', '17', '18' ]
-        arrow_nightly: ['0']
-    env:
-      ARROW_NIGHTLY: ${{ matrix.arrow_nightly }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
@@ -78,6 +85,18 @@ jobs:
           distribution: 'temurin'
           java-version: ${{ matrix.java-version }}
       - name: Run tests
-        run: make javatest
+        run: |
+          if [ "${{ github.base_ref }}" == "main" ]; then
+            export ARROW_NIGHTLY=1
+          else
+            export ARROW_NIGHTLY=0
+          fi
+          make javatest
       - name: Build cookbook
-        run: make java
+        run: |
+          if [ "${{ github.base_ref }}" == "main" ]; then
+            export ARROW_NIGHTLY=1
+          else
+            export ARROW_NIGHTLY=0
+          fi
+          make java

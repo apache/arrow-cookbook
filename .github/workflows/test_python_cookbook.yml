@@ -15,26 +15,25 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Test Python Cookbook Latest
+name: Test Python Cookbook
 
 on:
   pull_request:
     branches:
        - main
+       - stable
     paths:
      - "python/**"
-     - ".github/workflows/test_python_cookbook_latest.yml"
+     - ".github/workflows/test_python_cookbook.yml"
 
 concurrency:
   group: ${{ github.repository }}-${{ github.ref }}-${{ github.workflow }}
   cancel-in-progress: true
 
 jobs:
-  test_py_latest:
-    name: "Test Python Cookbook on Arrow latest"
+  test_py:
+    name: "Test Python Cookbook on Arrow"
     runs-on: ubuntu-latest
-    env:
-      ARROW_NIGHTLY: 1
     steps:
       - uses: actions/checkout@v3
       - name: Install dependencies
@@ -42,6 +41,18 @@ jobs:
           sudo apt update
           sudo apt install libcurl4-openssl-dev libssl-dev python3-pip
       - name: Run tests
-        run: make pytest
+        run: |
+          if [ "${{ github.base_ref }}" == "main" ]; then
+            export ARROW_NIGHTLY=1
+          else
+            export ARROW_NIGHTLY=0
+          fi
+          make pytest
       - name: Build cookbook
-        run: make py
+        run: |
+          if [ "${{ github.base_ref }}" == "main" ]; then
+            export ARROW_NIGHTLY=1
+          else
+            export ARROW_NIGHTLY=0
+          fi
+          make py

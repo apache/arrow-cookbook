@@ -15,23 +15,24 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Test R Cookbook Stable
+name: Test R Cookbook
 
 on:
   pull_request:
     branches:
+       - main
        - stable
     paths:
      - "r/**"
-     - ".github/workflows/test_r_cookbook_stable.yml"
+     - ".github/workflows/test_r_cookbook.yml"
 
 concurrency:
   group: ${{ github.repository }}-${{ github.ref }}-${{ github.workflow }}
   cancel-in-progress: true
 
 jobs:
-  test_r_stable:
-    name: "Test R Cookbook on Arrow stable"
+  test_r:
+    name: "Test R Cookbook on Arrow"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -46,6 +47,18 @@ jobs:
           sudo apt update
           sudo apt install libcurl4-openssl-dev libssl-dev
       - name: Run tests
-        run: make rtest
+        run: |
+          if [ "${{ github.base_ref }}" == "main" ]; then
+            export ARROW_NIGHTLY=1
+          else
+            export ARROW_NIGHTLY=0
+          fi
+          make rtest
       - name: Build cookbooks
-        run: make r
+        run: |
+          if [ "${{ github.base_ref }}" == "main" ]; then
+            export ARROW_NIGHTLY=1
+          else
+            export ARROW_NIGHTLY=0
+          fi
+          make r 
