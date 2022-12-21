@@ -60,3 +60,21 @@ conduct](https://www.apache.org/foundation/policies/conduct.html).
 
 We use the GitHub UI to merge Pull Requests instead of a script as we do on the
 main Arrow repository. The repo is configured to use `Squash and merge`.
+
+## Deployment and CI
+
+We use GitHub actions for our Continuous Integration tests and to deploy the
+versions of the cookbooks.
+
+A Pull Request with base `main` will run the cookbooks using the nightly version
+of Apache Arrow.
+
+A Pull Request with base `stable` will run the cookbooks using the latest stable
+version released of Apache Arrow.
+
+Commits merged on `main` will deploy the development cookbooks using the latest
+Apache Arrow nightlies version to: https://arrow.apache.org/cookbook/dev
+
+Commits merge on `stable` will deploy the stable version of the cookbooks
+using the latest released version of Apache Arrow to build the cookbooks:
+https://arrow.apache.org/cookbook
