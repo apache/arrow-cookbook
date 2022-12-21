@@ -33,3 +33,8 @@ rmd_files: [
   "python.Rmd",
   "flight.Rmd"
 ]
+
+output:
+  bookdown::gitbook:
+    includes:
+      in_header: ../../matomo.html

@@ -1,0 +1,6 @@
+{% extends "!layout.html" %}
+{# Use Matomo #}
+{% block extrahead %}
+  {{ super() }}
+  {%- include "../../../matomo.html" %}
+{% endblock %}
