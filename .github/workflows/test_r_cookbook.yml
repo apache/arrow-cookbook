@@ -34,6 +34,8 @@ jobs:
   test_r:
     name: "Test R Cookbook on Arrow"
     runs-on: ubuntu-latest
+    env:
+      ARROW_NIGHTLY: ${{ github.base_ref == 'main' && 1 || 0 }}
     steps:
       - uses: actions/checkout@v3
       - name: Setup R
@@ -57,17 +59,7 @@ jobs:
             libssl-dev
       - name: Run tests
         run: |
-          if [ "${{ github.base_ref }}" == "main" ]; then
-            export ARROW_NIGHTLY=1
-          else
-            export ARROW_NIGHTLY=0
-          fi
           make rtest
       - name: Build cookbooks
         run: |
-          if [ "${{ github.base_ref }}" == "main" ]; then
-            export ARROW_NIGHTLY=1
-          else
-            export ARROW_NIGHTLY=0
-          fi
           make r 

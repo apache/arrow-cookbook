@@ -34,6 +34,8 @@ jobs:
   test_java_linux:
     name: "Test Java Cookbook On Linux"
     runs-on: ubuntu-latest
+    env:
+      ARROW_NIGHTLY: ${{ github.base_ref == 'main' && 1 || 0 }}
     strategy:
       matrix:
         python-version: [ '3.9' ]
@@ -53,24 +55,16 @@ jobs:
           sudo apt install libcurl4-openssl-dev libssl-dev
       - name: Run tests
         run: |
-          if [ "${{ github.base_ref }}" == "main" ]; then
-            export ARROW_NIGHTLY=1
-          else
-            export ARROW_NIGHTLY=0
-          fi
           make javatest
       - name: Build cookbook
         run: |
-          if [ "${{ github.base_ref }}" == "main" ]; then
-            export ARROW_NIGHTLY=1
-          else
-            export ARROW_NIGHTLY=0
-          fi
           make java
 
   test_java_osx:
     name: "Test Java Cookbook on MacOS"
     runs-on: macos-latest
+    env:
+      ARROW_NIGHTLY: ${{ github.base_ref == 'main' && 1 || 0 }}
     strategy:
       matrix:
         python-version: [ '3.9' ]
@@ -86,17 +80,7 @@ jobs:
           java-version: ${{ matrix.java-version }}
       - name: Run tests
         run: |
-          if [ "${{ github.base_ref }}" == "main" ]; then
-            export ARROW_NIGHTLY=1
-          else
-            export ARROW_NIGHTLY=0
-          fi
           make javatest
       - name: Build cookbook
         run: |
-          if [ "${{ github.base_ref }}" == "main" ]; then
-            export ARROW_NIGHTLY=1
-          else
-            export ARROW_NIGHTLY=0
-          fi
           make java
