@@ -21,6 +21,7 @@ on:
   pull_request:
     branches:
        - main
+       - stable
     paths:
      - "python/**"
      - ".github/workflows/test_python_cookbook.yml"
@@ -30,9 +31,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test_py_stable:
-    name: "Test Python Cookbook on Arrow stable"
+  test_py:
+    name: "Test Python Cookbook on Arrow"
     runs-on: ubuntu-latest
+    env:
+      ARROW_NIGHTLY: ${{ github.base_ref == 'main' && 1 || 0 }}
     steps:
       - uses: actions/checkout@v3
       - name: Install dependencies
@@ -40,6 +43,8 @@ jobs:
           sudo apt update
           sudo apt install libcurl4-openssl-dev libssl-dev python3-pip
       - name: Run tests
-        run: make pytest
+        run: |
+          make pytest
       - name: Build cookbook
-        run: make py
+        run: |
+          make py

@@ -21,6 +21,7 @@ on:
   pull_request:
     branches:
        - main
+       - stable
     paths:
      - "cpp/**"
      - ".github/workflows/test_cpp_cookbook.yml"
@@ -30,8 +31,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test_cpp_stable:
-    name: "Test C++ Cookbook on Arrow stable"
+  test_cpp:
+    name: "Test C++ Cookbook on Arrow"
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -47,12 +48,21 @@ jobs:
           path: ~/conda_pkgs_dir
           key:
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('cpp/conda-linux-64.lock') }}
-      - name: Setup environment
+      - name: Setup latest environment
+        if: github.event.pull_request.base.ref == 'main'
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          activate-environment: cookbook-cpp-dev
+          environment-file: cpp/dev.yml
+          auto-activate-base: false
+      - name: Setup stable environment
+        if: github.event.pull_request.base.ref == 'stable'
         uses: conda-incubator/setup-miniconda@v2
         with:
           auto-update-conda: true
           activate-environment: cookbook-cpp
-          environment-file: cpp/conda-linux-64.lock
+          environment-file: cpp/environment.yml
           auto-activate-base: false
       - name: Test
         run:
