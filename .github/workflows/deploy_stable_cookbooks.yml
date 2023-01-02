@@ -21,14 +21,6 @@ jobs:
         run: |
           sudo apt update
           sudo apt install libcurl4-openssl-dev \
-            libidn2-dev \
-            libkrb5-dev \
-            libldap-dev \
-            libnghttp2-dev \
-            libpsl-dev \
-            librtmp-dev \
-            libssh-dev \
-            libssh2-1-dev \
             libssl-dev \
             maven \
             openjdk-11-jdk \
