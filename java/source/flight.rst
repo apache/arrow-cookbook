@@ -239,8 +239,7 @@ Flight Client and Server
                System.out.println("C3: Client (Get Metadata): " + flightInfo);
 
                // Get data information
-               try(FlightStream flightStream = flightClient.getStream(new Ticket(
-                       FlightDescriptor.path("profiles").getPath().get(0).getBytes(StandardCharsets.UTF_8)))) {
+               try(FlightStream flightStream = flightClient.getStream(flightInfo.getEndpoints().get(0).getTicket())) {
                    int batch = 0;
                    try (VectorSchemaRoot vectorSchemaRootReceived = flightStream.getRoot()) {
                        System.out.println("C4: Client (Get Stream):");
@@ -451,8 +450,7 @@ And get the data back:
    }
 
    // Client
-   try(FlightStream flightStream = flightClient.getStream(new Ticket(
-           FlightDescriptor.path("profiles").getPath().get(0).getBytes(StandardCharsets.UTF_8)))) {
+   try(FlightStream flightStream = flightClient.getStream(flightInfo.getEndpoints().get(0).getTicket())) {
        int batch = 0;
        try (VectorSchemaRoot vectorSchemaRootReceived = flightStream.getRoot()) {
            System.out.println("C4: Client (Get Stream):");
