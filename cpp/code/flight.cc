@@ -19,7 +19,9 @@
 #include <arrow/filesystem/filesystem.h>
 #include <arrow/filesystem/localfs.h>
 #include <arrow/flight/client.h>
+#include <arrow/flight/client_tracing_middleware.h>
 #include <arrow/flight/server.h>
+#include <arrow/flight/server_tracing_middleware.h>
 #include <arrow/pretty_print.h>
 #include <arrow/result.h>
 #include <arrow/status.h>
@@ -28,6 +30,17 @@
 #include <gmock/gmock.h>
 #include <grpc++/grpc++.h>
 #include <gtest/gtest.h>
+#include <opentelemetry/context/propagation/global_propagator.h>
+#include <opentelemetry/context/propagation/text_map_propagator.h>
+#include <opentelemetry/exporters/ostream/span_exporter_factory.h>
+#include <opentelemetry/sdk/common/global_log_handler.h>
+#include <opentelemetry/sdk/trace/simple_processor_factory.h>
+#include <opentelemetry/sdk/trace/tracer.h>
+#include <opentelemetry/sdk/trace/tracer_provider.h>
+#include <opentelemetry/sdk/trace/tracer_provider_factory.h>
+#include <opentelemetry/trace/propagation/http_trace_context.h>
+#include <opentelemetry/trace/provider.h>
+#include <opentelemetry/trace/scope.h>
 #include <parquet/arrow/reader.h>
 #include <parquet/arrow/writer.h>
 #include <protos/helloworld.grpc.pb.h>
@@ -148,7 +161,7 @@ class ParquetStorageService : public arrow::flight::FlightServerBase {
     endpoint.ticket.ticket = file_info.base_name();
     arrow::flight::Location location;
     ARROW_ASSIGN_OR_RAISE(location,
-        arrow::flight::Location::ForGrpcTcp("localhost", port()));
+                          arrow::flight::Location::ForGrpcTcp("localhost", port()));
     endpoint.locations.push_back(location);
 
     int64_t total_records = reader->parquet_reader()->metadata()->num_rows();
@@ -197,7 +210,7 @@ arrow::Status TestPutGetDelete() {
 
   arrow::flight::Location server_location;
   ARROW_ASSIGN_OR_RAISE(server_location,
-      arrow::flight::Location::ForGrpcTcp("0.0.0.0", 0));
+                        arrow::flight::Location::ForGrpcTcp("0.0.0.0", 0));
 
   arrow::flight::FlightServerOptions options(server_location);
   auto server = std::unique_ptr<arrow::flight::FlightServerBase>(
@@ -209,7 +222,7 @@ arrow::Status TestPutGetDelete() {
   StartRecipe("ParquetStorageService::Connect");
   arrow::flight::Location location;
   ARROW_ASSIGN_OR_RAISE(location,
-      arrow::flight::Location::ForGrpcTcp("localhost", server->port()));
+                        arrow::flight::Location::ForGrpcTcp("localhost", server->port()));
 
   std::unique_ptr<arrow::flight::FlightClient> client;
   ARROW_ASSIGN_OR_RAISE(client, arrow::flight::FlightClient::Connect(location));
@@ -317,7 +330,7 @@ arrow::Status TestClientOptions() {
 
   arrow::flight::Location server_location;
   ARROW_ASSIGN_OR_RAISE(server_location,
-      arrow::flight::Location::ForGrpcTcp("0.0.0.0", 0));
+                        arrow::flight::Location::ForGrpcTcp("0.0.0.0", 0));
 
   arrow::flight::FlightServerOptions options(server_location);
   auto server = std::unique_ptr<arrow::flight::FlightServerBase>(
@@ -331,12 +344,12 @@ arrow::Status TestClientOptions() {
 
   arrow::flight::Location location;
   ARROW_ASSIGN_OR_RAISE(location,
-      arrow::flight::Location::ForGrpcTcp("localhost", server->port()));
+                        arrow::flight::Location::ForGrpcTcp("localhost", server->port()));
 
   std::unique_ptr<arrow::flight::FlightClient> client;
   // pass client_options into Connect()
   ARROW_ASSIGN_OR_RAISE(client,
-      arrow::flight::FlightClient::Connect(location, client_options));
+                        arrow::flight::FlightClient::Connect(location, client_options));
   rout << "Connected to " << location.ToString() << std::endl;
   EndRecipe("TestClientOptions::Connect");
 
@@ -354,7 +367,7 @@ arrow::Status TestCustomGrpcImpl() {
   StartRecipe("CustomGrpcImpl::StartServer");
   arrow::flight::Location server_location;
   ARROW_ASSIGN_OR_RAISE(server_location,
-      arrow::flight::Location::ForGrpcTcp("0.0.0.0", 5000));
+                        arrow::flight::Location::ForGrpcTcp("0.0.0.0", 3000));
 
   arrow::flight::FlightServerOptions options(server_location);
   auto server = std::unique_ptr<arrow::flight::FlightServerBase>(
@@ -375,7 +388,7 @@ arrow::Status TestCustomGrpcImpl() {
 
   StartRecipe("CustomGrpcImpl::CreateClient");
   auto client_channel =
-      grpc::CreateChannel("0.0.0.0:5000", grpc::InsecureChannelCredentials());
+      grpc::CreateChannel("0.0.0.0:3000", grpc::InsecureChannelCredentials());
 
   auto stub = HelloWorldService::NewStub(client_channel);
 
@@ -393,6 +406,82 @@ arrow::Status TestCustomGrpcImpl() {
   return arrow::Status::OK();
 }
 
+arrow::Status TestPropagateSpansImpl() {
+  StartRecipe("PropagateSpansImpl::SetGlobalPropagator");
+  namespace trace_propagation = opentelemetry::context::propagation;
+  trace_propagation::GlobalTextMapPropagator::SetGlobalPropagator(
+      opentelemetry::nostd::shared_ptr<trace_propagation::TextMapPropagator>(
+          new opentelemetry::trace::propagation::HttpTraceContext()));
+  EndRecipe("PropagateSpansImpl::SetGlobalPropagator");
+
+  StartRecipe("PropagateSpansImpl::SetTraceProvider");
+  namespace trace_api = opentelemetry::trace;
+  namespace trace_sdk = opentelemetry::sdk::trace;
+
+  auto trace_out = std::stringstream();
+  auto os_exporter =
+      opentelemetry::exporter::trace::OStreamSpanExporterFactory::Create(trace_out);
+  auto os_processor =
+      trace_sdk::SimpleSpanProcessorFactory::Create(std::move(os_exporter));
+  auto provider = trace_sdk::TracerProviderFactory::Create(std::move(os_processor));
+  trace_api::Provider::SetTracerProvider(std::move(provider));
+  EndRecipe("PropagateSpansImpl::SetTraceProvider");
+
+  // Build flight service as usual
+  auto fs = std::make_shared<arrow::fs::LocalFileSystem>();
+  ARROW_RETURN_NOT_OK(fs->CreateDir("./flight_datasets/"));
+  ARROW_RETURN_NOT_OK(fs->DeleteDirContents("./flight_datasets/"));
+  auto root = std::make_shared<arrow::fs::SubTreeFileSystem>("./flight_datasets/", fs);
+
+  auto server = std::unique_ptr<arrow::flight::FlightServerBase>(
+      new ParquetStorageService(std::move(root)));
+
+  arrow::flight::Location server_location;
+  ARROW_ASSIGN_OR_RAISE(server_location,
+                        arrow::flight::Location::ForGrpcTcp("0.0.0.0", 3000));
+
+  StartRecipe("PropagateSpansImpl::AddServerMiddleware");
+  arrow::flight::FlightServerOptions options(server_location);
+
+  options.middleware.emplace_back("tracing",
+                                  arrow::flight::MakeTracingServerMiddlewareFactory());
+  ARROW_RETURN_NOT_OK(server->Init(options));
+  rout << "Listening on port " << server->port() << std::endl;
+  EndRecipe("PropagateSpansImpl::AddServerMiddleware");
+
+  StartRecipe("PropagateSpansImpl::AddClientMiddleware");
+  auto client_options = arrow::flight::FlightClientOptions::Defaults();
+  client_options.middleware.emplace_back(
+      arrow::flight::MakeTracingClientMiddlewareFactory());
+
+  arrow::flight::Location location;
+  ARROW_ASSIGN_OR_RAISE(location,
+                        arrow::flight::Location::ForGrpcTcp("localhost", server->port()));
+
+  std::unique_ptr<arrow::flight::FlightClient> client;
+  // pass client_options into Connect()
+  ARROW_ASSIGN_OR_RAISE(client,
+                        arrow::flight::FlightClient::Connect(location, client_options));
+  rout << "Connected to " << location.ToString() << std::endl;
+  EndRecipe("PropagateSpansImpl::AddClientMiddleware");
+
+  StartRecipe("PropagateSpansImpl::MakeTracedCall");
+  {
+    auto provider = opentelemetry::trace::Provider::GetTracerProvider();
+    auto tracer = provider->GetTracer("my_client", "1.0.0");
+    auto span = tracer->StartSpan("test");
+    auto scope = tracer->WithActiveSpan(span);
+
+    auto descriptor = arrow::flight::FlightDescriptor::Path({"airquality.parquet"});
+    auto _ = client->GetFlightInfo(descriptor);
+    rout << trace_out.str() << std::endl;
+    // TODO: This isn't outputting for some reason.
+  }
+  EndRecipe("PropagateSpansImpl::MakeTracedCall");
+
+  return arrow::Status::OK();
+}
+
 TEST(ParquetStorageServiceTest, PutGetDelete) { ASSERT_OK(TestPutGetDelete()); }
 TEST(ParquetStorageServiceTest, TestClientOptions) {
   auto status = TestClientOptions();
@@ -400,3 +489,6 @@ TEST(ParquetStorageServiceTest, TestClientOptions) {
   ASSERT_THAT(status.message(), testing::HasSubstr("resource exhausted"));
 }
 TEST(ParquetStorageServiceTest, TestCustomGrpcImpl) { ASSERT_OK(TestCustomGrpcImpl()); }
+TEST(ParquetStorageServiceTest, TestPropagateSpansImpl) {
+  ASSERT_OK(TestPropagateSpansImpl());
+}

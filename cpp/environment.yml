@@ -26,3 +26,5 @@ dependencies:
   - gmock
   - pyarrow==10.0.1
   - clang-tools
+  - cpp-opentelemetry-api
+  - cpp-opentelemetry-sdk

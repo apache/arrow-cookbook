@@ -151,3 +151,52 @@ gRPC definition.
 
 .. recipe:: ../code/flight.cc CustomGrpcImpl::CreateClient
    :dedent: 2
+
+
+Propagating OpenTelemetry Spans
+===============================
+
+
+Configuring the server
+----------------------
+
+In order to get OpenTelemetry spans from clients to the servers, you must add 
+the following to your server:
+
+1. Register the global OpenTelemetry propagator.
+2. Setup OpenTelemetry SDK with a ``TraceProvider`` so that spans have somewhere to go.
+3. Add the Arrow tracing middleware in the server options before initializing.
+
+Setting the global propagator makes sure that OpenTelemetry knows how to extract
+the trace information from the transport headers.
+
+.. recipe:: ../code/flight.cc PropagateSpansImpl::SetGlobalPropagator
+   :dedent: 2
+
+Next, traces need to be collected somewhere, otherwise all OpenTelemetry operations
+will be a no-op. This should be configured to export to your preferred telemetry
+system. For the purposes of the example, we just use the output stream exporter.
+
+.. recipe:: ../code/flight.cc PropagateSpansImpl::SetTraceProvider
+   :dedent: 2
+
+Finally, we can add the middleware to the server option and initialize the server.
+
+.. recipe:: ../code/flight.cc PropagateSpansImpl::AddServerMiddleware
+   :dedent: 2
+
+
+Configuring the client
+----------------------
+
+Clients need to follow the same steps as the server, except they should use the
+client middleware.
+
+.. recipe:: ../code/flight.cc PropagateSpansImpl::AddClientMiddleware
+   :dedent: 2
+
+
+Then we can make the call:
+
+.. recipe:: ../code/flight.cc PropagateSpansImpl::MakeTracedCall
+   :dedent: 2
