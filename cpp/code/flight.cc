@@ -418,7 +418,8 @@ arrow::Status TestPropagateSpansImpl() {
   namespace trace_api = opentelemetry::trace;
   namespace trace_sdk = opentelemetry::sdk::trace;
 
-  auto trace_out = std::stringstream();
+  std::stringstream trace_out;
+
   auto os_exporter =
       opentelemetry::exporter::trace::OStreamSpanExporterFactory::Create(trace_out);
   auto os_processor =
@@ -474,9 +475,8 @@ arrow::Status TestPropagateSpansImpl() {
 
     auto descriptor = arrow::flight::FlightDescriptor::Path({"airquality.parquet"});
     auto _ = client->GetFlightInfo(descriptor);
-    rout << trace_out.str() << std::endl;
-    // TODO: This isn't outputting for some reason.
   }
+  rout << trace_out.str() << std::endl;
   EndRecipe("PropagateSpansImpl::MakeTracedCall");
 
   return arrow::Status::OK();
