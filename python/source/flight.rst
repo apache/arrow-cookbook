@@ -929,7 +929,8 @@ another child span.
 
    with tracer.start_as_current_span("hello_world") as span:
        action = pa.flight.Action("echo", b"Hello, world!")
-       client.do_action(action=action)
+       # Call list() on do_action to drain all results.
+       list(client.do_action(action=action))
     
    print(f"There are {len(exporter.spans)} spans.")
    print(f"The span names are:\n  {list(span.name for span in exporter.spans)}.")
