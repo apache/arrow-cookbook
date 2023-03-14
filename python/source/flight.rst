@@ -796,6 +796,7 @@ First, define the client middleware:
             if exception:
                 self._span.record_exception(exception)
                 self._span.set_status(StatusCode.ERROR)
+                print(exception)
             else:
                 self._span.set_status(StatusCode.OK)
             self._span.end()
@@ -826,6 +827,7 @@ Next, define the server middleware:
             if exception:
                 self._span.record_exception(exception)
                 self._span.set_status(StatusCode.ERROR)
+                print(exception)
             else:
                 self._span.set_status(StatusCode.OK)
             self._span.end()
@@ -845,7 +847,7 @@ a hostname, process id, service version, and operating system.
 
     from opentelemetry import trace
     from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.export import SimpleSpanProcessor, ConsoleSpanExporter
+    from opentelemetry.sdk.trace.export import SimpleSpanProcessor
     from opentelemetry.sdk.resources import SERVICE_NAME, Resource
     from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 
