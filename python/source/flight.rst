@@ -758,8 +758,8 @@ Propagating OpenTelemetry Traces
 ================================
 
 OpenTelemetry_ traces can be propagated between Flight clients and servers using
-a middleware. The client middleware needs to inject the trace information into
-the call headers. The server middleware needs to extract the trace information
+a middleware. The client middleware needs to inject the trace context into
+the call headers. The server middleware needs to extract the trace context
 from the headers and pass the context into a new span. Optionally, the client
 middleware can also create a new span to time the client-side call.
 
@@ -837,7 +837,7 @@ to record spans and export them somewhere. For the sake of the example, we'll
 collect the spans into a Python list, but this is normally where you would set
 them up to be exported to some service like `Jaeger`_.
 
-As part of this, you also define the resource: where the spans are running.
+As part of this, you will need to define the resource where spans are running.
 At a minimum this is the service name, but it could include other information like
 a hostname, process id, service version, and operating system.
 
@@ -904,10 +904,10 @@ We can use the middleware now in our EchoServer from earlier.
     t = threading.Thread(target=server.serve)
     t.start()
 
-Finally, we can use the middle on the client. When we make a call with our 
-Flight client within an OpenTelemetry span, our client middleware will create
-a child span for the client-side flight call and then propagate the span
-context to the server. Our server middleware will pick up that context and create
+Finally, we can use the middleware on the client. When we make a call with our 
+client within an OpenTelemetry span, our client middleware will create
+a child span for the client-side Flight call and then propagate the span
+context to the server. Our server middleware will pick up that trace context and create
 another child span.
 
 .. testcode::
