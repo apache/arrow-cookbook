@@ -757,11 +757,17 @@ Running the client script, you should see the server printing out information ab
 Propagating OpenTelemetry Traces
 ================================
 
-OpenTelemetry_ traces can be propagated between Flight clients and servers using
-a middleware. The client middleware needs to inject the trace context into
-the call headers. The server middleware needs to extract the trace context
-from the headers and pass the context into a new span. Optionally, the client
-middleware can also create a new span to time the client-side call.
+Distributed tracing with OpenTelemetry_ allows collecting call-level performance
+measurements across a Flight service. In order to correlate spans across a Flight
+client and server, trace context must be passed between the two. This can be passed
+manually through headers in :class:`pyarrow.flight.FlightCallOptions`, or can 
+be automatically propagated using middleware.
+
+This example shows how to accomplish trace propagation through middleware.
+The client middleware needs to inject the trace context into the call headers.
+The server middleware needs to extract the trace context from the headers and
+pass the context into a new span. Optionally, the client middleware can also
+create a new span to time the client-side call.
 
 .. _OpenTelemetry: https://opentelemetry.io/docs/instrumentation/python/getting-started/
 
