@@ -771,7 +771,7 @@ create a new span to time the client-side call.
 
 .. _OpenTelemetry: https://opentelemetry.io/docs/instrumentation/python/getting-started/
 
-First, define the client middleware:
+**Step 1: define the client middleware:**
 
 .. testcode::
 
@@ -807,7 +807,7 @@ First, define the client middleware:
                 self._span.set_status(StatusCode.OK)
             self._span.end()
 
-Next, define the server middleware:
+**Step 2: define the server middleware:**
 
 .. testcode::
 
@@ -838,16 +838,20 @@ Next, define the server middleware:
                 self._span.set_status(StatusCode.OK)
             self._span.end()
 
+**Step 3: configure the trace exporter, processor, and provider:**
+
 Both the server and client will need to be configured with the OpenTelemetry SDK
 to record spans and export them somewhere. For the sake of the example, we'll 
 collect the spans into a Python list, but this is normally where you would set
-them up to be exported to some service like `Jaeger`_.
+them up to be exported to some service like `Jaeger`_. See other examples of 
+exporters at `OpenTelemetry Exporters`_.
 
 As part of this, you will need to define the resource where spans are running.
 At a minimum this is the service name, but it could include other information like
 a hostname, process id, service version, and operating system.
 
 .. _Jaeger: https://www.jaegertracing.io/
+.. _`OpenTelemetry Exporters`: https://opentelemetry.io/docs/instrumentation/python/exporters/
 
 .. testcode::
 
@@ -878,6 +882,8 @@ a hostname, process id, service version, and operating system.
         provider.add_span_processor(processor)
         trace.set_tracer_provider(provider)
         return exporter
+
+**Step 4: add the middleware to the server:**
 
 We can use the middleware now in our EchoServer from earlier. 
 
@@ -910,16 +916,24 @@ We can use the middleware now in our EchoServer from earlier.
     t = threading.Thread(target=server.serve)
     t.start()
 
-Finally, we can use the middleware on the client. When we make a call with our 
-client within an OpenTelemetry span, our client middleware will create
-a child span for the client-side Flight call and then propagate the span
-context to the server. Our server middleware will pick up that trace context and create
-another child span.
+**Step 5: add the middleware to the client:**
 
 .. testcode::
 
-   import pyarrow as pa
-   import pyarrow.flight
+   client = pa.flight.connect(
+       "grpc://0.0.0.0:8816",
+       middleware=[ClientTracingMiddlewareFactory()],
+   )
+
+**Step 6: use the client within active spans:**
+
+When we make a call with our client within an OpenTelemetry span, our client 
+middleware will create a child span for the client-side Flight call and then 
+propagate the span context to the server. Our server middleware will pick up 
+that trace context and create another child span.
+
+.. testcode::
+
    from opentelemetry import trace
 
    # Client would normally also need to configure tracing, but for this example
@@ -927,11 +941,6 @@ another child span.
    # exporter = configure_tracing()
 
    tracer = trace.get_tracer(__name__)
-
-   client = pa.flight.connect(
-       "grpc://0.0.0.0:8816",
-       middleware=[ClientTracingMiddlewareFactory()],
-   )
 
    with tracer.start_as_current_span("hello_world") as span:
        action = pa.flight.Action("echo", b"Hello, world!")
