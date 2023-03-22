@@ -17,8 +17,9 @@
 import os
 import pathlib
 import subprocess
+from typing import Any, Dict
 
-from sphinx.ext.doctest import (Any, DocTestBuilder, TestcodeDirective,
+from sphinx.ext.doctest import (DocTestBuilder, TestcodeDirective,
                                 TestoutputDirective, doctest, sphinx)
 from sphinx.locale import __
 
@@ -99,7 +100,7 @@ class JavaDocTestBuilder(DocTestBuilder):
         output = (4*' ').join(output.split('\t'))
         return output
 
-def setup(app):
+def setup(app) -> Dict[str, Any]:
     app.add_directive("testcode", JavaTestcodeDirective)
     app.add_directive("testoutput", TestoutputDirective)
     app.add_builder(JavaDocTestBuilder)
