@@ -19,9 +19,9 @@ cmake_minimum_required(VERSION 3.19)
 project(arrow-cookbook)
 
 set(CMAKE_CXX_STANDARD 17)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
-endif()
+# if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+#     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
+# endif()
 
 # Add Arrow and other required packages
 find_package(Arrow REQUIRED)
@@ -32,9 +32,10 @@ endif()
 find_package(ArrowDataset REQUIRED)
 find_package(ArrowFlight REQUIRED)
 find_package(Parquet REQUIRED)
+find_package(opentelemetry-cpp REQUIRED)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(CMAKE_CXX_CLANG_TIDY "clang-tidy")
+    # set(CMAKE_CXX_CLANG_TIDY "clang-tidy")
 endif()
 
 # Create test targets
@@ -89,6 +90,7 @@ target_link_libraries(flight
     protobuf::libprotobuf
     gRPC::grpc
     gRPC::grpc++
+    opentelemetry-cpp::ostream_span_exporter
 )
 target_include_directories(flight PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 get_target_property(grpc_cpp_plugin_location gRPC::grpc_cpp_plugin LOCATION)
