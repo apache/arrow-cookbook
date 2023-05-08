@@ -359,11 +359,11 @@ on the column ``values``. Note that, an aggregation operation pairs with a colum
 .. testoutput::
 
     pyarrow.Table
-    values_sum: int64
     keys: string
+    values_sum: int64
     ----
-    values_sum: [[31,7,15,1,4]]
     keys: [["a","b","c","d","e"]]
+    values_sum: [[31,7,15,1,4]]
 
 If you observe carefully, the new table returns the aggregated column
 as ``values_sum`` which is formed by the column name and aggregation operation name. 
@@ -412,11 +412,11 @@ null values.
 .. testoutput::
 
     pyarrow.Table
-    values_count: int64
     keys: string
+    values_count: int64
     ----
-    values_count: [[1,3,1,2,1]]
     keys: [["a","b","c","d","e"]]
+    values_count: [[1,3,1,2,1]]
 
 
 Sort a Table
