@@ -74,7 +74,7 @@ test_that("asdf_table chunk works as expected", {
 
 ### Discussion
 
-You can use either `as.data.frame()` or `dplyr::collect()` to do this.
+You can `dplyr::collect()` to return a tibble or `as.data.frame()` to return a `data.frame`.
 
 ## Write a Parquet file
 
@@ -110,14 +110,14 @@ test_that("read_parquet works as expected", {
 })
 ```
 
-As the argument `as_data_frame` was left set to its default value of `TRUE`, the file was read in as a `data.frame` object.
+As the argument `as_data_frame` was left set to its default value of `TRUE`, the file was read in as a tibble.
 
 ```{r, read_parquet_2}
 class(parquet_tbl)
 ```
 ```{r, test_read_parquet_2, opts.label = "test"}
 test_that("read_parquet_2 works as expected", {
-  expect_s3_class(parquet_tbl, "tibble")
+  expect_s3_class(parquet_tbl, "tbl_df")
 })
 ```
 
@@ -291,7 +291,7 @@ my_csv <- read_csv_arrow("cars.csv", as_data_frame = FALSE)
 
 ```{r, test_read_csv_arrow, opts.label = "test"}
 test_that("read_csv_arrow chunk works as expected", {
-  expect_equivalent(as.data.frame(my_csv), cars)
+  expect_equal(as.data.frame(my_csv), cars)
 })
 unlink("cars.csv")
 ```
