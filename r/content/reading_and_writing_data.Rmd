@@ -117,7 +117,7 @@ class(parquet_tbl)
 ```
 ```{r, test_read_parquet_2, opts.label = "test"}
 test_that("read_parquet_2 works as expected", {
-  expect_s3_class(parquet_tbl, "data.frame")
+  expect_s3_class(parquet_tbl, "tibble")
 })
 ```
 
@@ -172,7 +172,7 @@ time_only
 ```
 ```{r, test_read_parquet_filter, opts.label = "test"}
 test_that("read_parquet_filter works as expected", {
-  expect_identical(time_only, data.frame(time = c(43, 44, 40)))
+  expect_identical(time_only, tibble::tibble(time = c(43, 44, 40)))
 })
 ```
 
@@ -258,7 +258,7 @@ my_ipc_stream <- arrow::read_ipc_stream("my_table.arrows")
 test_that("read_ipc_stream chunk works as expected", {
   expect_equal(
     my_ipc_stream,
-    data.frame(group = c("A", "B", "C"), score = c(99, 97, 99))
+    tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99))
   )
 })
 unlink("my_table.arrows")
