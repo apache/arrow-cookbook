@@ -50,9 +50,11 @@ If you have any Arrow feature requests to make or bugs to report, please
 
 Crane N, Hazlitt S, et al (2023). Apache Arrow R Cookbook. https://arrow.apache.org/cookbook/r/
 
+```
 @Manual{,
   title = {Apache Arrow R Cookbook},
   author = {Nicola Crane and Stephanie Hazlitt and Apache Arrow},
   year = {2023},
   note = {https://arrow.apache.org/cookbook/r/, https://github.com/apache/arrow-cookbook/},
 }
+```
