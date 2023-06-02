@@ -39,6 +39,7 @@ This cookbook is tested with Apache Arrow |version|.
    io
    flight
    dataset
+   substrait
    data
    avro
    jdbc
