@@ -21,25 +21,23 @@
 Substrait
 =========
 
-Arrow Java is using `Substrait`_ to leverage their integrations using standard
-specification to share messages between different layer y/o languages.
+Arrow can use `Substrait`_ to integrate with other languages.
 
 .. contents::
 
-Query Datasets
-==============
+Querying Datasets
+=================
 
-Arrow :doc:`Java Dataset <dataset>` offer capabilities to read tabular data.
-For other side `Substrait Java`_ offer serialization Plan for Relational Algebra.
-Arrow Java Substrait is combined both of them to enable Querying data using
-`Acero`_ as a backend.
+The Substrait support in Arrow combines :doc:`Dataset <dataset>` and
+`substrait-java`_ to query datasets using `Acero`_ as a backend.
 
-Current `Acero`_ supported operations are:
-- Read
-- Filter
-- Project
-- Join
-- Aggregate
+Acero currently supports:
+
+- Reading Arrow, CSV, ORC, and Parquet files
+- Filters
+- Projections
+- Joins
+- Aggregates
 
 Here is an example of a Java program that queries a Parquet file:
 
@@ -85,7 +83,6 @@ Here is an example of a Java program that queries a Parquet file:
            Scanner scanner = dataset.newScan(options);
            ArrowReader reader = scanner.scanBatches()
        ) {
-           // map table to reader
            Map<String, ArrowReader> mapTableToArrowReader = new HashMap<>();
            mapTableToArrowReader.put("NATION", reader);
            // get binary plan
@@ -113,8 +110,8 @@ Here is an example of a Java program that queries a Parquet file:
     N_NATIONKEY    N_NAME    N_REGIONKEY    N_COMMENT
     17    PERU    1    platelets. blithely pending dependencies use fluffily across the even pinto beans. carefully silent accoun
 
-It is also possible to query multiple datasets and joining then based on some criteria.
-Let's query for example the following datasets: TPCH Nation and TPCH Customer
+It is also possible to query multiple datasets and join them based on some criteria.
+For example, we can join the nation and customer tables from the TPC-H benchmark:
 
 .. testcode::
 
