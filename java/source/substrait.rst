@@ -154,22 +154,20 @@ For example, we can join the nation and customer tables from the TPC-H benchmark
     static void queryTwoDatasetsThruSubstraitPlanDefinition() {
         String uriNation = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/tpch/nation.parquet";
         String uriCustomer = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/tpch/customer.parquet";
-        ScanOptions optionsNations = new ScanOptions(/*batchSize*/ 32768);
-        ScanOptions optionsCustomer = new ScanOptions(/*batchSize*/ 32768);
+        ScanOptions options = new ScanOptions(/*batchSize*/ 32768);
         try (
             BufferAllocator allocator = new RootAllocator();
             DatasetFactory datasetFactory = new FileSystemDatasetFactory(
                 allocator, NativeMemoryPool.getDefault(),
                 FileFormat.PARQUET, uriNation);
             Dataset dataset = datasetFactory.finish();
-            Scanner scanner = dataset.newScan(optionsNations);
+            Scanner scanner = dataset.newScan(options);
             ArrowReader readerNation = scanner.scanBatches();
             DatasetFactory datasetFactoryCustomer = new FileSystemDatasetFactory(
                 allocator, NativeMemoryPool.getDefault(),
                 FileFormat.PARQUET, uriCustomer);
             Dataset datasetCustomer = datasetFactoryCustomer.finish();
-            Scanner scannerCustomer = datasetCustomer.newScan(
-                optionsCustomer);
+            Scanner scannerCustomer = datasetCustomer.newScan(options);
             ArrowReader readerCustomer = scannerCustomer.scanBatches()
         ) {
             // map table to reader
@@ -204,5 +202,5 @@ For example, we can join the nation and customer tables from the TPC-H benchmark
     PERU    573
 
 .. _`Substrait`: https://substrait.io/
-.. _`Substrait Java`: https://github.com/substrait-io/substrait-java
+.. _`substrait-java`: https://github.com/substrait-io/substrait-java
 .. _`Acero`: https://arrow.apache.org/docs/cpp/streaming_execution.html
