@@ -317,24 +317,11 @@ the development version of the Arrow R package had been associated with their op
 classes.  However, as the Arrow C++ library's functionality extends, compute 
 functions may be added which do not yet have an R binding.  If you find a C++ 
 compute function which you wish to use from the R package, please [open an issue
-on the project JIRA](https://issues.apache.org/jira/projects/ARROW/issues).
+on the Github project](https://github.com/apache/arrow/issues).
 
 ## Compute Window Aggregates
 
-Arrow does not support window functions, which can be problematic when applying an aggregate like `mean()` on a grouped table or within a rowwise operation like `filter()`:
-
-```{r, arrow_window_aggregate}
-arrow_table(starwars) %>%
-  select(1:4) %>%
-  filter(!is.na(hair_color)) %>%
-  group_by(hair_color) %>%
-  filter(height < mean(height, na.rm = TRUE))
-```
-
-Arrow pulls the data into R, but for large tables, this sacrifices performance. You can perform these window aggregate operations on Arrow tables by:
-
-- Computing the aggregation separately, and join the result
-- Passing the data to DuckDB
+You want to apply an aggregation (e.g. `mean()`) on a grouped table or within a rowwise operation like `filter()`:
 
 ### Solution
 
@@ -364,5 +351,20 @@ arrow_table(starwars) %>%
 ```
 
 ### Discusson
+
+Arrow does not support window functions, and pulls the data into R. For large tables, this sacrifices performance. 
+
+```{r, arrow_window_aggregate}
+arrow_table(starwars) %>%
+  select(1:4) %>%
+  filter(!is.na(hair_color)) %>%
+  group_by(hair_color) %>%
+  filter(height < mean(height, na.rm = TRUE))
+```
+
+You can perform these window aggregate operations on Arrow tables by:
+
+- Computing the aggregation separately, and joining the result
+- Passing the data to DuckDB, and use the DuckDB query engine to perform the operations
 
 Arrow supports zero-copy integration with DuckDB, and DuckDB can query Arrow datasets directly and stream query results back to Arrow. This integreation uses zero-copy streaming of data between DuckDB and Arrow and vice versa so that you can compose a query using both together, all the while not paying any cost to (re)serialize the data when you pass it back and forth. This is especially useful in cases where something is supported in one of Arrow or DuckDB query engines but not the other. You can find more information about this integration on the [Arrow blog post](https://arrow.apache.org/blog/2021/12/03/arrow-duckdb/).
