@@ -168,7 +168,7 @@ air_data
 ```{r, test_open_dataset, opts.label = "test"}
 test_that("open_dataset chunk works as expected", {
   expect_equal(nrow(air_data), 153)
-  expect_equal(arrange(collect(air_data), Month, Day), arrange(airquality, Month, Day), ignore_attr = TRUE)
+  expect_equal(tibble::as_tibble(arrange(collect(air_data), Month, Day)), arrange(tibble::as_tibble(airquality), Month, Day))
 })
 ```
 
