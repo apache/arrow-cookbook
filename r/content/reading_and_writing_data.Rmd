@@ -84,7 +84,7 @@ You want to write a single Parquet file to disk.
 
 ```{r, write_parquet}
 # Create table
-my_table <- arrow_table(data.frame(group = c("A", "B", "C"), score = c(99, 97, 99)))
+my_table <- arrow_table(tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99)))
 # Write to Parquet
 write_parquet(my_table, "my_table.parquet")
 ```
