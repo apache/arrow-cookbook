@@ -339,15 +339,64 @@ arrow_table(starwars) %>%
   collect()
 ```
 
+```{r, test_arrow_window_aggregate_joins, opts.label = "test"}
+test_that("arrow_window_aggregate_joins", {
+    expect_equal(
+      starwars %>%
+        select(name, height, hair_color) %>%
+        filter(!is.na(hair_color)) %>%
+        group_by(hair_color) %>%
+        filter(height < mean(height, na.rm = TRUE)) %>%
+        ungroup(),
+      arrow_table(starwars) %>%
+        select(name, height, hair_color) %>%
+        filter(!is.na(hair_color)) %>%
+        left_join(
+          arrow_table(starwars) %>%
+            group_by(hair_color) %>%
+            summarize(mean_height = mean(height, na.rm = TRUE))
+        ) %>%
+        filter(height < mean_height) %>%
+        select(!mean_height) %>%
+        collect()
+    )
+})
+```
+
+Or using `to_duckdb()`
 ```{r, arrow_window_aggregate_duckdb}
 arrow_table(starwars) %>%
   select(1:4) %>%
   filter(!is.na(hair_color)) %>%
-  to_duckdb() %>%
+  to_duckdb() %>% 
   group_by(hair_color) %>%
   filter(height < mean(height, na.rm = TRUE)) %>%
   to_arrow() %>%
   collect()
+```
+
+```{r, test_arrow_window_aggregate_duckdb, opts.label = "test"}
+test_that("arrow_window_aggregate_duckdb", {
+    expect_equal(
+      starwars %>%
+        select(name, height, hair_color) %>%
+        filter(!is.na(hair_color)) %>%
+        group_by(hair_color) %>%
+        filter(height < mean(height, na.rm = TRUE)) %>%
+        ungroup() %>%
+        arrange(name),
+      arrow_table(starwars) %>%
+        select(name, height, hair_color) %>%
+        filter(!is.na(hair_color)) %>%
+        to_duckdb() %>%
+        group_by(hair_color) %>%
+        filter(height < mean(height, na.rm = TRUE)) %>%
+        to_arrow() %>%
+        ungroup() %>%
+        arrange(name) %>%
+        collect()
+    )
+})
 ```
 
 ### Discusson
