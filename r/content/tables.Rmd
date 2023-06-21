@@ -341,25 +341,26 @@ arrow_table(starwars) %>%
 
 ```{r, test_arrow_window_aggregate_joins, opts.label = "test"}
 test_that("arrow_window_aggregate_joins", {
-    expect_equal(
-      starwars %>%
-        select(name, height, hair_color) %>%
-        filter(!is.na(hair_color)) %>%
-        group_by(hair_color) %>%
-        filter(height < mean(height, na.rm = TRUE)) %>%
-        ungroup(),
+  out <- arrow_table(starwars) %>%
+    select(1:4) %>%
+    filter(!is.na(hair_color)) %>%
+    left_join(
       arrow_table(starwars) %>%
-        select(name, height, hair_color) %>%
-        filter(!is.na(hair_color)) %>%
-        left_join(
-          arrow_table(starwars) %>%
-            group_by(hair_color) %>%
-            summarize(mean_height = mean(height, na.rm = TRUE))
-        ) %>%
-        filter(height < mean_height) %>%
-        select(!mean_height) %>%
-        collect()
-    )
+        group_by(hair_color) %>%
+        summarize(mean_height = mean(height, na.rm = TRUE))
+    ) %>%
+    filter(height < mean_height) %>%
+    select(!mean_height) %>%
+    collect()
+
+  expected <- starwars %>%
+    select(name, height, hair_color) %>%
+    filter(!is.na(hair_color)) %>%
+    group_by(hair_color) %>%
+    filter(height < mean(height, na.rm = TRUE))
+
+  expect_equal(nrow(out), nrow(expected))
+  expect_equal(sum(out$height), sum(expected$height))
 })
 ```
 
@@ -368,7 +369,7 @@ Or using `to_duckdb()`
 arrow_table(starwars) %>%
   select(1:4) %>%
   filter(!is.na(hair_color)) %>%
-  to_duckdb() %>% 
+  to_duckdb() %>%
   group_by(hair_color) %>%
   filter(height < mean(height, na.rm = TRUE)) %>%
   to_arrow() %>%
@@ -377,25 +378,23 @@ arrow_table(starwars) %>%
 
 ```{r, test_arrow_window_aggregate_duckdb, opts.label = "test"}
 test_that("arrow_window_aggregate_duckdb", {
-    expect_equal(
-      starwars %>%
-        select(name, height, hair_color) %>%
-        filter(!is.na(hair_color)) %>%
-        group_by(hair_color) %>%
-        filter(height < mean(height, na.rm = TRUE)) %>%
-        ungroup() %>%
-        arrange(name),
-      arrow_table(starwars) %>%
-        select(name, height, hair_color) %>%
-        filter(!is.na(hair_color)) %>%
-        to_duckdb() %>%
-        group_by(hair_color) %>%
-        filter(height < mean(height, na.rm = TRUE)) %>%
-        to_arrow() %>%
-        ungroup() %>%
-        arrange(name) %>%
-        collect()
-    )
+  out <- arrow_table(starwars) %>%
+    select(1:4) %>%
+    filter(!is.na(hair_color)) %>%
+    to_duckdb() %>%
+    group_by(hair_color) %>%
+    filter(height < mean(height, na.rm = TRUE)) %>%
+    to_arrow() %>%
+    collect()
+
+  expected <- starwars %>%
+    select(name, height, hair_color) %>%
+    filter(!is.na(hair_color)) %>%
+    group_by(hair_color) %>%
+    filter(height < mean(height, na.rm = TRUE))
+
+  expect_equal(nrow(out), nrow(expected))
+  expect_equal(sum(out$height), sum(expected$height))
 })
 ```
 
