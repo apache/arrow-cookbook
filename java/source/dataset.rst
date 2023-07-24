@@ -534,3 +534,9 @@ Let's read a CSV file.
    Total batch size: 3
 
 .. _Arrow Java Dataset: https://arrow.apache.org/docs/dev/java/dataset.html
+
+
+Write Parquet Files
+===================
+
+Go to :doc:`JDBC Adapter - Write ResultSet to Parquet File <jdbc>` for an example.
