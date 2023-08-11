@@ -63,7 +63,7 @@ Here is an example of a Java program that queries a Parquet file:
     import java.util.HashMap;
     import java.util.Map;
 
-    static Plan queryTableNation() throws SqlParseException {
+    Plan queryTableNation() throws SqlParseException {
        String sql = "SELECT * FROM NATION WHERE N_NATIONKEY = 17";
        String nation = "CREATE TABLE NATION (N_NATIONKEY BIGINT NOT NULL, N_NAME CHAR(25), " +
                "N_REGIONKEY BIGINT NOT NULL, N_COMMENT VARCHAR(152))";
@@ -72,7 +72,7 @@ Here is an example of a Java program that queries a Parquet file:
        return plan;
     }
 
-    static void queryDatasetThruSubstraitPlanDefinition() {
+    void queryDatasetThruSubstraitPlanDefinition() {
        String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/tpch/nation.parquet";
        ScanOptions options = new ScanOptions(/*batchSize*/ 32768);
        try (
@@ -135,7 +135,7 @@ For example, we can join the nation and customer tables from the TPC-H benchmark
     import java.util.HashMap;
     import java.util.Map;
 
-    static Plan queryTableNationJoinCustomer() throws SqlParseException {
+    Plan queryTableNationJoinCustomer() throws SqlParseException {
         String sql = "SELECT n.n_name, COUNT(*) AS NUMBER_CUSTOMER FROM NATION n JOIN CUSTOMER c " +
             "ON n.n_nationkey = c.c_nationkey WHERE n.n_nationkey = 17 " +
             "GROUP BY n.n_name";
@@ -151,7 +151,7 @@ For example, we can join the nation and customer tables from the TPC-H benchmark
         return plan;
     }
 
-    static void queryTwoDatasetsThruSubstraitPlanDefinition() {
+    void queryTwoDatasetsThruSubstraitPlanDefinition() {
         String uriNation = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/tpch/nation.parquet";
         String uriCustomer = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/tpch/customer.parquet";
         ScanOptions options = new ScanOptions(/*batchSize*/ 32768);

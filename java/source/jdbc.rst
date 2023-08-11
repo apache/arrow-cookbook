@@ -311,8 +311,7 @@ values to the given scale.
 Write ResultSet to Parquet File
 ===============================
 
-In this example, we have the JDBC adapter result and trying to write them
-into a parquet file.
+As an example, we are trying to write a parquet file from the JDBC adapter results.
 
 .. testcode::
 
@@ -345,42 +344,48 @@ into a parquet file.
     import org.apache.arrow.dataset.source.DatasetFactory;
     import org.apache.arrow.memory.BufferAllocator;
     import org.apache.arrow.memory.RootAllocator;
-    import org.apache.arrow.vector.VectorLoader;
     import org.apache.arrow.vector.VectorSchemaRoot;
-    import org.apache.arrow.vector.VectorUnloader;
     import org.apache.arrow.vector.ipc.ArrowReader;
-    import org.apache.arrow.vector.ipc.message.ArrowRecordBatch;
     import org.apache.arrow.vector.types.pojo.Schema;
     import org.apache.ibatis.jdbc.ScriptRunner;
+    import org.slf4j.LoggerFactory;
+
+    import ch.qos.logback.classic.Level;
+    import ch.qos.logback.classic.Logger;
 
     class JDBCReader extends ArrowReader {
       private final ArrowVectorIterator iter;
-      private final Schema schema;
+      private final JdbcToArrowConfig config;
+      private VectorSchemaRoot root;
+      private boolean firstRoot = true;
 
-      public JDBCReader(BufferAllocator allocator, ArrowVectorIterator iter, Schema schema) {
+      public JDBCReader(BufferAllocator allocator, ArrowVectorIterator iter, JdbcToArrowConfig config) {
         super(allocator);
         this.iter = iter;
-        this.schema = schema;
+        this.config = config;
       }
 
       @Override
       public boolean loadNextBatch() throws IOException {
-        while (iter.hasNext()) {
-          try (VectorSchemaRoot rootTmp = iter.next()) {
-            if (rootTmp.getRowCount() > 0) {
-              VectorUnloader unloader = new VectorUnloader(rootTmp);
-              VectorLoader loader = new VectorLoader(super.getVectorSchemaRoot());
-              try (ArrowRecordBatch recordBatch = unloader.getRecordBatch()) {
-                loader.load(recordBatch);
-              }
-              return true;
+        if (firstRoot) {
+          firstRoot = false;
+          return true;
+        }
+        else {
+          if (iter.hasNext()) {
+            if (root != null && !config.isReuseVectorSchemaRoot()) {
+              root.close();
             }
             else {
-              return false;
+              root.allocateNew();
             }
+            root = iter.next();
+            return root.getRowCount() != 0;
+          }
+          else {
+            return false;
           }
         }
-        return false;
       }
 
       @Override
@@ -390,15 +395,32 @@ into a parquet file.
 
       @Override
       protected void closeReadSource() throws IOException {
+        if (root != null && !config.isReuseVectorSchemaRoot()) {
+          root.close();
+        }
       }
 
       @Override
-      protected Schema readSchema() {
-        return schema;
+      protected Schema readSchema() throws IOException {
+        return null;
+      }
+
+      @Override
+      public VectorSchemaRoot getVectorSchemaRoot() throws IOException {
+        if (root == null) {
+          root = iter.next();
+        }
+        return root;
       }
     }
-    final BufferAllocator allocator = new RootAllocator();
+
+    ((Logger) LoggerFactory.getLogger("org.apache.arrow")).setLevel(Level.TRACE);
     try (
+        final BufferAllocator allocator = new RootAllocator();
+        final BufferAllocator allocatorJDBC = allocator.newChildAllocator("allocatorJDBC", 0, Long.MAX_VALUE);
+        final BufferAllocator allocatorReader = allocator.newChildAllocator("allocatorReader", 0, Long.MAX_VALUE);
+        final BufferAllocator allocatorParquetWrite = allocator.newChildAllocator("allocatorParquetWrite", 0,
+            Long.MAX_VALUE);
         final Connection connection = DriverManager.getConnection(
             "jdbc:h2:mem:h2-jdbc-adapter")
     ) {
@@ -408,11 +430,12 @@ into a parquet file.
           new FileReader("./thirdpartydeps/jdbc/h2-ddl.sql")));
       runnerDDLDML.runScript(new BufferedReader(
           new FileReader("./thirdpartydeps/jdbc/h2-dml.sql")));
-      JdbcToArrowConfig config = new JdbcToArrowConfigBuilder(allocator,
+      JdbcToArrowConfig config = new JdbcToArrowConfigBuilder(allocatorJDBC,
           JdbcToArrowUtils.getUtcCalendar())
           .setTargetBatchSize(2)
+          .setReuseVectorSchemaRoot(true)
           .setArraySubTypeByColumnNameMap(
-              new HashMap() {{
+              new HashMap<>() {{
                 put("LIST_FIELD19",
                     new JdbcFieldInfo(Types.INTEGER));
               }}
@@ -421,18 +444,16 @@ into a parquet file.
       String query = "SELECT int_field1, bool_field2, bigint_field5, char_field16, list_field19 FROM TABLE1";
       try (
           final ResultSet resultSetConvertToParquet = connection.createStatement().executeQuery(query);
-          final ResultSet resultSetForSchema = connection.createStatement().executeQuery(query);
           final ArrowVectorIterator arrowVectorIterator = JdbcToArrow.sqlToArrowVectorIterator(
               resultSetConvertToParquet, config)
       ) {
-        Schema schema = JdbcToArrow.sqlToArrowVectorIterator(resultSetForSchema, config).next().getSchema();
         Path uri = Files.createTempDirectory("parquet_");
         try (
             // get jdbc row data as a arrow reader
-            final JDBCReader arrowReader = new JDBCReader(allocator, arrowVectorIterator, schema)
+            final JDBCReader arrowReader = new JDBCReader(allocatorReader, arrowVectorIterator, config)
         ) {
           // write arrow reader to parqueet file
-          DatasetFileWriter.write(allocator, arrowReader, FileFormat.PARQUET, uri.toUri().toString());
+          DatasetFileWriter.write(allocatorParquetWrite, arrowReader, FileFormat.PARQUET, uri.toUri().toString());
         }
         // validate data of parquet file created
         ScanOptions options = new ScanOptions(/*batchSize*/ 32768);
@@ -445,6 +466,7 @@ into a parquet file.
         ) {
           while (reader.loadNextBatch()) {
             System.out.print(reader.getVectorSchemaRoot().contentToTSVString());
+            System.out.println("RowCount: " + reader.getVectorSchemaRoot().getRowCount());
           }
         } catch (Exception e) {
           e.printStackTrace();
@@ -469,5 +491,7 @@ into a parquet file.
    INT_FIELD1    BOOL_FIELD2    BIGINT_FIELD5    CHAR_FIELD16    LIST_FIELD19
    101    true    1000000000300    some char text      [1,2,3]
    102    true    100000000030    some char text      [1,2]
+   RowCount: 2
    INT_FIELD1    BOOL_FIELD2    BIGINT_FIELD5    CHAR_FIELD16    LIST_FIELD19
    103    true    10000000003    some char text      [1]
+   RowCount: 1

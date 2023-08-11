@@ -579,3 +579,95 @@ Reading and writing dictionary-encoded data requires separately tracking the dic
    Dictionary-encoded data recovered: [0, 3, 4, 5, 7]
    Dictionary recovered: Dictionary DictionaryEncoding[id=666,ordered=false,indexType=Int(8, true)] [Andorra, Cuba, Grecia, Guinea, Islandia, Malta, Tailandia, Uganda, Yemen, Zambia]
    Decoded data: [Andorra, Guinea, Islandia, Malta, Uganda]
+
+Customize Logic to Read Dataset
+===============================
+
+If you need to implement a custom dataset reader, consider extending `ArrowReader`_ class.
+
+The ArrowReader class can be extended as follows:
+
+1. Write the logic to read schema on ``readSchema()``.
+2. If you do not want to define a logic for reading the schema, then you will also need to override ``getVectorSchemaRoot()``.
+3. Once (1) or (2) have been completed, you can proceed to ``loadNextBatch()``.
+4. At the end don’t forget to define the logic to ``closeReadSource()``.
+5. Make sure you define the logic for closing the ``closeReadSource()`` at the end.
+
+For example, let's create a custom JDBCReader reader.
+
+.. code-block:: java
+
+    import java.io.IOException;
+
+    import org.apache.arrow.adapter.jdbc.ArrowVectorIterator;
+    import org.apache.arrow.adapter.jdbc.JdbcToArrowConfig;
+    import org.apache.arrow.memory.BufferAllocator;
+    import org.apache.arrow.vector.VectorSchemaRoot;
+    import org.apache.arrow.vector.ipc.ArrowReader;
+    import org.apache.arrow.vector.types.pojo.Schema;
+
+    class JDBCReader extends ArrowReader {
+      private final ArrowVectorIterator iter;
+      private final JdbcToArrowConfig config;
+      private VectorSchemaRoot root;
+      private boolean firstRoot = true;
+
+      public JDBCReader(BufferAllocator allocator, ArrowVectorIterator iter, JdbcToArrowConfig config) {
+        super(allocator);
+        this.iter = iter;
+        this.config = config;
+      }
+
+      @Override
+      public boolean loadNextBatch() throws IOException {
+        if (firstRoot) {
+          firstRoot = false;
+          return true;
+        }
+        else {
+          if (iter.hasNext()) {
+            if (root != null && !config.isReuseVectorSchemaRoot()) {
+              root.close();
+            }
+            else {
+              root.allocateNew();
+            }
+            root = iter.next();
+            return root.getRowCount() != 0;
+          }
+          else {
+            return false;
+          }
+        }
+      }
+
+      @Override
+      public long bytesRead() {
+        return 0;
+      }
+
+      @Override
+      protected void closeReadSource() throws IOException {
+        if (root != null && !config.isReuseVectorSchemaRoot()) {
+          root.close();
+        }
+      }
+
+      @Override
+      protected Schema readSchema() throws IOException {
+        return null;
+      }
+
+      @Override
+      public VectorSchemaRoot getVectorSchemaRoot() throws IOException {
+        if (root == null) {
+          root = iter.next();
+        }
+        return root;
+      }
+    }
+
+
+
+
+.. _`ArrowReader`: https://arrow.apache.org/docs/java/reference/org/apache/arrow/vector/ipc/ArrowReader.html
