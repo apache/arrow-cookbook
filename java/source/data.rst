@@ -89,18 +89,18 @@ appends the three vectors together:
     Loading VectorSchemaRoot: 2, Records to append: 4
     Loading VectorSchemaRoot: 3, Records to append: 3
     Total Rowcount: 11
-    age	name
-    10	Jean
-    10	Lu
-    10	Kei
-    10	Sophia
-    10	Mara
-    20	Arit
-    20	Neil
-    20	Jason
-    20	John
-    20	Peter
-    20	Ismael
+    age    name
+    10    Jean
+    10    Lu
+    10    Kei
+    10    Sophia
+    10    Mara
+    20    Arit
+    20    Neil
+    20    Jason
+    20    John
+    20    Peter
+    20    Ismael
 
 Compare Vectors for Field Equality
 ==================================
