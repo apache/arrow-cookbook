@@ -23,6 +23,85 @@ Recipes related to compare, filtering or transforming data.
 
 .. contents::
 
+Append VectorSchemaRoots
+========================
+
+In some cases, VectorSchemaRoot needs to be modeled as a container. To accomplish
+this, you can use ``VectorSchemaRootAppender.append``. The following code reads a
+Parquet file with three row groups, gets the three vectors separately, and then
+appends the three vectors together:
+
+.. testcode::
+
+    import java.io.IOException;
+
+    import org.apache.arrow.dataset.file.FileFormat;
+    import org.apache.arrow.dataset.file.FileSystemDatasetFactory;
+    import org.apache.arrow.dataset.jni.NativeMemoryPool;
+    import org.apache.arrow.dataset.scanner.ScanOptions;
+    import org.apache.arrow.dataset.scanner.Scanner;
+    import org.apache.arrow.dataset.source.Dataset;
+    import org.apache.arrow.dataset.source.DatasetFactory;
+    import org.apache.arrow.memory.BufferAllocator;
+    import org.apache.arrow.memory.RootAllocator;
+    import org.apache.arrow.vector.VectorSchemaRoot;
+    import org.apache.arrow.vector.ipc.ArrowReader;
+    import org.apache.arrow.vector.util.VectorSchemaRootAppender;
+
+    VectorSchemaRoot appendVectorSchemaRootAsOne(BufferAllocator allocator) {
+      VectorSchemaRoot result = null;
+      final ScanOptions options = new ScanOptions(/*batchSize*/ 32768);
+      final String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data4_3rg_gzip.parquet";
+      try (
+          final DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator,
+              NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
+          final Dataset dataset = datasetFactory.finish();
+          final Scanner scanner = dataset.newScan(options);
+          final ArrowReader reader = scanner.scanBatches()
+      ) {
+        int rowgroup = 1;
+        while (reader.loadNextBatch()) {
+          try (VectorSchemaRoot root = reader.getVectorSchemaRoot()) {
+            if(result == null) {
+               result = VectorSchemaRoot.create(root.getSchema(), allocator);
+               result.allocateNew(); // allocate each vector before append data for memory purposes
+            }
+            System.out.println("Loading VectorSchemaRoot: " + rowgroup++ + ", Records to append: " + root.getRowCount());
+            VectorSchemaRootAppender.append(result, root);
+          }
+        }
+        return result;
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+    // reading final VectorSchemaRoot
+    try (final VectorSchemaRoot root = appendVectorSchemaRootAsOne(new RootAllocator())) {
+      System.out.println("Total Rowcount: " + root.getRowCount());
+      System.out.println(root.contentToTSVString());
+    }
+
+.. testoutput::
+
+    Loading VectorSchemaRoot: 1, Records to append: 4
+    Loading VectorSchemaRoot: 2, Records to append: 4
+    Loading VectorSchemaRoot: 3, Records to append: 3
+    Total Rowcount: 11
+    age	name
+    10	Jean
+    10	Lu
+    10	Kei
+    10	Sophia
+    10	Mara
+    20	Arit
+    20	Neil
+    20	Jason
+    20	John
+    20	Peter
+    20	Ismael
+
 Compare Vectors for Field Equality
 ==================================
 
