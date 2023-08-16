@@ -80,7 +80,7 @@ appends the three vectors together:
     // reading final VectorSchemaRoot
     try (final VectorSchemaRoot root = appendVectorSchemaRootAsOne(new RootAllocator())) {
       System.out.println("Total Rowcount: " + root.getRowCount());
-      System.out.println(root.contentToTSVString());
+      System.out.print(root.contentToTSVString());
     }
 
 .. testoutput::
