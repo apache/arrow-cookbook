@@ -23,6 +23,58 @@ Recipes related to compare, filtering or transforming data.
 
 .. contents::
 
+Concatenate Value Vectors
+=========================
+
+In some cases, we need to concatenate two value vectors into one. To accomplish
+this, we can use `VectorAppender`_. The following code create two vectors separately,
+and then appends the two vectors together.
+
+.. warning::
+
+    VectorAppender is package-private and is not accessible from other packages
+    besides `org.apache.arrow.vector.util`.
+
+
+.. code-block:: java
+
+    package org.apache.arrow.vector.util;
+
+    import org.apache.arrow.memory.BufferAllocator;
+    import org.apache.arrow.memory.RootAllocator;
+    import org.apache.arrow.vector.IntVector;
+    import org.apache.arrow.vector.ValueVector;
+
+    public class FieldVectorAppender {
+      public static void main(String[] args) {
+        try (
+            BufferAllocator allocator = new RootAllocator();
+            IntVector initialValues = new IntVector("initialValues", allocator);
+            IntVector toAppend = new IntVector("toAppend", allocator);
+        ) {
+          initialValues.allocateNew(2);
+          initialValues.set(0, 1);
+          initialValues.set(1, 2);
+          initialValues.setValueCount(2);
+          System.out.println("Initial IntVector: " + initialValues);
+          toAppend.allocateNew(4);
+          toAppend.set(1, 4);
+          toAppend.set(3, 6);
+          toAppend.setValueCount(4);
+          System.out.println("IntVector to Append: " + toAppend);
+          VectorAppender appenderUtil = new VectorAppender(initialValues);
+          ValueVector resultOfVectorsAppended = toAppend.accept(appenderUtil, null);
+          System.out.println("IntVector Result: " + resultOfVectorsAppended);
+        }
+      }
+    }
+
+.. code-block:: shell
+
+    Initial IntVector: [1, 2]
+    IntVector to Append: [null, 4, null, 6]
+    IntVector Result: [1, 2, null, 4, null, 6]
+
 Compare Vectors for Field Equality
 ==================================
 
@@ -279,3 +331,5 @@ FixedWidthOutOfPlaceVectorSorter & VariableWidthOutOfPlaceVectorSor
 .. testoutput::
 
    [null, 8, 10]
+
+.. _`VectorAppender`: https://github.com/apache/arrow/blob/main/java/vector/src/main/java/org/apache/arrow/vector/util/VectorAppender.java
