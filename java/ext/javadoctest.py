@@ -104,8 +104,8 @@ def setup(app) -> Dict[str, Any]:
     app.add_directive("testcode", JavaTestcodeDirective)
     app.add_directive("testoutput", TestoutputDirective)
     app.add_builder(JavaDocTestBuilder)
-    # this config value adds to sys.path
     app.add_config_value("doctest_show_successes", True, False)
+    # this config value adds to sys.path
     app.add_config_value("doctest_path", [], False)
     app.add_config_value("doctest_test_doctest_blocks", "default", False)
     app.add_config_value("doctest_global_setup", "", False)
