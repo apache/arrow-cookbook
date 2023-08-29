@@ -27,8 +27,8 @@ Concatenate Value Vectors
 =========================
 
 In some cases, we need to concatenate two value vectors into one. To accomplish
-this, we can use `VectorAppender`_. The following code create two vectors separately,
-and then appends the two vectors together.
+this, we can use `VectorAppender`_. Consider also that the initial Value Vector
+is mutated and used to concatenate the added values.
 
 .. testcode::
 
@@ -56,6 +56,8 @@ and then appends the two vectors together.
       VectorAppender appenderUtil = new VectorAppender(initialValues);
       ValueVector resultOfVectorsAppended = toAppend.accept(appenderUtil, null);
       System.out.println("IntVector Result: " + resultOfVectorsAppended);
+      System.out.println("Initial IntVector mutated: " +
+        (initialValues.hashCode()==resultOfVectorsAppended.hashCode())) ;
     }
 
 .. testoutput::
@@ -63,6 +65,7 @@ and then appends the two vectors together.
     Initial IntVector: [1, 2]
     IntVector to Append: [null, 4, null, 6]
     IntVector Result: [1, 2, null, 4, null, 6]
+    Initial IntVector mutated: true
 
 Compare Vectors for Field Equality
 ==================================
