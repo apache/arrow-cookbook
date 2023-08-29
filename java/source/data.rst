@@ -36,39 +36,40 @@ the three vectors separately, and then appends the three vectors together:
     import org.apache.arrow.memory.RootAllocator;
     import org.apache.arrow.vector.IntVector;
     import org.apache.arrow.vector.VectorSchemaRoot;
+    import org.apache.arrow.vector.types.pojo.ArrowType;
+    import org.apache.arrow.vector.types.pojo.Field;
+    import org.apache.arrow.vector.types.pojo.FieldType;
+    import org.apache.arrow.vector.types.pojo.Schema;
     import org.apache.arrow.vector.util.VectorSchemaRootAppender;
 
-    try (BufferAllocator allocator = new RootAllocator()) {
-        VectorSchemaRoot result = null;
-        IntVector appenderOne = new IntVector("column", allocator);
-        IntVector appenderTwo = new IntVector("column", allocator);
-        appenderOne.allocateNew(2);
+    import static java.util.Arrays.asList;
+
+    Field column_one = new Field("column-one", FieldType.nullable(new ArrowType.Int(32, true)), null);
+    Schema schema = new Schema(asList(column_one));
+    try (
+        BufferAllocator allocator = new RootAllocator();
+        VectorSchemaRoot rootOne = VectorSchemaRoot.create(schema, allocator);
+        VectorSchemaRoot rootTwo = VectorSchemaRoot.create(schema, allocator);
+        VectorSchemaRoot result = VectorSchemaRoot.create(schema, allocator);
+    ) {
+        IntVector appenderOne = (IntVector) rootOne.getVector(0);
+        rootOne.allocateNew();
         appenderOne.set(0, 100);
         appenderOne.set(1, 20);
-        appenderOne.setValueCount(2);
-        appenderTwo.allocateNew(2);
+        rootOne.setRowCount(2);
+        IntVector appenderTwo = (IntVector) rootTwo.getVector(0);
+        rootTwo.allocateNew();
         appenderTwo.set(0, 34);
         appenderTwo.set(1, 75);
-        appenderTwo.setValueCount(2);
-        try (
-            final VectorSchemaRoot rootOne = new VectorSchemaRoot(
-                    Collections.singletonList(appenderOne));
-            final VectorSchemaRoot rootTwo = new VectorSchemaRoot(
-                    Collections.singletonList(appenderTwo))
-        ) {
-            if (result == null) {
-                result = VectorSchemaRoot.create(rootOne.getSchema(), allocator);
-                result.allocateNew();
-            }
-            VectorSchemaRootAppender.append(result, rootOne, rootTwo);
-            System.out.print(result.contentToTSVString());
-        }
-        result.close();
+        rootTwo.setRowCount(2);
+        result.allocateNew();
+        VectorSchemaRootAppender.append(result, rootOne, rootTwo);
+        System.out.print(result.contentToTSVString());
     }
 
 .. testoutput::
 
-    column
+    column-one
     100
     20
     34
