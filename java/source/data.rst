@@ -43,21 +43,19 @@ is mutated and used to concatenate the added values.
         IntVector initialValues = new IntVector("initialValues", allocator);
         IntVector toAppend = new IntVector("toAppend", allocator);
     ) {
-      initialValues.allocateNew(2);
-      initialValues.set(0, 1);
-      initialValues.set(1, 2);
-      initialValues.setValueCount(2);
-      System.out.println("Initial IntVector: " + initialValues);
-      toAppend.allocateNew(4);
-      toAppend.set(1, 4);
-      toAppend.set(3, 6);
-      toAppend.setValueCount(4);
-      System.out.println("IntVector to Append: " + toAppend);
-      VectorAppender appenderUtil = new VectorAppender(initialValues);
-      ValueVector resultOfVectorsAppended = toAppend.accept(appenderUtil, null);
-      System.out.println("IntVector Result: " + resultOfVectorsAppended);
-      System.out.println("Initial IntVector mutated: " +
-        (initialValues.hashCode()==resultOfVectorsAppended.hashCode())) ;
+        initialValues.allocateNew(2);
+        initialValues.set(0, 1);
+        initialValues.set(1, 2);
+        initialValues.setValueCount(2);
+        System.out.println("Initial IntVector: " + initialValues);
+        toAppend.allocateNew(4);
+        toAppend.set(1, 4);
+        toAppend.set(3, 6);
+        toAppend.setValueCount(4);
+        System.out.println("IntVector to Append: " + toAppend);
+        VectorAppender appenderUtil = new VectorAppender(initialValues);
+        toAppend.accept(appenderUtil, null);
+        System.out.println("IntVector Result: " + initialValues);
     }
 
 .. testoutput::
@@ -65,7 +63,6 @@ is mutated and used to concatenate the added values.
     Initial IntVector: [1, 2]
     IntVector to Append: [null, 4, null, 6]
     IntVector Result: [1, 2, null, 4, null, 6]
-    Initial IntVector mutated: true
 
 Compare Vectors for Field Equality
 ==================================
