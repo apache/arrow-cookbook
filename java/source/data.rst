@@ -27,11 +27,8 @@ Append VectorSchemaRoots
 ========================
 
 In some cases, VectorSchemaRoot needs to be modeled as a container. To accomplish
-this, you can use ``VectorSchemaRootAppender.append``. The following code reads a
-Parquet file with three row groups, gets the three vectors separately, and then
-appends the three vectors together:
-
-There will be another cases of integration w
+this, you can use ``VectorSchemaRootAppender.append``. The following code gets
+the three vectors separately, and then appends the three vectors together:
 
 .. testcode::
 
@@ -41,39 +38,30 @@ There will be another cases of integration w
     import org.apache.arrow.vector.VectorSchemaRoot;
     import org.apache.arrow.vector.util.VectorSchemaRootAppender;
 
-    try (
-        BufferAllocator allocator = new RootAllocator()
-    ) {
+    try (BufferAllocator allocator = new RootAllocator()) {
         VectorSchemaRoot result = null;
+        IntVector appenderOne = new IntVector("column", allocator);
+        IntVector appenderTwo = new IntVector("column", allocator);
+        appenderOne.allocateNew(2);
+        appenderOne.set(0, 100);
+        appenderOne.set(1, 20);
+        appenderOne.setValueCount(2);
+        appenderTwo.allocateNew(2);
+        appenderTwo.set(0, 34);
+        appenderTwo.set(1, 75);
+        appenderTwo.setValueCount(2);
         try (
-            IntVector appenderOne = new IntVector("column",
-                    allocator);
-            IntVector appenderTwo = new IntVector("column",
-                    allocator)
+            final VectorSchemaRoot rootOne = new VectorSchemaRoot(
+                    Collections.singletonList(appenderOne));
+            final VectorSchemaRoot rootTwo = new VectorSchemaRoot(
+                    Collections.singletonList(appenderTwo))
         ) {
-            appenderOne.allocateNew(2);
-            appenderOne.set(0, 100);
-            appenderOne.set(1, 20);
-            appenderOne.setValueCount(2);
-            appenderTwo.allocateNew(2);
-            appenderTwo.set(0, 34);
-            appenderTwo.set(1, 75);
-            appenderTwo.setValueCount(2);
-            try (
-                final VectorSchemaRoot rootOne = new VectorSchemaRoot(
-                        Collections.singletonList(appenderOne));
-                final VectorSchemaRoot rootTwo = new VectorSchemaRoot(
-                        Collections.singletonList(appenderTwo))
-            ) {
-                if (result == null) {
-                    result = VectorSchemaRoot.create(rootOne.getSchema(),
-                            allocator);
-                    result.allocateNew();
-                }
-                VectorSchemaRootAppender.append(result, rootOne, rootTwo);
-
-                System.out.print(result.contentToTSVString());
+            if (result == null) {
+                result = VectorSchemaRoot.create(rootOne.getSchema(), allocator);
+                result.allocateNew();
             }
+            VectorSchemaRootAppender.append(result, rootOne, rootTwo);
+            System.out.print(result.contentToTSVString());
         }
         result.close();
     }
