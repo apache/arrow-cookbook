@@ -23,12 +23,12 @@ Recipes related to compare, filtering or transforming data.
 
 .. contents::
 
-Append VectorSchemaRoots
-========================
+Concatenate VectorSchemaRoots
+=============================
 
 In some cases, VectorSchemaRoot needs to be modeled as a container. To accomplish
-this, you can use ``VectorSchemaRootAppender.append``. The following code gets
-the three vectors separately, and then appends the three vectors together:
+this, you can use ``VectorSchemaRootAppender.append``. The following code 
+creates two roots, then concatenates them together:
 
 .. testcode::
 
