@@ -27,8 +27,7 @@ Concatenate Value Vectors
 =========================
 
 In some cases, we need to concatenate two value vectors into one. To accomplish
-this, we can use `VectorAppender`_. Consider also that the initial Value Vector
-is mutated and used to concatenate the added values.
+this, we can use `VectorAppender`_. This mutates the initial ValueVector.
 
 .. testcode::
 
