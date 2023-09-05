@@ -31,9 +31,9 @@ Python Component:
     from pyarrow.cffi import ffi as arrow_c
 
     # Init the JVM and make MapValuesV2 class available to Python.
-    jpype.startJVM(classpath=[ "../arrow-java-playground/target/*"])
+    jpype.startJVM(classpath=[ "../target/*"])
     java_c_package = jpype.JPackage("org").apache.arrow.c
-    MapValuesConsumer = JClass('io.arrow.playground.python.MapValuesConsumer')
+    MapValuesConsumer = JClass('MapValuesConsumer')
     CDataDictionaryProvider = JClass('org.apache.arrow.c.CDataDictionaryProvider')
 
     # Starting from Python and generating data
