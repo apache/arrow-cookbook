@@ -107,7 +107,8 @@ In the Python component, the following steps are executed to demonstrate the dat
 Java Component:
 ---------------
 
-    In the Java component, the MapValuesConsumer class receives data from the Python component through C Data. It then updates the data and sends it back to the Python component.
+    In the Java component, the MapValuesConsumer class receives data from the Python component through C Data. 
+    It then updates the data and sends it back to the Python component.
 
 .. code-block:: java
 
