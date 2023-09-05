@@ -34,7 +34,7 @@
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
-        <arrow.version>10.0.1</arrow.version>
+        <arrow.version>12.0.0</arrow.version>
     </properties>
     <dependencies>
         <dependency>
@@ -85,7 +85,7 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <version>2.1.214</version>
+            <version>2.2.220</version>
         </dependency>
         <dependency>
             <groupId>org.apache.ibatis</groupId>
@@ -95,7 +95,17 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>30.1.1-jre</version>
+            <version>32.0.0-jre</version>
+        </dependency>
+        <dependency>
+            <groupId>io.substrait</groupId>
+            <artifactId>isthmus</artifactId>
+            <version>0.11.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.substrait</groupId>
+            <artifactId>core</artifactId>
+            <version>0.11.0</version>
         </dependency>
     </dependencies>
 </project>

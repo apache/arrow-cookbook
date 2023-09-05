@@ -38,9 +38,9 @@ copyright = '2022, Apache Software Foundation'
 author = 'The Apache Software Foundation'
 arrow_nightly=os.getenv("ARROW_NIGHTLY")
 if arrow_nightly and arrow_nightly != '0':
-    version = "11.0.0-SNAPSHOT"
+    version = "13.0.0-SNAPSHOT"
 else:
-    version = "10.0.1"
+    version = "12.0.0"
 print(f"Running with Arrow version: {version}")
 
 # -- General configuration ---------------------------------------------------
@@ -72,9 +72,25 @@ html_theme = 'alabaster'
 html_theme_options = {
     'page_width': '1200px',
     'code_font_size': '0.8em',
+    "logo": "arrow-logo_vertical_black-txt_transparent-bg.svg",
+    "github_user": "apache",
+    "github_repo": "arrow-cookbook",
+    "github_button": "true",
+    "github_type": "none",
+    "extra_nav_links": {
+        "User Guide": "https://arrow.apache.org/docs/java/index.html",
+        "API Reference": "https://arrow.apache.org/docs/java/reference/index.html"
+    },
+    "font_family": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,Liberation Sans,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji"
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ['../../static']
+
+# The name of an image file (relative to this directory) to use as a favicon of
+# the docs.  This file should be a Windows icon file (.ico) being 16x16 or
+# 32x32 pixels large.
+#
+html_favicon = "../../static/favicon.ico"

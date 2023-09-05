@@ -74,7 +74,7 @@ test_that("asdf_table chunk works as expected", {
 
 ### Discussion
 
-You can use either `as.data.frame()` or `dplyr::collect()` to do this.
+You can `dplyr::collect()` to return a tibble or `as.data.frame()` to return a `data.frame`.
 
 ## Write a Parquet file
 
@@ -84,7 +84,7 @@ You want to write a single Parquet file to disk.
 
 ```{r, write_parquet}
 # Create table
-my_table <- arrow_table(data.frame(group = c("A", "B", "C"), score = c(99, 97, 99)))
+my_table <- arrow_table(tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99)))
 # Write to Parquet
 write_parquet(my_table, "my_table.parquet")
 ```
@@ -106,18 +106,18 @@ parquet_tbl
 ```
 ```{r, test_read_parquet, opts.label = "test"}
 test_that("read_parquet works as expected", {
-  expect_identical(parquet_tbl, data.frame(group = c("A", "B", "C"), score = c(99, 97, 99)))
+  expect_equal(parquet_tbl, tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99)))
 })
 ```
 
-As the argument `as_data_frame` was left set to its default value of `TRUE`, the file was read in as a `data.frame` object.
+As the argument `as_data_frame` was left set to its default value of `TRUE`, the file was read in as a tibble.
 
 ```{r, read_parquet_2}
 class(parquet_tbl)
 ```
 ```{r, test_read_parquet_2, opts.label = "test"}
 test_that("read_parquet_2 works as expected", {
-  expect_s3_class(parquet_tbl, "data.frame")
+  expect_s3_class(parquet_tbl, "tbl_df")
 })
 ```
 
@@ -172,7 +172,7 @@ time_only
 ```
 ```{r, test_read_parquet_filter, opts.label = "test"}
 test_that("read_parquet_filter works as expected", {
-  expect_identical(time_only, data.frame(time = c(43, 44, 40)))
+  expect_identical(time_only, tibble::tibble(time = c(43, 44, 40)))
 })
 ```
 
@@ -258,7 +258,7 @@ my_ipc_stream <- arrow::read_ipc_stream("my_table.arrows")
 test_that("read_ipc_stream chunk works as expected", {
   expect_equal(
     my_ipc_stream,
-    data.frame(group = c("A", "B", "C"), score = c(99, 97, 99))
+    tibble::tibble(group = c("A", "B", "C"), score = c(99, 97, 99))
   )
 })
 unlink("my_table.arrows")
@@ -291,7 +291,7 @@ my_csv <- read_csv_arrow("cars.csv", as_data_frame = FALSE)
 
 ```{r, test_read_csv_arrow, opts.label = "test"}
 test_that("read_csv_arrow chunk works as expected", {
-  expect_equivalent(as.data.frame(my_csv), cars)
+  expect_equal(as.data.frame(my_csv), cars)
 })
 unlink("cars.csv")
 ```

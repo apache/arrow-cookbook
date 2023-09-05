@@ -17,8 +17,9 @@
 import os
 import pathlib
 import subprocess
+from typing import Any, Dict
 
-from sphinx.ext.doctest import (Any, Dict, DocTestBuilder, TestcodeDirective,
+from sphinx.ext.doctest import (DocTestBuilder, TestcodeDirective,
                                 TestoutputDirective, doctest, sphinx)
 from sphinx.locale import __
 
@@ -103,6 +104,7 @@ def setup(app) -> Dict[str, Any]:
     app.add_directive("testcode", JavaTestcodeDirective)
     app.add_directive("testoutput", TestoutputDirective)
     app.add_builder(JavaDocTestBuilder)
+    app.add_config_value("doctest_show_successes", True, False)
     # this config value adds to sys.path
     app.add_config_value("doctest_path", [], False)
     app.add_config_value("doctest_test_doctest_blocks", "default", False)
