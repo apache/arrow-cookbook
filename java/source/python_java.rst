@@ -96,6 +96,44 @@ Python Component:
 
     del updated_array
 
+.. code-block:: shell
+
+    From Python
+    Dictionary Created:
+    -- dictionary:
+    [
+        "A",
+        "B",
+        "C",
+        "D"
+    ]
+    -- indices:
+    [
+        0,
+        1,
+        2,
+        0,
+        3
+    ]
+    Doing work in Java
+    From Java back to Python
+    Updated Array:
+    -- dictionary:
+    [
+        "A",
+        "B",
+        "C",
+        "D"
+    ]
+    -- indices:
+    [
+        2,
+        1,
+        2,
+        0,
+        3
+    ]
+
 In the Python component, the following steps are executed to demonstrate the data roundtrip:
 
 1. Create data in Python 
