@@ -43,6 +43,7 @@ This cookbook is tested with Apache Arrow |version|.
    data
    avro
    jdbc
+   python_java
 
 Indices and tables
 ==================
