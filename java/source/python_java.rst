@@ -4,20 +4,23 @@
 PyArrow Java Integration
 ========================
 
-PyArrow for Python is a strong API which is useful for certain Java application development.
+The PyArrow library offers a powerful API for Python that can be integrated with Java applications.
+This document provides a guide on how to enable seamless data exchange between Python and Java components using PyArrow.
 
 .. contents::
 
 Dictionary Data Roundtrip
 =========================
 
-    To demonstrate how dictionary data can be used in both Python and Java, consider the following.
+    This section demonstrates a data roundtrip, where a dictionary array is created in Python, accessed and updated in Java,
+    and finally re-accessed and validated in Python for data consistency.
 
-    Data is created in Python, then it will be accessed in Java and data will be updated. updated
-    data will be again used in Python and validated for consistency through out the entire application.
 
 Python Component:
 -----------------
+
+    The Python code uses jpype to start the JVM and make the Java class MapValuesConsumer available to Python.
+    Data is generated in PyArrow and exported through C Data to Java.
 
 .. code-block:: python
 
@@ -93,17 +96,18 @@ Python Component:
 
     del updated_array
 
-In Python component, the following steps are taken to demonstrate the roundtrip process.
+In the Python component, the following steps are executed to demonstrate the data roundtrip:
 
-1. Create Data in Python 
-2. Access Data from Java
-3. Update Data from Java
-4. Access Data from Python
-5. Validate the data change
+1. Create data in Python 
+2. Export data to Java
+3. Import updated data from Java
+4. Validate the data consistency
 
 
 Java Component:
 ---------------
+
+    In the Java component, the MapValuesConsumer class receives data from the Python component through C Data. It then updates the data and sends it back to the Python component.
 
 .. code-block:: java
 
@@ -148,5 +152,11 @@ Java Component:
         }
     }
 
-Java component access the data from Python and update the vector,
-and this is later accessed in Python component. 
+The Java component performs the following actions:
+
+1. Receives data from the Python component.
+2. Updates the data.
+3. Exports the updated data back to Python.
+
+By integrating PyArrow in Python and Java components, this example demonstrates that 
+a system can be created where data is shared and updated across both languages seamlessly.
