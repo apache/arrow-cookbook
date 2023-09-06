@@ -30,7 +30,7 @@ Python Component:
     import pyarrow as pa
     from pyarrow.cffi import ffi as arrow_c
 
-    # Init the JVM and make MapValuesV2 class available to Python.
+    # Init the JVM and make MapValuesConsumer class available to Python.
     jpype.startJVM(classpath=[ "../target/*"])
     java_c_package = jpype.JPackage("org").apache.arrow.c
     MapValuesConsumer = JClass('MapValuesConsumer')
