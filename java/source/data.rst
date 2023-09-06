@@ -23,6 +23,58 @@ Recipes related to compare, filtering or transforming data.
 
 .. contents::
 
+Concatenate VectorSchemaRoots
+=============================
+
+In some cases, VectorSchemaRoot needs to be modeled as a container. To accomplish
+this, you can use ``VectorSchemaRootAppender.append``. The following code
+creates two roots, then concatenates them together:
+
+.. testcode::
+
+    import org.apache.arrow.memory.BufferAllocator;
+    import org.apache.arrow.memory.RootAllocator;
+    import org.apache.arrow.vector.IntVector;
+    import org.apache.arrow.vector.VectorSchemaRoot;
+    import org.apache.arrow.vector.types.pojo.ArrowType;
+    import org.apache.arrow.vector.types.pojo.Field;
+    import org.apache.arrow.vector.types.pojo.FieldType;
+    import org.apache.arrow.vector.types.pojo.Schema;
+    import org.apache.arrow.vector.util.VectorSchemaRootAppender;
+
+    import static java.util.Arrays.asList;
+
+    Field column_one = new Field("column-one", FieldType.nullable(new ArrowType.Int(32, true)), null);
+    Schema schema = new Schema(asList(column_one));
+    try (
+        BufferAllocator allocator = new RootAllocator();
+        VectorSchemaRoot rootOne = VectorSchemaRoot.create(schema, allocator);
+        VectorSchemaRoot rootTwo = VectorSchemaRoot.create(schema, allocator);
+        VectorSchemaRoot result = VectorSchemaRoot.create(schema, allocator);
+    ) {
+        IntVector appenderOne = (IntVector) rootOne.getVector(0);
+        rootOne.allocateNew();
+        appenderOne.set(0, 100);
+        appenderOne.set(1, 20);
+        rootOne.setRowCount(2);
+        IntVector appenderTwo = (IntVector) rootTwo.getVector(0);
+        rootTwo.allocateNew();
+        appenderTwo.set(0, 34);
+        appenderTwo.set(1, 75);
+        rootTwo.setRowCount(2);
+        result.allocateNew();
+        VectorSchemaRootAppender.append(result, rootOne, rootTwo);
+        System.out.print(result.contentToTSVString());
+    }
+
+.. testoutput::
+
+    column-one
+    100
+    20
+    34
+    75
+
 Concatenate Value Vectors
 =========================
 
