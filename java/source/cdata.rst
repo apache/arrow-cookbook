@@ -28,23 +28,23 @@ Python (Consumer) - Java (Producer)
 
     For Python Consumer and Java Producer, please consider:
 
-    - The Root Allocator should be shared for all memory allocations.
+    - The ``RootAllocator`` should be shared for all memory allocations.
 
     - The Python application will sometimes shut down the Java JVM but Java JNI C Data will still work on releasing exported objects, which is why some guards have been implemented to protect against such scenarios. A warning message "WARNING: Failed to release Java C Data resource" indicates this scenario.
 
-    - We do not know when `RootAllocator` will be closed. It is for this reason that the `RootAllocator` should survive so long as the export/import of used objects is released. Here is an example of this scenario:
+    - We do not know when ``RootAllocator`` will be closed. It is for this reason that the ``RootAllocator`` should survive so long as the export/import of used objects is released. Here is an example of this scenario:
 
-        + Whenever Java code calls `allocator.close`, a memory leak will occur since many objects will have to be released on either Python or Java JNI sides.
+        + Whenever Java code calls ``allocator.close``, a memory leak will occur since many objects will have to be released on either Python or Java JNI sides.
 
-        + To solve memory leak problems, you will call Java `allocator.close` when Python and Java JNI have released all their objects, which is impossible to accomplish.
+        + To solve memory leak problems, you will call Java ``allocator.close`` when Python and Java JNI have released all their objects, which is impossible to accomplish.
 
-    - In addition, Java applications should expose a method for closing all Java-created objects independently from Root Allocators.
+    - In addition, Java applications should expose a method to release all Java-created objects different than ``RootAllocator``.
 
 
 Sharing ValueVector
 *******************
 
-Java Side:
+Java Component:
 
 .. testcode::
 
@@ -104,7 +104,7 @@ Java Side:
 
    [1, 7, 93]
 
-Python Side:
+Python Component:
 
 .. code-block:: python
 
@@ -112,9 +112,11 @@ Python Side:
     import pyarrow as pa
     from pyarrow.cffi import ffi
 
+    # configure debug mode to capture more detailed error information
     jvmargs=["-Darrow.memory.debug.allocator=true"]
+    # make the ShareValueVectorAPI class available in Python by starting the JVM with the embedded jar
     jpype.startJVM(*jvmargs, jvmpath=jpype.getDefaultJVMPath(), classpath=[
-        "./target/java-python-by-cdata-1.0-SNAPSHOT-jar-with-dependencies.jar"])
+        "./target/java-python-jar-with-dependencies.jar"])
     java_value_vector_api = jpype.JClass('ShareValueVectorAPI')
     java_c_package = jpype.JPackage("org").apache.arrow.c
     py_c_schema = ffi.new("struct ArrowSchema*")
@@ -133,6 +135,7 @@ Python Side:
     py_array = pa.Array._import_from_c(py_ptr_array, py_ptr_schema)
     print(type(py_array))
     print(py_array)
+    java_value_vector_api.closeAllocatorForJavaConsumers()
 
 .. code-block:: shell
 
@@ -146,7 +149,7 @@ Python Side:
 Sharing VectorSchemaRoot
 ************************
 
-Java Side:
+Java Component:
 
 .. testcode::
 
@@ -214,7 +217,7 @@ Java Side:
     100
     20
 
-Python Side:
+Python Component:
 
 .. code-block:: python
 
@@ -222,9 +225,11 @@ Python Side:
     import pyarrow as pa
     from pyarrow.cffi import ffi
 
+    # configure debug mode to capture more detailed error information
     jvmargs=["-Darrow.memory.debug.allocator=true"]
+    # make the ShareValueVectorAPI class available in Python by starting the JVM with the embedded jar
     jpype.startJVM(*jvmargs, jvmpath=jpype.getDefaultJVMPath(), classpath=[
-        "./target/java-python-by-cdata-1.0-SNAPSHOT-jar-with-dependencies.jar"])
+        "./target/java-python-jar-with-dependencies.jar"])
     java_value_vector_api = jpype.JClass('ShareVectorSchemaRootAPI')
     java_c_package = jpype.JPackage("org").apache.arrow.c
     py_c_schema = ffi.new("struct ArrowSchema*")
@@ -243,6 +248,7 @@ Python Side:
     py_record_batch = pa.Array._import_from_c(py_ptr_array, py_ptr_schema)
     print(type(py_record_batch))
     print(py_record_batch)
+    java_value_vector_api.closeAllocatorForJavaConsumers()
 
 .. code-block:: shell
 
@@ -257,7 +263,7 @@ Python Side:
 Sharing ArrowReader
 *******************
 
-Java Side:
+Java Component:
 
 .. testcode::
 
@@ -427,7 +433,7 @@ Java Side:
     INT_FIELD1    BOOL_FIELD2    BIGINT_FIELD5    CHAR_FIELD16    LIST_FIELD19
     103    true    10000000003    some char text      [1]
 
-Python Side:
+Python Component:
 
 .. code-block:: python
 
@@ -447,9 +453,11 @@ Python Side:
             yield reader.schema
             yield from reader
 
+    # configure debug mode to capture more detailed error information
     jvmargs=["-Darrow.memory.debug.allocator=true"]
+    # make the ShareValueVectorAPI class available in Python by starting the JVM with the embedded jar
     jpype.startJVM(*jvmargs, jvmpath=jpype.getDefaultJVMPath(), classpath=[
-        "./target/java-python-by-cdata-1.0-SNAPSHOT-jar-with-dependencies.jar"])
+        "./target/java-python-jar-with-dependencies.jar"])
     java_reader_api = jpype.JClass('ShareArrowReaderAPI')
     java_c_package = jpype.JPackage("org").apache.arrow.c
     py_stream = ffi.new("struct ArrowArrayStream*")
@@ -466,7 +474,7 @@ Python Side:
                          './jdbc/parquet',
                          format="parquet")
 
-    java_reader_api.closeAllocatorForJavaConsumers();
+    java_reader_api.closeAllocatorForJavaConsumers()
 
 .. code-block:: shell
 
