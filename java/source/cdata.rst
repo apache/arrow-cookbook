@@ -32,7 +32,7 @@ Python (Consumer) - Java (Producer)
 
     - The Python application will sometimes shut down the Java JVM but Java JNI C Data will still work on releasing exported objects, which is why some guards have been implemented to protect against such scenarios. A warning message "WARNING: Failed to release Java C Data resource" indicates this scenario.
 
-    - We do not know when Root Allocator will be closed. It is for this reason that the Root Allocator should survive so long as the export/import of used objects is released. Here is an example of this scenario:
+    - We do not know when `RootAllocator` will be closed. It is for this reason that the `RootAllocator` should survive so long as the export/import of used objects is released. Here is an example of this scenario:
 
         + Whenever Java code calls `allocator.close`, a memory leak will occur since many objects will have to be released on either Python or Java JNI sides.
 
