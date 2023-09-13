@@ -148,7 +148,7 @@ Java Component:
     In the Java component, the MapValuesConsumer class receives data from the Python component through C Data. 
     It then updates the data and sends it back to the Python component.
 
-.. code-block:: java
+.. testcode:: java
 
     import org.apache.arrow.c.ArrowArray;
     import org.apache.arrow.c.ArrowSchema;
@@ -164,6 +164,8 @@ Java Component:
         private final static BufferAllocator allocator = new RootAllocator();
         private final CDataDictionaryProvider provider;
         private FieldVector vector;
+        private final static BigIntVector intVector = new BigIntVector("internal_test_vector", allocator);
+
 
         public MapValuesConsumer(CDataDictionaryProvider provider) {
             this.provider = provider;
@@ -184,12 +186,63 @@ Java Component:
             this.doWorkInJava(vector);
         }
 
+        public FieldVector updateFromJava(long c_array_ptr, long c_schema_ptr) {
+            ArrowArray arrow_array = ArrowArray.wrap(c_array_ptr);
+            ArrowSchema arrow_schema = ArrowSchema.wrap(c_schema_ptr);
+            vector = Data.importVector(allocator, arrow_array, arrow_schema, null);
+            this.doWorkInJava(vector);
+            return vector;
+        }
+
         private void doWorkInJava(FieldVector vector) {
             System.out.println("Doing work in Java");
             BigIntVector bigIntVector = (BigIntVector)vector;
             bigIntVector.setSafe(0, 2);
         }
+
+        private static BigIntVector getIntVectorForJavaConsumers() {
+            intVector.allocateNew(3);
+            intVector.set(0, 1);
+            intVector.set(1, 7);
+            intVector.set(2, 93);
+            intVector.setValueCount(3);
+            return intVector;
+        }
+
+        public static void simulateAsAJavaConsumers() {
+            CDataDictionaryProvider provider = new CDataDictionaryProvider();
+            MapValueConsumerV2 mvc = new MapValueConsumerV2(provider);//FIXME! Use constructor with dictionary provider
+            try (
+                ArrowArray arrowArray = ArrowArray.allocateNew(allocator);
+                ArrowSchema arrowSchema = ArrowSchema.allocateNew(allocator)
+            ) {
+                Data.exportVector(allocator, getIntVectorForJavaConsumers(), provider, arrowArray, arrowSchema);
+                FieldVector updatedVector = mvc.updateFromJava(arrowArray.memoryAddress(), arrowSchema.memoryAddress());
+                try (ArrowArray usedArray = ArrowArray.allocateNew(allocator);
+                    ArrowSchema usedSchema = ArrowSchema.allocateNew(allocator)) {
+                    Data.exportVector(allocator, updatedVector, provider, usedArray, usedSchema);
+                    try(FieldVector valueVectors = Data.importVector(allocator, usedArray, usedSchema, provider)) {
+                        System.out.println(valueVectors);
+                    }
+                }
+            }
+        }
+
+        public static void close() {
+            intVector.close();
+        }
+
+        public static void main(String[] args) {
+            simulateAsAJavaConsumers();
+            close();
+        }
     }
+
+.. testoutput::
+
+    Doing work in Java
+    [2, 7, 93]
+
 
 The Java component performs the following actions:
 
