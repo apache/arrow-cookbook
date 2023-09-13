@@ -148,7 +148,7 @@ Java Component:
     In the Java component, the MapValuesConsumer class receives data from the Python component through C Data. 
     It then updates the data and sends it back to the Python component.
 
-.. testcode:: java
+.. testcode::
 
     import org.apache.arrow.c.ArrowArray;
     import org.apache.arrow.c.ArrowSchema;
