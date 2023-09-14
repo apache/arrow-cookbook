@@ -291,7 +291,7 @@ Let's read an Arrow file and populate that data into a Parquet file.
     import org.apache.arrow.vector.ipc.SeekableReadChannel;
     import org.apache.arrow.vector.util.ByteArrayReadableSeekableByteChannel;
 
-    // read arrow demo data
+    // read arrow demo data: Three row groups each consisting of three rows
     Path uriRead = Paths.get("./thirdpartydeps/arrowfiles/random_access.arrow");
     try (
         BufferAllocator allocator = new RootAllocator();
