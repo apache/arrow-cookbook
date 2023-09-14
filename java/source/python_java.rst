@@ -158,20 +158,23 @@ Java Component:
     import org.apache.arrow.memory.RootAllocator;
     import org.apache.arrow.vector.FieldVector;
     import org.apache.arrow.vector.BigIntVector;
+    import org.apache.arrow.util.AutoCloseables;
 
 
-    public class MapValuesConsumer {
-        private final static BufferAllocator allocator = new RootAllocator();
+    class MapValuesConsumer implements AutoCloseable {
+        private final BufferAllocator allocator;
         private final CDataDictionaryProvider provider;
         private FieldVector vector;
-        private final static BigIntVector intVector = new BigIntVector("internal_test_vector", allocator);
+        private final BigIntVector intVector;
 
 
-        public MapValuesConsumer(CDataDictionaryProvider provider) {
+        public MapValuesConsumer(CDataDictionaryProvider provider, BufferAllocator allocator) {
             this.provider = provider;
+            this.allocator = allocator;
+            this.intVector = new BigIntVector("internal_test_vector", allocator);
         }
 
-        public static BufferAllocator getAllocatorForJavaConsumer() {
+        public BufferAllocator getAllocatorForJavaConsumer() {
             return allocator;
         }
 
@@ -189,7 +192,7 @@ Java Component:
         public FieldVector updateFromJava(long c_array_ptr, long c_schema_ptr) {
             ArrowArray arrow_array = ArrowArray.wrap(c_array_ptr);
             ArrowSchema arrow_schema = ArrowSchema.wrap(c_schema_ptr);
-            vector = Data.importVector(allocator, arrow_array, arrow_schema, null);
+            this.vector = Data.importVector(allocator, arrow_array, arrow_schema, this.provider);
             this.doWorkInJava(vector);
             return vector;
         }
@@ -200,7 +203,7 @@ Java Component:
             bigIntVector.setSafe(0, 2);
         }
 
-        private static BigIntVector getIntVectorForJavaConsumers() {
+        public BigIntVector getIntVectorForJavaConsumer() {
             intVector.allocateNew(3);
             intVector.set(0, 1);
             intVector.set(1, 7);
@@ -209,34 +212,38 @@ Java Component:
             return intVector;
         }
 
-        public static void simulateAsAJavaConsumers() {
-            CDataDictionaryProvider provider = new CDataDictionaryProvider();
-            MapValueConsumerV2 mvc = new MapValueConsumerV2(provider);//FIXME! Use constructor with dictionary provider
-            try (
-                ArrowArray arrowArray = ArrowArray.allocateNew(allocator);
-                ArrowSchema arrowSchema = ArrowSchema.allocateNew(allocator)
-            ) {
-                Data.exportVector(allocator, getIntVectorForJavaConsumers(), provider, arrowArray, arrowSchema);
-                FieldVector updatedVector = mvc.updateFromJava(arrowArray.memoryAddress(), arrowSchema.memoryAddress());
-                try (ArrowArray usedArray = ArrowArray.allocateNew(allocator);
-                    ArrowSchema usedSchema = ArrowSchema.allocateNew(allocator)) {
-                    Data.exportVector(allocator, updatedVector, provider, usedArray, usedSchema);
-                    try(FieldVector valueVectors = Data.importVector(allocator, usedArray, usedSchema, provider)) {
-                        System.out.println(valueVectors);
-                    }
-                }
-            }
-        }
-
-        public static void close() {
-            intVector.close();
-        }
-
-        public static void main(String[] args) {
-            simulateAsAJavaConsumers();
-            close();
+        @Override
+        public void close() throws Exception {
+            AutoCloseables.close(intVector);
         }
     }
+    try (BufferAllocator allocator = new RootAllocator()) {
+        CDataDictionaryProvider provider = new CDataDictionaryProvider();
+        try (final MapValuesConsumer mvc = new MapValuesConsumer(provider, allocator)) {
+            try (
+            ArrowArray arrowArray = ArrowArray.allocateNew(allocator);
+            ArrowSchema arrowSchema = ArrowSchema.allocateNew(allocator)
+            )  {
+                    Data.exportVector(allocator, mvc.getIntVectorForJavaConsumer(), provider, arrowArray, arrowSchema);
+                    FieldVector updatedVector = mvc.updateFromJava(arrowArray.memoryAddress(), arrowSchema.memoryAddress());
+                    try (ArrowArray usedArray = ArrowArray.allocateNew(allocator);
+                        ArrowSchema usedSchema = ArrowSchema.allocateNew(allocator)) {
+                        Data.exportVector(allocator, updatedVector, provider, usedArray, usedSchema);
+                        try(FieldVector valueVectors = Data.importVector(allocator, usedArray, usedSchema, provider)) {
+                            System.out.println(valueVectors);
+                        }
+                    }
+                    updatedVector.close();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    } catch (Exception ex) {
+        ex.printStackTrace();
+    }
+
 
 .. testoutput::
 
