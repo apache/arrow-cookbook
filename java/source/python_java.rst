@@ -1,3 +1,20 @@
+.. Licensed to the Apache Software Foundation (ASF) under one
+.. or more contributor license agreements.  See the NOTICE file
+.. distributed with this work for additional information
+.. regarding copyright ownership.  The ASF licenses this file
+.. to you under the Apache License, Version 2.0 (the
+.. "License"); you may not use this file except in compliance
+.. with the License.  You may obtain a copy of the License at
+
+..   http://www.apache.org/licenses/LICENSE-2.0
+
+.. Unless required by applicable law or agreed to in writing,
+.. software distributed under the License is distributed on an
+.. "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+.. KIND, either express or implied.  See the License for the
+.. specific language governing permissions and limitations
+.. under the License.
+
 .. _arrow-python-java:
 
 ========================
@@ -12,21 +29,28 @@ This document provides a guide on how to enable seamless data exchange between P
 Dictionary Data Roundtrip
 =========================
 
-    This section demonstrates a data roundtrip, where a dictionary array is created in Python, accessed and updated in Java,
-    and finally re-accessed and validated in Python for data consistency.
+This section demonstrates a data roundtrip where C Data interface is being used to provide
+the seamless access to data across language boundaries.
 
 
-Python Component:
------------------
+Python Component
+----------------
 
-    The Python code uses jpype to start the JVM and make the Java class MapValuesConsumer available to Python.
-    Data is generated in PyArrow and exported through C Data to Java.
+In the Python-based component, the data roundtrip process is demonstrated through a sequential workflow.
+
+1. Create data in Python 
+2. Export data to Java
+3. Import updated data from Java
+4. Validate the data consistency
+
+The Python code uses `jpype <https://jpype.readthedocs.io/en/latest/>`_ to start the JVM and make the Java class MapValuesConsumer available to Python.
+Data is generated in PyArrow and exported through C Data to Java.
 
 .. code-block:: python
 
     import jpype
     import jpype.imports
-    from jpype.types import *
+    from jpype.types import JClass
     import pyarrow as pa
     from pyarrow.cffi import ffi as arrow_c
 
@@ -43,7 +67,7 @@ Python Component:
     dictionary = pa.dictionary(pa.int64(), pa.utf8())
     array = pa.array(["A", "B", "C", "A", "D"], dictionary)
     print("From Python")
-    print("Dictionary Created: ", array)
+    print("Dictionary Created:", array)
 
     # create the CDataDictionaryProvider instance which is
     # required to create dictionary array precisely
@@ -62,7 +86,7 @@ Python Component:
     array.type._export_to_c(c_schema_ptr)
 
     # Send Array and its Schema to the Java function
-    # that will update the dictionary
+    # update values in Java
     consumer.update(c_array_ptr, c_schema_ptr)
 
     # Importing updated values from Java to Python
@@ -92,7 +116,7 @@ Python Component:
     # In Java and Python, the same memory is being accessed through the C Data interface.
     # Since the array from Java and array created in Python should have same data. 
     assert updated_array.equals(array)
-    print("Updated Array: ", updated_array)
+    print("Updated Array:", updated_array)
 
     del updated_array
 
@@ -134,19 +158,17 @@ Python Component:
         3
     ]
 
-In the Python component, the following steps are executed to demonstrate the data roundtrip:
 
-1. Create data in Python 
-2. Export data to Java
-3. Import updated data from Java
-4. Validate the data consistency
+Java Component
+--------------
 
+In the Java-based component of the system, the following operations are executed:
 
-Java Component:
----------------
+1. Receives data from the Python component.
+2. Updates the data.
+3. Exports the updated data back to Python.
 
-    In the Java component, the MapValuesConsumer class receives data from the Python component through C Data. 
-    It then updates the data and sends it back to the Python component.
+MapValuesConsumer class uses C Data interface to access the data created in Python.
 
 .. testcode::
 
@@ -250,12 +272,6 @@ Java Component:
     Doing work in Java
     [2, 7, 93]
 
-
-The Java component performs the following actions:
-
-1. Receives data from the Python component.
-2. Updates the data.
-3. Exports the updated data back to Python.
 
 By integrating PyArrow in Python and Java components, this example demonstrates that 
 a system can be created where data is shared and updated across both languages seamlessly.
