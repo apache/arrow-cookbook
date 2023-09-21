@@ -27,3 +27,4 @@ dependencies:
   - gmock
   - arrow-nightlies::pyarrow
   - clang-tools
+  - zlib
