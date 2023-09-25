@@ -21,7 +21,7 @@
 C Data Interface
 ================
 
-The Arrow C Data Interface enables zero-copy sharing of Arrow data between language
+The `Arrow C Data Interface <https://arrow.apache.org/docs/format/CDataInterface.html>`_ enables zero-copy sharing of Arrow data between language
 runtimes.  A Java programme can seamlessly work with C++ and Python programs.
 The following examples demonstrates how it can be done.
 

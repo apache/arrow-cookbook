@@ -86,21 +86,20 @@ Data is generated in PyArrow and exported through C Data to Java.
     array.type._export_to_c(c_schema_ptr)
 
     # Send Array and its Schema to the Java function
-    # update values in Java
-    consumer.update(c_array_ptr, c_schema_ptr)
+    consumer.callToJava(c_array_ptr, c_schema_ptr)
 
     # Importing updated values from Java to Python
 
     # Export the Python array through C Data
-    updated_c_array = arrow_c.new("struct ArrowArray*")
-    updated_c_array_ptr = int(arrow_c.cast("uintptr_t", updated_c_array))
+    c_array_from_java = arrow_c.new("struct ArrowArray*")
+    c_array_ptr_from_java = int(arrow_c.cast("uintptr_t", c_array_from_java))
 
     # Export the Schema of the Array through C Data
-    updated_c_schema = arrow_c.new("struct ArrowSchema*")
-    updated_c_schema_ptr = int(arrow_c.cast("uintptr_t", updated_c_schema))
+    c_schema_from_java = arrow_c.new("struct ArrowSchema*")
+    c_schema_ptr_from_java = int(arrow_c.cast("uintptr_t", c_schema_from_java))
 
-    java_wrapped_array = java_c_package.ArrowArray.wrap(updated_c_array_ptr)
-    java_wrapped_schema = java_c_package.ArrowSchema.wrap(updated_c_schema_ptr)
+    java_wrapped_array = java_c_package.ArrowArray.wrap(c_array_ptr_from_java)
+    java_wrapped_schema = java_c_package.ArrowSchema.wrap(c_schema_ptr_from_java)
 
     java_c_package.Data.exportVector(
         consumer.getAllocatorForJavaConsumer(),
@@ -111,14 +110,19 @@ Data is generated in PyArrow and exported through C Data to Java.
     )
 
     print("From Java back to Python")
-    updated_array = pa.Array._import_from_c(updated_c_array_ptr, updated_c_schema_ptr)
+    array_from_java = pa.Array._import_from_c(c_array_ptr_from_java, c_schema_ptr_from_java)
 
     # In Java and Python, the same memory is being accessed through the C Data interface.
     # Since the array from Java and array created in Python should have same data. 
-    assert updated_array.equals(array)
-    print("Updated Array:", updated_array)
+    assert array_from_java.equals(array)
+    print("Array from Java: ", array_from_java)
 
-    del updated_array
+    # Releasing Java C Data source.
+    del array_from_java
+
+    consumer.close()
+    jpype.shutdownJVM()
+
 
 .. code-block:: shell
 
@@ -141,7 +145,7 @@ Data is generated in PyArrow and exported through C Data to Java.
     ]
     Doing work in Java
     From Java back to Python
-    Updated Array:
+    Array from Java:
     -- dictionary:
     [
         "A",
@@ -191,79 +195,82 @@ MapValuesConsumer class uses C Data interface to access the data created in Pyth
 
 
         public MapValuesConsumer(CDataDictionaryProvider provider, BufferAllocator allocator) {
-            this.provider = provider;
-            this.allocator = allocator;
-            this.intVector = new BigIntVector("internal_test_vector", allocator);
+          this.provider = provider;
+          this.allocator = allocator;
+          this.intVector = new BigIntVector("internal_test_vector", allocator);
         }
 
         public BufferAllocator getAllocatorForJavaConsumer() {
-            return allocator;
+          return allocator;
         }
 
         public FieldVector getVector() {
-            return this.vector;
+          return this.vector;
         }
 
         public void update(long c_array_ptr, long c_schema_ptr) {
-            ArrowArray arrow_array = ArrowArray.wrap(c_array_ptr);
-            ArrowSchema arrow_schema = ArrowSchema.wrap(c_schema_ptr);
-            this.vector = Data.importVector(allocator, arrow_array, arrow_schema, this.provider);
-            this.doWorkInJava(vector);
+          ArrowArray arrow_array = ArrowArray.wrap(c_array_ptr);
+          ArrowSchema arrow_schema = ArrowSchema.wrap(c_schema_ptr);
+          this.vector = Data.importVector(allocator, arrow_array, arrow_schema, this.provider);
+          this.doWorkInJava(vector);
         }
 
         public FieldVector updateFromJava(long c_array_ptr, long c_schema_ptr) {
-            ArrowArray arrow_array = ArrowArray.wrap(c_array_ptr);
-            ArrowSchema arrow_schema = ArrowSchema.wrap(c_schema_ptr);
-            this.vector = Data.importVector(allocator, arrow_array, arrow_schema, this.provider);
-            this.doWorkInJava(vector);
-            return vector;
+          ArrowArray arrow_array = ArrowArray.wrap(c_array_ptr);
+          ArrowSchema arrow_schema = ArrowSchema.wrap(c_schema_ptr);
+          this.vector = Data.importVector(allocator, arrow_array, arrow_schema, this.provider);
+          this.doWorkInJava(vector);
+          return vector;
         }
 
         private void doWorkInJava(FieldVector vector) {
-            System.out.println("Doing work in Java");
-            BigIntVector bigIntVector = (BigIntVector)vector;
-            bigIntVector.setSafe(0, 2);
+          System.out.println("Doing work in Java");
+          BigIntVector bigIntVector = (BigIntVector)vector;
+          bigIntVector.setSafe(0, 2);
         }
 
         public BigIntVector getIntVectorForJavaConsumer() {
-            intVector.allocateNew(3);
-            intVector.set(0, 1);
-            intVector.set(1, 7);
-            intVector.set(2, 93);
-            intVector.setValueCount(3);
-            return intVector;
+          intVector.allocateNew(3);
+          intVector.set(0, 1);
+          intVector.set(1, 7);
+          intVector.set(2, 93);
+          intVector.setValueCount(3);
+          return intVector;
         }
 
         @Override
         public void close() throws Exception {
-            AutoCloseables.close(intVector);
+          AutoCloseables.close(intVector);
         }
     }
     try (BufferAllocator allocator = new RootAllocator()) {
-        CDataDictionaryProvider provider = new CDataDictionaryProvider();
-        try (final MapValuesConsumer mvc = new MapValuesConsumer(provider, allocator)) {
-            try (
+      CDataDictionaryProvider provider = new CDataDictionaryProvider();
+      try (final MapValuesConsumer mvc = new MapValuesConsumer(provider, allocator)) {
+        try (
             ArrowArray arrowArray = ArrowArray.allocateNew(allocator);
             ArrowSchema arrowSchema = ArrowSchema.allocateNew(allocator)
-            )  {
-                    Data.exportVector(allocator, mvc.getIntVectorForJavaConsumer(), provider, arrowArray, arrowSchema);
-                    FieldVector updatedVector = mvc.updateFromJava(arrowArray.memoryAddress(), arrowSchema.memoryAddress());
-                    try (ArrowArray usedArray = ArrowArray.allocateNew(allocator);
-                        ArrowSchema usedSchema = ArrowSchema.allocateNew(allocator)) {
-                        Data.exportVector(allocator, updatedVector, provider, usedArray, usedSchema);
-                        try(FieldVector valueVectors = Data.importVector(allocator, usedArray, usedSchema, provider)) {
-                            System.out.println(valueVectors);
-                        }
-                    }
-                    updatedVector.close();
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
+        ) {
+          Data.exportVector(allocator, mvc.getIntVectorForJavaConsumer(), provider, arrowArray,
+              arrowSchema);
+          FieldVector updatedVector = mvc.updateFromJava(arrowArray.memoryAddress(),
+              arrowSchema.memoryAddress());
+          try (ArrowArray usedArray = ArrowArray.allocateNew(allocator);
+              ArrowSchema usedSchema = ArrowSchema.allocateNew(allocator)) {
+            Data.exportVector(allocator, updatedVector, provider, usedArray, usedSchema);
+            try (FieldVector valueVectors = Data.importVector(allocator, usedArray, usedSchema,
+                provider)) {
+              System.out.println(valueVectors);
+            }
+          }
+          updatedVector.close();
         } catch (Exception ex) {
-            ex.printStackTrace();
+          ex.printStackTrace();
         }
-    } catch (Exception ex) {
+      } catch (Exception ex) {
         ex.printStackTrace();
+      }
+    } catch (Exception ex) {
+      ex.printStackTrace();
     }
 
 
