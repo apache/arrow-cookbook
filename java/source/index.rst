@@ -43,6 +43,7 @@ This cookbook is tested with Apache Arrow |version|.
    data
    avro
    jdbc
+   cdata
 
 Indices and tables
 ==================
