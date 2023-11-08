@@ -211,7 +211,7 @@ because in ``second_schema`` it was already declared as a ``pa.string()``
 
     try:
         union_schema =  pa.unify_schemas([first_schema, second_schema, third_schema])
-    except pa.ArrowInvalid as e:
+    except (pa.ArrowInvalid, pa.ArrowTypeError) as e:
         print(e)
 
 .. testoutput::
