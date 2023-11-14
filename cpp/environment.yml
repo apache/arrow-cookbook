@@ -20,7 +20,7 @@ channels:
 dependencies:
   - python=3.9
   - compilers
-  - arrow-cpp==14.0.0
+  - libarrow==14.0.0
   - sphinx
   - gtest
   - gmock
