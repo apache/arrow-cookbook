@@ -21,7 +21,7 @@ channels:
 dependencies:
   - python=3.9
   - compilers
-  - arrow-nightlies::arrow-cpp
+  - arrow-nightlies::libarrow
   - sphinx
   - gtest
   - gmock
