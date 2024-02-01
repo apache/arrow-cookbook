@@ -25,9 +25,6 @@ Arrow can use `Substrait`_ to integrate with other languages.
 
 .. contents::
 
-Querying Datasets
-=================
-
 The Substrait support in Arrow combines :doc:`Dataset <dataset>` and
 `substrait-java`_ to query datasets using `Acero`_ as a backend.
 
@@ -38,6 +35,9 @@ Acero currently supports:
 - Projections
 - Joins
 - Aggregates
+
+Querying Datasets
+=================
 
 Here is an example of a Java program that queries a Parquet file:
 
@@ -63,7 +63,7 @@ Here is an example of a Java program that queries a Parquet file:
     import java.util.HashMap;
     import java.util.Map;
 
-    static Plan queryTableNation() throws SqlParseException {
+    Plan queryTableNation() throws SqlParseException {
        String sql = "SELECT * FROM NATION WHERE N_NATIONKEY = 17";
        String nation = "CREATE TABLE NATION (N_NATIONKEY BIGINT NOT NULL, N_NAME CHAR(25), " +
                "N_REGIONKEY BIGINT NOT NULL, N_COMMENT VARCHAR(152))";
@@ -72,7 +72,7 @@ Here is an example of a Java program that queries a Parquet file:
        return plan;
     }
 
-    static void queryDatasetThruSubstraitPlanDefinition() {
+    void queryDatasetThruSubstraitPlanDefinition() {
        String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/tpch/nation.parquet";
        ScanOptions options = new ScanOptions(/*batchSize*/ 32768);
        try (
@@ -135,7 +135,7 @@ For example, we can join the nation and customer tables from the TPC-H benchmark
     import java.util.HashMap;
     import java.util.Map;
 
-    static Plan queryTableNationJoinCustomer() throws SqlParseException {
+    Plan queryTableNationJoinCustomer() throws SqlParseException {
         String sql = "SELECT n.n_name, COUNT(*) AS NUMBER_CUSTOMER FROM NATION n JOIN CUSTOMER c " +
             "ON n.n_nationkey = c.c_nationkey WHERE n.n_nationkey = 17 " +
             "GROUP BY n.n_name";
@@ -151,7 +151,7 @@ For example, we can join the nation and customer tables from the TPC-H benchmark
         return plan;
     }
 
-    static void queryTwoDatasetsThruSubstraitPlanDefinition() {
+    void queryTwoDatasetsThruSubstraitPlanDefinition() {
         String uriNation = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/tpch/nation.parquet";
         String uriCustomer = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/tpch/customer.parquet";
         ScanOptions options = new ScanOptions(/*batchSize*/ 32768);
@@ -201,6 +201,175 @@ For example, we can join the nation and customer tables from the TPC-H benchmark
     N_NAME    NUMBER_CUSTOMER
     PERU    573
 
+Execute Filter and Projection into a Dataset
+============================================
+
+Dataset module is able to execute filters and projection with Substrait’s
+`Extended Expression`_. The substrait-java library is required in order to define
+our SQL Expression that we will pass to the dataset module.
+
+Filter Dataset
+--------------
+
+Here is an example of a Java program that filter columns from a Parquet file:
+
+.. testcode::
+
+    import com.google.common.collect.ImmutableList;
+    import io.substrait.isthmus.SqlExpressionToSubstrait;
+    import io.substrait.proto.ExtendedExpression;
+    import java.nio.ByteBuffer;
+    import java.util.Base64;
+    import java.util.Optional;
+    import org.apache.arrow.dataset.file.FileFormat;
+    import org.apache.arrow.dataset.file.FileSystemDatasetFactory;
+    import org.apache.arrow.dataset.jni.NativeMemoryPool;
+    import org.apache.arrow.dataset.scanner.ScanOptions;
+    import org.apache.arrow.dataset.scanner.Scanner;
+    import org.apache.arrow.dataset.source.Dataset;
+    import org.apache.arrow.dataset.source.DatasetFactory;
+    import org.apache.arrow.memory.BufferAllocator;
+    import org.apache.arrow.memory.RootAllocator;
+    import org.apache.arrow.vector.ipc.ArrowReader;
+    import org.apache.calcite.sql.parser.SqlParseException;
+
+    ByteBuffer getFilterExpression() throws SqlParseException {
+      String sqlExpression = "N_NATIONKEY > 10 AND N_NATIONKEY < 15";
+      String nation =
+          "CREATE TABLE NATION (N_NATIONKEY INT NOT NULL, N_NAME CHAR(25), "
+              + "N_REGIONKEY INT NOT NULL, N_COMMENT VARCHAR)";
+      SqlExpressionToSubstrait expressionToSubstrait = new SqlExpressionToSubstrait();
+      ExtendedExpression expression =
+          expressionToSubstrait.convert(sqlExpression, ImmutableList.of(nation));
+      byte[] expressionToByte =
+          Base64.getDecoder().decode(Base64.getEncoder().encodeToString(expression.toByteArray()));
+      ByteBuffer byteBuffer = ByteBuffer.allocateDirect(expressionToByte.length);
+      byteBuffer.put(expressionToByte);
+      return byteBuffer;
+    }
+
+    void filterDataset() throws SqlParseException {
+      String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/tpch/nation.parquet";
+      ScanOptions options =
+          new ScanOptions.Builder(/*batchSize*/ 32768)
+              .columns(Optional.empty())
+              .substraitFilter(getFilterExpression())
+              .build();
+      try (BufferAllocator allocator = new RootAllocator();
+          DatasetFactory datasetFactory =
+              new FileSystemDatasetFactory(
+                  allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
+          Dataset dataset = datasetFactory.finish();
+          Scanner scanner = dataset.newScan(options);
+          ArrowReader reader = scanner.scanBatches()) {
+        while (reader.loadNextBatch()) {
+          System.out.print(reader.getVectorSchemaRoot().contentToTSVString());
+        }
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    filterDataset();
+
+.. testoutput::
+
+    n_nationkey    n_name    n_regionkey    n_comment
+    11    IRAQ    4    nic deposits boost atop the quickly final requests? quickly regula
+    12    JAPAN    2    ously. final, express gifts cajole a
+    13    JORDAN    4    ic deposits are blithely about the carefully regular pa
+    14    KENYA    0     pending excuses haggle furiously deposits. pending, express pinto beans wake fluffily past t
+
+Projection Dataset
+------------------
+
+The following Java program project a new column after applying a filter and
+projection definition into a Parquet file:
+
+.. testcode::
+
+    import com.google.common.collect.ImmutableList;
+    import io.substrait.isthmus.SqlExpressionToSubstrait;
+    import io.substrait.proto.ExtendedExpression;
+    import java.nio.ByteBuffer;
+    import java.util.Base64;
+    import java.util.Optional;
+    import org.apache.arrow.dataset.file.FileFormat;
+    import org.apache.arrow.dataset.file.FileSystemDatasetFactory;
+    import org.apache.arrow.dataset.jni.NativeMemoryPool;
+    import org.apache.arrow.dataset.scanner.ScanOptions;
+    import org.apache.arrow.dataset.scanner.Scanner;
+    import org.apache.arrow.dataset.source.Dataset;
+    import org.apache.arrow.dataset.source.DatasetFactory;
+    import org.apache.arrow.memory.BufferAllocator;
+    import org.apache.arrow.memory.RootAllocator;
+    import org.apache.arrow.vector.ipc.ArrowReader;
+    import org.apache.calcite.sql.parser.SqlParseException;
+
+    ByteBuffer getProjectExpression() throws SqlParseException {
+      String sqlExpression = "N_NAME";
+      String nation =
+          "CREATE TABLE NATION (N_NATIONKEY INT NOT NULL, N_NAME CHAR(25), "
+              + "N_REGIONKEY INT NOT NULL, N_COMMENT VARCHAR)";
+      SqlExpressionToSubstrait expressionToSubstrait = new SqlExpressionToSubstrait();
+      ExtendedExpression expression =
+          expressionToSubstrait.convert(sqlExpression, ImmutableList.of(nation));
+      byte[] expressionToByte =
+          Base64.getDecoder().decode(Base64.getEncoder().encodeToString(expression.toByteArray()));
+      ByteBuffer byteBuffer = ByteBuffer.allocateDirect(expressionToByte.length);
+      byteBuffer.put(expressionToByte);
+      return byteBuffer;
+    }
+
+    ByteBuffer getFilterExpression() throws SqlParseException {
+      String sqlExpression = "N_NATIONKEY > 10 AND N_NATIONKEY < 15";
+      String nation =
+          "CREATE TABLE NATION (N_NATIONKEY INT NOT NULL, N_NAME CHAR(25), "
+              + "N_REGIONKEY INT NOT NULL, N_COMMENT VARCHAR)";
+      SqlExpressionToSubstrait expressionToSubstrait = new SqlExpressionToSubstrait();
+      ExtendedExpression expression =
+          expressionToSubstrait.convert(sqlExpression, ImmutableList.of(nation));
+      byte[] expressionToByte =
+          Base64.getDecoder().decode(Base64.getEncoder().encodeToString(expression.toByteArray()));
+      ByteBuffer byteBuffer = ByteBuffer.allocateDirect(expressionToByte.length);
+      byteBuffer.put(expressionToByte);
+      return byteBuffer;
+    }
+
+    void filterAndProjectDataset() throws SqlParseException {
+      String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/tpch/nation.parquet";
+      ScanOptions options =
+          new ScanOptions.Builder(/*batchSize*/ 32768)
+              .columns(Optional.empty())
+              .substraitFilter(getFilterExpression())
+              .substraitProjection(getProjectExpression())
+              .build();
+      try (BufferAllocator allocator = new RootAllocator();
+          DatasetFactory datasetFactory =
+              new FileSystemDatasetFactory(
+                  allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
+          Dataset dataset = datasetFactory.finish();
+          Scanner scanner = dataset.newScan(options);
+          ArrowReader reader = scanner.scanBatches()) {
+        while (reader.loadNextBatch()) {
+          System.out.print(reader.getVectorSchemaRoot().contentToTSVString());
+        }
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    filterAndProjectDataset();
+
+.. testoutput::
+
+    new-column
+    IRAQ
+    JAPAN
+    JORDAN
+    KENYA
+
 .. _`Substrait`: https://substrait.io/
 .. _`substrait-java`: https://github.com/substrait-io/substrait-java
 .. _`Acero`: https://arrow.apache.org/docs/cpp/streaming_execution.html
+.. _`Extended Expression`: https://github.com/substrait-io/substrait/blob/main/site/docs/expressions/extended_expression.md

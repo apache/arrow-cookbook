@@ -100,12 +100,12 @@
         <dependency>
             <groupId>io.substrait</groupId>
             <artifactId>isthmus</artifactId>
-            <version>0.11.0</version>
+            <version>0.25.0</version>
         </dependency>
         <dependency>
             <groupId>io.substrait</groupId>
             <artifactId>core</artifactId>
-            <version>0.11.0</version>
+            <version>0.25.0</version>
         </dependency>
     </dependencies>
 </project>
