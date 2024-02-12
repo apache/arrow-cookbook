@@ -213,6 +213,11 @@ Filter Dataset
 
 Here is an example of a Java program that filter columns from a Parquet file:
 
+- Loads a Parquet file containing the “nation” table from the TPC-H benchmark.
+- Applies a filter:
+    - `N_NATIONKEY > 10, AND`
+    - `N_NATIONKEY < 15`
+
 .. testcode::
 
     import com.google.common.collect.ImmutableList;
@@ -286,6 +291,15 @@ Projection Dataset
 The following Java program project a new column after applying a filter and
 projection definition into a Parquet file:
 
+- Loads a Parquet file containing the “nation” table from the TPC-H benchmark.
+- Applies a filter:
+ - `N_NATIONKEY > 10, AND`
+ - `N_NATIONKEY < 15`
+- Projects three new columns:
+ - `N_NAME`
+ - `N_NATIONKEY > 12`
+ - `N_NATIONKEY + 31`
+
 .. testcode::
 
     import com.google.common.collect.ImmutableList;
@@ -307,7 +321,7 @@ projection definition into a Parquet file:
     import org.apache.calcite.sql.parser.SqlParseException;
 
     ByteBuffer getProjectExpression() throws SqlParseException {
-      String sqlExpression = "N_NAME";
+      String[] sqlExpression = new String[]{"N_NAME", "N_NATIONKEY > 12", "N_NATIONKEY + 31"};
       String nation =
           "CREATE TABLE NATION (N_NATIONKEY INT NOT NULL, N_NAME CHAR(25), "
               + "N_REGIONKEY INT NOT NULL, N_COMMENT VARCHAR)";
@@ -363,11 +377,11 @@ projection definition into a Parquet file:
 
 .. testoutput::
 
-    new-column
-    IRAQ
-    JAPAN
-    JORDAN
-    KENYA
+    column-1    column-2    column-3
+    IRAQ    false    42
+    JAPAN    false    43
+    JORDAN    true    44
+    KENYA    true    45
 
 .. _`Substrait`: https://substrait.io/
 .. _`substrait-java`: https://github.com/substrait-io/substrait-java
