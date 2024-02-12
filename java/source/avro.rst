@@ -17,9 +17,9 @@
 
 .. _arrow-avro:
 
-======
-Avro 
-======
+====
+Avro
+====
 
 Avro encoded data can be converted into Arrow format.
 
@@ -32,10 +32,10 @@ The example assumes that the Avro schema is stored separately from the Avro data
 
 .. testcode::
 
-   import org.apache.arrow.AvroToArrow;
-   import org.apache.arrow.AvroToArrowConfig;
-   import org.apache.arrow.AvroToArrowConfigBuilder;
-   import org.apache.arrow.AvroToArrowVectorIterator;
+   import org.apache.arrow.adapter.avro.AvroToArrow;
+   import org.apache.arrow.adapter.avro.AvroToArrowConfig;
+   import org.apache.arrow.adapter.avro.AvroToArrowConfigBuilder;
+   import org.apache.arrow.adapter.avro.AvroToArrowVectorIterator;
    import org.apache.arrow.memory.BufferAllocator;
    import org.apache.arrow.memory.RootAllocator;
    import org.apache.arrow.vector.VectorSchemaRoot;
@@ -63,7 +63,7 @@ The example assumes that the Avro schema is stored separately from the Avro data
        }
    } catch (Exception e) {
        e.printStackTrace();
-   } 
+   }
 
 .. testoutput::
 
