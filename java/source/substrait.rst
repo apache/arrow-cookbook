@@ -201,21 +201,21 @@ For example, we can join the nation and customer tables from the TPC-H benchmark
     N_NAME    NUMBER_CUSTOMER
     PERU    573
 
-Execute Filter and Projection into a Dataset
-============================================
+Filtering and Projecting Datasets
+=================================
 
-Dataset module is able to execute filters and projection with Substrait’s
-`Extended Expression`_. The substrait-java library is required in order to define
-our SQL Expression that we will pass to the dataset module.
+Arrow Dataset supports filters and projections with Substrait’s
+`Extended Expression`_. The substrait-java library is required to construct
+these expressions.
 
-Filter Dataset
---------------
+Filtering a Dataset
+-------------------
 
-Here is an example of a Java program that filter columns from a Parquet file:
+Here is an example of a Java program that filters a Parquet file:
 
 - Loads a Parquet file containing the “nation” table from the TPC-H benchmark.
 - Applies a filter:
-    - `N_NATIONKEY > 10, AND`
+    - ``N_NATIONKEY > 10, AND``
     - `N_NATIONKEY < 15`
 
 .. testcode::
@@ -285,11 +285,11 @@ Here is an example of a Java program that filter columns from a Parquet file:
     13    JORDAN    4    ic deposits are blithely about the carefully regular pa
     14    KENYA    0     pending excuses haggle furiously deposits. pending, express pinto beans wake fluffily past t
 
-Projection Dataset
-------------------
+Projecting a Dataset
+--------------------
 
-The following Java program project a new column after applying a filter and
-projection definition into a Parquet file:
+The following Java program projects new columns after applying a filter to
+a Parquet file:
 
 - Loads a Parquet file containing the “nation” table from the TPC-H benchmark.
 - Applies a filter:
