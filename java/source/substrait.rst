@@ -43,7 +43,6 @@ Here is an example of a Java program that queries a Parquet file:
 
 .. testcode::
 
-    import com.google.common.collect.ImmutableList;
     import io.substrait.isthmus.SqlToSubstrait;
     import io.substrait.proto.Plan;
     import org.apache.arrow.dataset.file.FileFormat;
@@ -68,7 +67,7 @@ Here is an example of a Java program that queries a Parquet file:
        String nation = "CREATE TABLE NATION (N_NATIONKEY BIGINT NOT NULL, N_NAME CHAR(25), " +
                "N_REGIONKEY BIGINT NOT NULL, N_COMMENT VARCHAR(152))";
        SqlToSubstrait sqlToSubstrait = new SqlToSubstrait();
-       Plan plan = sqlToSubstrait.execute(sql, ImmutableList.of(nation));
+       Plan plan = sqlToSubstrait.execute(sql, Collections.singletonList(nation));
        return plan;
     }
 
@@ -115,7 +114,6 @@ For example, we can join the nation and customer tables from the TPC-H benchmark
 
 .. testcode::
 
-    import com.google.common.collect.ImmutableList;
     import io.substrait.isthmus.SqlToSubstrait;
     import io.substrait.proto.Plan;
     import org.apache.arrow.dataset.file.FileFormat;
@@ -132,6 +130,7 @@ For example, we can join the nation and customer tables from the TPC-H benchmark
     import org.apache.calcite.sql.parser.SqlParseException;
 
     import java.nio.ByteBuffer;
+    import java.util.Arrays;
     import java.util.HashMap;
     import java.util.Map;
 
@@ -147,7 +146,7 @@ For example, we can join the nation and customer tables from the TPC-H benchmark
             "C_COMMENT VARCHAR(117) )";
         SqlToSubstrait sqlToSubstrait = new SqlToSubstrait();
         Plan plan = sqlToSubstrait.execute(sql,
-            ImmutableList.of(nation, customer));
+            Arrays.asList(nation, customer));
         return plan;
     }
 
@@ -216,15 +215,13 @@ Here is an example of a Java program that filters a Parquet file:
 - Loads a Parquet file containing the “nation” table from the TPC-H benchmark.
 - Applies a filter:
     - ``N_NATIONKEY > 10, AND``
-    - `N_NATIONKEY < 15`
+    - ``N_NATIONKEY < 15```
 
 .. testcode::
 
-    import com.google.common.collect.ImmutableList;
     import io.substrait.isthmus.SqlExpressionToSubstrait;
     import io.substrait.proto.ExtendedExpression;
     import java.nio.ByteBuffer;
-    import java.util.Base64;
     import java.util.Optional;
     import org.apache.arrow.dataset.file.FileFormat;
     import org.apache.arrow.dataset.file.FileSystemDatasetFactory;
@@ -245,9 +242,8 @@ Here is an example of a Java program that filters a Parquet file:
               + "N_REGIONKEY INT NOT NULL, N_COMMENT VARCHAR)";
       SqlExpressionToSubstrait expressionToSubstrait = new SqlExpressionToSubstrait();
       ExtendedExpression expression =
-          expressionToSubstrait.convert(sqlExpression, ImmutableList.of(nation));
-      byte[] expressionToByte =
-          Base64.getDecoder().decode(Base64.getEncoder().encodeToString(expression.toByteArray()));
+          expressionToSubstrait.convert(sqlExpression, Collections.singletonList(nation));
+      byte[] expressionToByte = expression.toByteArray();
       ByteBuffer byteBuffer = ByteBuffer.allocateDirect(expressionToByte.length);
       byteBuffer.put(expressionToByte);
       return byteBuffer;
@@ -293,20 +289,18 @@ a Parquet file:
 
 - Loads a Parquet file containing the “nation” table from the TPC-H benchmark.
 - Applies a filter:
- - `N_NATIONKEY > 10, AND`
- - `N_NATIONKEY < 15`
+ - ``N_NATIONKEY > 10, AND``
+ - ``N_NATIONKEY < 15``
 - Projects three new columns:
- - `N_NAME`
- - `N_NATIONKEY > 12`
- - `N_NATIONKEY + 31`
+ - ``N_NAME``
+ - ``N_NATIONKEY > 12``
+ - ``N_NATIONKEY + 31``
 
 .. testcode::
 
-    import com.google.common.collect.ImmutableList;
     import io.substrait.isthmus.SqlExpressionToSubstrait;
     import io.substrait.proto.ExtendedExpression;
     import java.nio.ByteBuffer;
-    import java.util.Base64;
     import java.util.Optional;
     import org.apache.arrow.dataset.file.FileFormat;
     import org.apache.arrow.dataset.file.FileSystemDatasetFactory;
@@ -327,9 +321,8 @@ a Parquet file:
               + "N_REGIONKEY INT NOT NULL, N_COMMENT VARCHAR)";
       SqlExpressionToSubstrait expressionToSubstrait = new SqlExpressionToSubstrait();
       ExtendedExpression expression =
-          expressionToSubstrait.convert(sqlExpression, ImmutableList.of(nation));
-      byte[] expressionToByte =
-          Base64.getDecoder().decode(Base64.getEncoder().encodeToString(expression.toByteArray()));
+          expressionToSubstrait.convert(sqlExpression, Collections.singletonList(nation));
+      byte[] expressionToByte = expression.toByteArray();
       ByteBuffer byteBuffer = ByteBuffer.allocateDirect(expressionToByte.length);
       byteBuffer.put(expressionToByte);
       return byteBuffer;
@@ -342,9 +335,8 @@ a Parquet file:
               + "N_REGIONKEY INT NOT NULL, N_COMMENT VARCHAR)";
       SqlExpressionToSubstrait expressionToSubstrait = new SqlExpressionToSubstrait();
       ExtendedExpression expression =
-          expressionToSubstrait.convert(sqlExpression, ImmutableList.of(nation));
-      byte[] expressionToByte =
-          Base64.getDecoder().decode(Base64.getEncoder().encodeToString(expression.toByteArray()));
+          expressionToSubstrait.convert(sqlExpression, Collections.singletonList(nation));
+      byte[] expressionToByte = expression.toByteArray();
       ByteBuffer byteBuffer = ByteBuffer.allocateDirect(expressionToByte.length);
       byteBuffer.put(expressionToByte);
       return byteBuffer;
