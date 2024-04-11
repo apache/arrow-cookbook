@@ -20,10 +20,10 @@ channels:
 dependencies:
   - python=3.9
   - compilers
-  - libarrow==15.0.1
+  - libarrow==15.0.2
   - sphinx
   - gtest
   - gmock
-  - pyarrow==15.0.1
+  - pyarrow==15.0.2
   - clang-tools
   - zlib
