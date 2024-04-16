@@ -75,7 +75,8 @@ html_theme_options = {
     "github_type": "none",
     "extra_nav_links": {
         "User Guide": "https://arrow.apache.org/docs/python/index.html",
-        "API Reference": "https://arrow.apache.org/docs/python/api.html"
+        "API Reference": "https://arrow.apache.org/docs/python/api.html",
+        "All Cookbooks": "../"
     },
     "font_family": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,Liberation Sans,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji"
 }
