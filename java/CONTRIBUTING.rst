@@ -30,22 +30,13 @@ install needed packages via pip, to build the Java cookbook.  The
 dependency packages managed via pip by build scripts are found at
 `requirements.txt <requirements.txt>`_.
 
-Java Shell
-^^^^^^^^^^^^^^^^^^^^^^^^^
-For Java cookbook we are running these with Java Shell tool -
-`JShell <https://docs.oracle.com/en/java/javase/11/jshell/introduction-jshell.html>`_
+Java
+^^^^
 
-.. code-block:: bash
+The Java cookbooks require:
 
-    > java --version
-    java 11.0.14 2022-01-18 LTS
-    Java(TM) SE Runtime Environment 18.9 (build 11.0.14+8-LTS-263)
-
-.. code-block:: bash
-
-    > jshell --version
-    jshell 11.0.14
-
+- Java JDK (11+)
+- Maven
 
 Build Process
 -------------------------
@@ -80,6 +71,21 @@ they suit that section or you can create new sections by adding
 additional ``.rst`` files in the ``source`` directory. You just
 need to remember to add them to the ``index.rst`` file in the
 ``toctree`` for them to become visible.
+
+When run, Java code snippets are wrapped in a simple main class
+
+.. code-block:: java
+
+    // Any imports get put here
+
+    public class Example {
+        public static void main (String[] args) {
+            // Your code gets inserted here
+        }
+    }
+
+If your code is more complicated, you can explicitly define ``public class Example``,
+the above wrapping won't happen and the code will be run as-is.
 
 Java Sphinx Directive
 =====================
