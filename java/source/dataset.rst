@@ -344,6 +344,7 @@ In case we need to project only certain columns we could configure ScanOptions w
    import org.apache.arrow.memory.RootAllocator;
    import org.apache.arrow.vector.VectorSchemaRoot;
    import org.apache.arrow.vector.ipc.ArrowReader;
+   import java.util.Optional;
 
    String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/parquetfiles/data1.parquet";
    String[] projection = new String[] {"name"};
