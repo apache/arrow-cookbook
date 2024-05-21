@@ -83,18 +83,6 @@ class JavaDocTestBuilder(DocTestBuilder):
             modified_env = os.environ.copy()
             modified_env["_JAVA_OPTIONS"] = "--add-opens=java.base/java.nio=ALL-UNNAMED"
 
-            # Hack until we refactor: exec:java can pull in dependencies it needs at
-            # runtime which pollutes the captured output we use later. So we run exec:java
-            # in a way that will (1) get those deps and (2) fail reasonably fast.
-            subprocess.Popen(
-                [
-                    "mvn",
-                    "-f",
-                    project_dir,
-                    "exec:java",
-                ]
-            )
-
             test_proc = subprocess.Popen(
                 [
                     "mvn",
@@ -124,6 +112,8 @@ class JavaDocTestBuilder(DocTestBuilder):
         # Remove log lines from output
         lines = [l for l in lines if not l.startswith("[INFO]")]
         lines = [l for l in lines if not l.startswith("[WARNING]")]
+        lines = [l for l in lines if not l.startswith("Download")]
+        lines = [l for l in lines if not l.startswith("Progress")]
 
         result = "\n".join(lines)
 
