@@ -21,8 +21,13 @@ from typing import Any, Dict
 import tempfile
 import shutil
 
-from sphinx.ext.doctest import (DocTestBuilder, TestcodeDirective,
-                                TestoutputDirective, doctest, sphinx)
+from sphinx.ext.doctest import (
+    DocTestBuilder,
+    TestcodeDirective,
+    TestoutputDirective,
+    doctest,
+    sphinx,
+)
 from sphinx.locale import __
 
 
@@ -122,7 +127,7 @@ class JavaDocTestBuilder(DocTestBuilder):
         # Convert all tabs to 4 spaces, Sphinx seems to eat tabs even if we
         # explicitly put them in the testoutput block so we instead modify
         # the output
-        result = (4*' ').join(result.split('\t'))
+        result = (4 * " ").join(result.split("\t"))
 
         return result.strip()
 
