@@ -83,15 +83,15 @@ class JavaDocTestBuilder(DocTestBuilder):
             modified_env = os.environ.copy()
             modified_env["_JAVA_OPTIONS"] = "--add-opens=java.base/java.nio=ALL-UNNAMED"
 
-            # Run package phase before from exec:java so we're not exec:java
-            # doesn't trigger downloading dependencies and pollute the captured
-            # output
+            # Hack until we refactor: exec:java can pull in dependencies it needs at
+            # runtime which pollutes the captured output we use later. So we run exec:java
+            # in a way that will (1) get those deps and (2) fail reasonably fast.
             subprocess.Popen(
                 [
                     "mvn",
                     "-f",
                     project_dir,
-                    "package",
+                    "exec:java",
                 ]
             )
 
