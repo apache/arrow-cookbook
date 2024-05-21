@@ -83,14 +83,15 @@ class JavaDocTestBuilder(DocTestBuilder):
             modified_env = os.environ.copy()
             modified_env["_JAVA_OPTIONS"] = "--add-opens=java.base/java.nio=ALL-UNNAMED"
 
-            # Run compile phase separately from exec:java so we're not
-            # capturing its output
+            # Run package phase before from exec:java so we're not exec:java
+            # doesn't trigger downloading dependencies and pollute the captured
+            # output
             subprocess.Popen(
                 [
                     "mvn",
                     "-f",
                     project_dir,
-                    "compile",
+                    "package",
                 ]
             )
 
