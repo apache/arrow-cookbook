@@ -127,6 +127,11 @@ class JavaDocTestBuilder(DocTestBuilder):
         return result.strip()
 
     def fill_template(self, template, code):
+        # Detect the special case where cookbook code is already wrapped in a
+        # class and just use the code as-is without wrapping it up
+        if code.find("public class Example") >= 0:
+            return template + code
+
         # Split input code into imports and not-imports
         lines = code.split("\n")
         code_imports = [l for l in lines if l.startswith("import")]

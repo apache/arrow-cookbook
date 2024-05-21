@@ -114,5 +114,10 @@
             <artifactId>core</artifactId>
             <version>0.26.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.calcite</groupId>
+            <artifactId>calcite-core</artifactId>
+            <version>1.37.0</version>
+        </dependency>
     </dependencies>
 </project>
