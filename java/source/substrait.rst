@@ -61,48 +61,55 @@ Here is an example of a Java program that queries a Parquet file:
     import java.nio.ByteBuffer;
     import java.util.HashMap;
     import java.util.Map;
+    import java.util.Collections;
 
-    Plan queryTableNation() throws SqlParseException {
-       String sql = "SELECT * FROM NATION WHERE N_NATIONKEY = 17";
-       String nation = "CREATE TABLE NATION (N_NATIONKEY BIGINT NOT NULL, N_NAME CHAR(25), " +
-               "N_REGIONKEY BIGINT NOT NULL, N_COMMENT VARCHAR(152))";
-       SqlToSubstrait sqlToSubstrait = new SqlToSubstrait();
-       Plan plan = sqlToSubstrait.execute(sql, Collections.singletonList(nation));
-       return plan;
-    }
+    public class Example {
+        Plan queryTableNation() throws SqlParseException {
+           String sql = "SELECT * FROM NATION WHERE N_NATIONKEY = 17";
+           String nation = "CREATE TABLE NATION (N_NATIONKEY BIGINT NOT NULL, N_NAME CHAR(25), " +
+                   "N_REGIONKEY BIGINT NOT NULL, N_COMMENT VARCHAR(152))";
+           SqlToSubstrait sqlToSubstrait = new SqlToSubstrait();
+           Plan plan = sqlToSubstrait.execute(sql, Collections.singletonList(nation));
+           return plan;
+        }
 
-    void queryDatasetThruSubstraitPlanDefinition() {
-       String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/tpch/nation.parquet";
-       ScanOptions options = new ScanOptions(/*batchSize*/ 32768);
-       try (
-           BufferAllocator allocator = new RootAllocator();
-           DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(),
-                   FileFormat.PARQUET, uri);
-           Dataset dataset = datasetFactory.finish();
-           Scanner scanner = dataset.newScan(options);
-           ArrowReader reader = scanner.scanBatches()
-       ) {
-           Map<String, ArrowReader> mapTableToArrowReader = new HashMap<>();
-           mapTableToArrowReader.put("NATION", reader);
-           // get binary plan
-           Plan plan = queryTableNation();
-           ByteBuffer substraitPlan = ByteBuffer.allocateDirect(plan.toByteArray().length);
-           substraitPlan.put(plan.toByteArray());
-           // run query
-           try (ArrowReader arrowReader = new AceroSubstraitConsumer(allocator).runQuery(
-               substraitPlan,
-               mapTableToArrowReader
-           )) {
-               while (arrowReader.loadNextBatch()) {
-                   System.out.print(arrowReader.getVectorSchemaRoot().contentToTSVString());
+        void queryDatasetThruSubstraitPlanDefinition() {
+           String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/tpch/nation.parquet";
+           ScanOptions options = new ScanOptions(/*batchSize*/ 32768);
+           try (
+               BufferAllocator allocator = new RootAllocator();
+               DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(),
+                       FileFormat.PARQUET, uri);
+               Dataset dataset = datasetFactory.finish();
+               Scanner scanner = dataset.newScan(options);
+               ArrowReader reader = scanner.scanBatches()
+           ) {
+               Map<String, ArrowReader> mapTableToArrowReader = new HashMap<>();
+               mapTableToArrowReader.put("NATION", reader);
+               // get binary plan
+               Plan plan = queryTableNation();
+               ByteBuffer substraitPlan = ByteBuffer.allocateDirect(plan.toByteArray().length);
+               substraitPlan.put(plan.toByteArray());
+               // run query
+               try (ArrowReader arrowReader = new AceroSubstraitConsumer(allocator).runQuery(
+                   substraitPlan,
+                   mapTableToArrowReader
+               )) {
+                   while (arrowReader.loadNextBatch()) {
+                       System.out.print(arrowReader.getVectorSchemaRoot().contentToTSVString());
+                   }
                }
+           } catch (Exception e) {
+               e.printStackTrace();
            }
-       } catch (Exception e) {
-           e.printStackTrace();
-       }
-    }
+        }
 
-    queryDatasetThruSubstraitPlanDefinition();
+        public static void main(String[] args) {
+            Example ex = new Example();
+
+            ex.queryDatasetThruSubstraitPlanDefinition();
+        }
+    }
 
 .. testoutput::
 
@@ -134,66 +141,72 @@ For example, we can join the nation and customer tables from the TPC-H benchmark
     import java.util.HashMap;
     import java.util.Map;
 
-    Plan queryTableNationJoinCustomer() throws SqlParseException {
-        String sql = "SELECT n.n_name, COUNT(*) AS NUMBER_CUSTOMER FROM NATION n JOIN CUSTOMER c " +
-            "ON n.n_nationkey = c.c_nationkey WHERE n.n_nationkey = 17 " +
-            "GROUP BY n.n_name";
-        String nation = "CREATE TABLE NATION (N_NATIONKEY BIGINT NOT NULL, " +
-            "N_NAME CHAR(25), N_REGIONKEY BIGINT NOT NULL, N_COMMENT VARCHAR(152))";
-        String customer = "CREATE TABLE CUSTOMER (C_CUSTKEY BIGINT NOT NULL, " +
-            "C_NAME VARCHAR(25), C_ADDRESS VARCHAR(40), C_NATIONKEY BIGINT NOT NULL, " +
-            "C_PHONE CHAR(15), C_ACCTBAL DECIMAL, C_MKTSEGMENT CHAR(10), " +
-            "C_COMMENT VARCHAR(117) )";
-        SqlToSubstrait sqlToSubstrait = new SqlToSubstrait();
-        Plan plan = sqlToSubstrait.execute(sql,
-            Arrays.asList(nation, customer));
-        return plan;
-    }
+    public class Example {
+        Plan queryTableNationJoinCustomer() throws SqlParseException {
+            String sql = "SELECT n.n_name, COUNT(*) AS NUMBER_CUSTOMER FROM NATION n JOIN CUSTOMER c " +
+                "ON n.n_nationkey = c.c_nationkey WHERE n.n_nationkey = 17 " +
+                "GROUP BY n.n_name";
+            String nation = "CREATE TABLE NATION (N_NATIONKEY BIGINT NOT NULL, " +
+                "N_NAME CHAR(25), N_REGIONKEY BIGINT NOT NULL, N_COMMENT VARCHAR(152))";
+            String customer = "CREATE TABLE CUSTOMER (C_CUSTKEY BIGINT NOT NULL, " +
+                "C_NAME VARCHAR(25), C_ADDRESS VARCHAR(40), C_NATIONKEY BIGINT NOT NULL, " +
+                "C_PHONE CHAR(15), C_ACCTBAL DECIMAL, C_MKTSEGMENT CHAR(10), " +
+                "C_COMMENT VARCHAR(117) )";
+            SqlToSubstrait sqlToSubstrait = new SqlToSubstrait();
+            Plan plan = sqlToSubstrait.execute(sql,
+                Arrays.asList(nation, customer));
+            return plan;
+        }
 
-    void queryTwoDatasetsThruSubstraitPlanDefinition() {
-        String uriNation = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/tpch/nation.parquet";
-        String uriCustomer = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/tpch/customer.parquet";
-        ScanOptions options = new ScanOptions(/*batchSize*/ 32768);
-        try (
-            BufferAllocator allocator = new RootAllocator();
-            DatasetFactory datasetFactory = new FileSystemDatasetFactory(
-                allocator, NativeMemoryPool.getDefault(),
-                FileFormat.PARQUET, uriNation);
-            Dataset dataset = datasetFactory.finish();
-            Scanner scanner = dataset.newScan(options);
-            ArrowReader readerNation = scanner.scanBatches();
-            DatasetFactory datasetFactoryCustomer = new FileSystemDatasetFactory(
-                allocator, NativeMemoryPool.getDefault(),
-                FileFormat.PARQUET, uriCustomer);
-            Dataset datasetCustomer = datasetFactoryCustomer.finish();
-            Scanner scannerCustomer = datasetCustomer.newScan(options);
-            ArrowReader readerCustomer = scannerCustomer.scanBatches()
-        ) {
-            // map table to reader
-            Map<String, ArrowReader> mapTableToArrowReader = new HashMap<>();
-            mapTableToArrowReader.put("NATION", readerNation);
-            mapTableToArrowReader.put("CUSTOMER", readerCustomer);
-            // get binary plan
-            Plan plan = queryTableNationJoinCustomer();
-            ByteBuffer substraitPlan = ByteBuffer.allocateDirect(
-                plan.toByteArray().length);
-            substraitPlan.put(plan.toByteArray());
-            // run query
-            try (ArrowReader arrowReader = new AceroSubstraitConsumer(
-                allocator).runQuery(
-                substraitPlan,
-                mapTableToArrowReader
-            )) {
-                while (arrowReader.loadNextBatch()) {
-                    System.out.print(arrowReader.getVectorSchemaRoot().contentToTSVString());
+        void queryTwoDatasetsThruSubstraitPlanDefinition() {
+            String uriNation = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/tpch/nation.parquet";
+            String uriCustomer = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/tpch/customer.parquet";
+            ScanOptions options = new ScanOptions(/*batchSize*/ 32768);
+            try (
+                BufferAllocator allocator = new RootAllocator();
+                DatasetFactory datasetFactory = new FileSystemDatasetFactory(
+                    allocator, NativeMemoryPool.getDefault(),
+                    FileFormat.PARQUET, uriNation);
+                Dataset dataset = datasetFactory.finish();
+                Scanner scanner = dataset.newScan(options);
+                ArrowReader readerNation = scanner.scanBatches();
+                DatasetFactory datasetFactoryCustomer = new FileSystemDatasetFactory(
+                    allocator, NativeMemoryPool.getDefault(),
+                    FileFormat.PARQUET, uriCustomer);
+                Dataset datasetCustomer = datasetFactoryCustomer.finish();
+                Scanner scannerCustomer = datasetCustomer.newScan(options);
+                ArrowReader readerCustomer = scannerCustomer.scanBatches()
+            ) {
+                // map table to reader
+                Map<String, ArrowReader> mapTableToArrowReader = new HashMap<>();
+                mapTableToArrowReader.put("NATION", readerNation);
+                mapTableToArrowReader.put("CUSTOMER", readerCustomer);
+                // get binary plan
+                Plan plan = queryTableNationJoinCustomer();
+                ByteBuffer substraitPlan = ByteBuffer.allocateDirect(
+                    plan.toByteArray().length);
+                substraitPlan.put(plan.toByteArray());
+                // run query
+                try (ArrowReader arrowReader = new AceroSubstraitConsumer(
+                    allocator).runQuery(
+                    substraitPlan,
+                    mapTableToArrowReader
+                )) {
+                    while (arrowReader.loadNextBatch()) {
+                        System.out.print(arrowReader.getVectorSchemaRoot().contentToTSVString());
+                    }
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        }
+
+        public static void main(String[] args) {
+            Example ex = new Example();
+
+            ex.queryTwoDatasetsThruSubstraitPlanDefinition();
         }
     }
-
-    queryTwoDatasetsThruSubstraitPlanDefinition();
 
 .. testoutput::
 
@@ -223,6 +236,7 @@ Here is an example of a Java program that filters a Parquet file:
     import io.substrait.proto.ExtendedExpression;
     import java.nio.ByteBuffer;
     import java.util.Optional;
+    import java.util.Collections;
     import org.apache.arrow.dataset.file.FileFormat;
     import org.apache.arrow.dataset.file.FileSystemDatasetFactory;
     import org.apache.arrow.dataset.jni.NativeMemoryPool;
@@ -235,43 +249,53 @@ Here is an example of a Java program that filters a Parquet file:
     import org.apache.arrow.vector.ipc.ArrowReader;
     import org.apache.calcite.sql.parser.SqlParseException;
 
-    ByteBuffer getFilterExpression() throws SqlParseException {
-      String sqlExpression = "N_NATIONKEY > 10 AND N_NATIONKEY < 15";
-      String nation =
-          "CREATE TABLE NATION (N_NATIONKEY INT NOT NULL, N_NAME CHAR(25), "
-              + "N_REGIONKEY INT NOT NULL, N_COMMENT VARCHAR)";
-      SqlExpressionToSubstrait expressionToSubstrait = new SqlExpressionToSubstrait();
-      ExtendedExpression expression =
-          expressionToSubstrait.convert(sqlExpression, Collections.singletonList(nation));
-      byte[] expressionToByte = expression.toByteArray();
-      ByteBuffer byteBuffer = ByteBuffer.allocateDirect(expressionToByte.length);
-      byteBuffer.put(expressionToByte);
-      return byteBuffer;
-    }
-
-    void filterDataset() throws SqlParseException {
-      String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/tpch/nation.parquet";
-      ScanOptions options =
-          new ScanOptions.Builder(/*batchSize*/ 32768)
-              .columns(Optional.empty())
-              .substraitFilter(getFilterExpression())
-              .build();
-      try (BufferAllocator allocator = new RootAllocator();
-          DatasetFactory datasetFactory =
-              new FileSystemDatasetFactory(
-                  allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
-          Dataset dataset = datasetFactory.finish();
-          Scanner scanner = dataset.newScan(options);
-          ArrowReader reader = scanner.scanBatches()) {
-        while (reader.loadNextBatch()) {
-          System.out.print(reader.getVectorSchemaRoot().contentToTSVString());
+    public class Example {
+        ByteBuffer getFilterExpression() throws SqlParseException {
+          String sqlExpression = "N_NATIONKEY > 10 AND N_NATIONKEY < 15";
+          String nation =
+              "CREATE TABLE NATION (N_NATIONKEY INT NOT NULL, N_NAME CHAR(25), "
+                  + "N_REGIONKEY INT NOT NULL, N_COMMENT VARCHAR)";
+          SqlExpressionToSubstrait expressionToSubstrait = new SqlExpressionToSubstrait();
+          ExtendedExpression expression =
+              expressionToSubstrait.convert(sqlExpression, Collections.singletonList(nation));
+          byte[] expressionToByte = expression.toByteArray();
+          ByteBuffer byteBuffer = ByteBuffer.allocateDirect(expressionToByte.length);
+          byteBuffer.put(expressionToByte);
+          return byteBuffer;
         }
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-    }
 
-    filterDataset();
+        void filterDataset() throws SqlParseException {
+          String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/tpch/nation.parquet";
+          ScanOptions options =
+              new ScanOptions.Builder(/*batchSize*/ 32768)
+                  .columns(Optional.empty())
+                  .substraitFilter(getFilterExpression())
+                  .build();
+          try (BufferAllocator allocator = new RootAllocator();
+              DatasetFactory datasetFactory =
+                  new FileSystemDatasetFactory(
+                      allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
+              Dataset dataset = datasetFactory.finish();
+              Scanner scanner = dataset.newScan(options);
+              ArrowReader reader = scanner.scanBatches()) {
+            while (reader.loadNextBatch()) {
+              System.out.print(reader.getVectorSchemaRoot().contentToTSVString());
+            }
+          } catch (Exception e) {
+            throw new RuntimeException(e);
+          }
+        }
+
+        public static void main(String[] args) {
+            Example ex = new Example();
+
+            try {
+              ex.filterDataset();
+            } catch (SqlParseException e) {
+              System.out.println(e.getMessage());
+            }
+        }
+    }
 
 .. testoutput::
 
@@ -302,6 +326,7 @@ a Parquet file:
     import io.substrait.proto.ExtendedExpression;
     import java.nio.ByteBuffer;
     import java.util.Optional;
+    import java.util.Collections;
     import org.apache.arrow.dataset.file.FileFormat;
     import org.apache.arrow.dataset.file.FileSystemDatasetFactory;
     import org.apache.arrow.dataset.jni.NativeMemoryPool;
@@ -314,58 +339,68 @@ a Parquet file:
     import org.apache.arrow.vector.ipc.ArrowReader;
     import org.apache.calcite.sql.parser.SqlParseException;
 
-    ByteBuffer getProjectExpression() throws SqlParseException {
-      String[] sqlExpression = new String[]{"N_NAME", "N_NATIONKEY > 12", "N_NATIONKEY + 31"};
-      String nation =
-          "CREATE TABLE NATION (N_NATIONKEY INT NOT NULL, N_NAME CHAR(25), "
-              + "N_REGIONKEY INT NOT NULL, N_COMMENT VARCHAR)";
-      SqlExpressionToSubstrait expressionToSubstrait = new SqlExpressionToSubstrait();
-      ExtendedExpression expression =
-          expressionToSubstrait.convert(sqlExpression, Collections.singletonList(nation));
-      byte[] expressionToByte = expression.toByteArray();
-      ByteBuffer byteBuffer = ByteBuffer.allocateDirect(expressionToByte.length);
-      byteBuffer.put(expressionToByte);
-      return byteBuffer;
-    }
-
-    ByteBuffer getFilterExpression() throws SqlParseException {
-      String sqlExpression = "N_NATIONKEY > 10 AND N_NATIONKEY < 15";
-      String nation =
-          "CREATE TABLE NATION (N_NATIONKEY INT NOT NULL, N_NAME CHAR(25), "
-              + "N_REGIONKEY INT NOT NULL, N_COMMENT VARCHAR)";
-      SqlExpressionToSubstrait expressionToSubstrait = new SqlExpressionToSubstrait();
-      ExtendedExpression expression =
-          expressionToSubstrait.convert(sqlExpression, Collections.singletonList(nation));
-      byte[] expressionToByte = expression.toByteArray();
-      ByteBuffer byteBuffer = ByteBuffer.allocateDirect(expressionToByte.length);
-      byteBuffer.put(expressionToByte);
-      return byteBuffer;
-    }
-
-    void filterAndProjectDataset() throws SqlParseException {
-      String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/tpch/nation.parquet";
-      ScanOptions options =
-          new ScanOptions.Builder(/*batchSize*/ 32768)
-              .columns(Optional.empty())
-              .substraitFilter(getFilterExpression())
-              .substraitProjection(getProjectExpression())
-              .build();
-      try (BufferAllocator allocator = new RootAllocator();
-          DatasetFactory datasetFactory =
-              new FileSystemDatasetFactory(
-                  allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
-          Dataset dataset = datasetFactory.finish();
-          Scanner scanner = dataset.newScan(options);
-          ArrowReader reader = scanner.scanBatches()) {
-        while (reader.loadNextBatch()) {
-          System.out.print(reader.getVectorSchemaRoot().contentToTSVString());
+    public class Example {
+        ByteBuffer getProjectExpression() throws SqlParseException {
+        String[] sqlExpression = new String[]{"N_NAME", "N_NATIONKEY > 12", "N_NATIONKEY + 31"};
+        String nation =
+            "CREATE TABLE NATION (N_NATIONKEY INT NOT NULL, N_NAME CHAR(25), "
+                + "N_REGIONKEY INT NOT NULL, N_COMMENT VARCHAR)";
+        SqlExpressionToSubstrait expressionToSubstrait = new SqlExpressionToSubstrait();
+        ExtendedExpression expression =
+            expressionToSubstrait.convert(sqlExpression, Collections.singletonList(nation));
+        byte[] expressionToByte = expression.toByteArray();
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(expressionToByte.length);
+        byteBuffer.put(expressionToByte);
+        return byteBuffer;
         }
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-    }
 
-    filterAndProjectDataset();
+        ByteBuffer getFilterExpression() throws SqlParseException {
+        String sqlExpression = "N_NATIONKEY > 10 AND N_NATIONKEY < 15";
+        String nation =
+            "CREATE TABLE NATION (N_NATIONKEY INT NOT NULL, N_NAME CHAR(25), "
+                + "N_REGIONKEY INT NOT NULL, N_COMMENT VARCHAR)";
+        SqlExpressionToSubstrait expressionToSubstrait = new SqlExpressionToSubstrait();
+        ExtendedExpression expression =
+            expressionToSubstrait.convert(sqlExpression, Collections.singletonList(nation));
+        byte[] expressionToByte = expression.toByteArray();
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(expressionToByte.length);
+        byteBuffer.put(expressionToByte);
+        return byteBuffer;
+        }
+
+        void filterAndProjectDataset() throws SqlParseException {
+        String uri = "file:" + System.getProperty("user.dir") + "/thirdpartydeps/tpch/nation.parquet";
+        ScanOptions options =
+            new ScanOptions.Builder(/*batchSize*/ 32768)
+                .columns(Optional.empty())
+                .substraitFilter(getFilterExpression())
+                .substraitProjection(getProjectExpression())
+                .build();
+        try (BufferAllocator allocator = new RootAllocator();
+            DatasetFactory datasetFactory =
+                new FileSystemDatasetFactory(
+                    allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
+            Dataset dataset = datasetFactory.finish();
+            Scanner scanner = dataset.newScan(options);
+            ArrowReader reader = scanner.scanBatches()) {
+            while (reader.loadNextBatch()) {
+            System.out.print(reader.getVectorSchemaRoot().contentToTSVString());
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        }
+
+        public static void main (String[] args) {
+            Example ex = new Example();
+
+            try {
+                ex.filterAndProjectDataset();
+            } catch (SqlParseException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+    }
 
 .. testoutput::
 

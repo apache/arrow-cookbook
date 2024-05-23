@@ -70,6 +70,7 @@ Flight Client and Server
    import java.util.Collections;
    import java.util.Iterator;
    import java.util.List;
+   import java.util.concurrent.ConcurrentMap;
    import java.util.concurrent.ConcurrentHashMap;
 
    class Dataset implements AutoCloseable {

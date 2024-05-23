@@ -61,6 +61,8 @@ Fields are used to denote the particular columns of tabular data.
    import org.apache.arrow.vector.types.pojo.ArrowType;
    import org.apache.arrow.vector.types.pojo.Field;
    import org.apache.arrow.vector.types.pojo.FieldType;
+   import java.util.ArrayList;
+   import java.util.List;
 
    FieldType intType = new FieldType(true, new ArrowType.Int(32, true), null);
    FieldType listType = new FieldType(true, new ArrowType.List(), null);
@@ -118,6 +120,8 @@ In case we need to add metadata to our Field we could use:
    import org.apache.arrow.vector.types.pojo.ArrowType;
    import org.apache.arrow.vector.types.pojo.Field;
    import org.apache.arrow.vector.types.pojo.FieldType;
+   import java.util.HashMap;
+   import java.util.Map;
 
    Map<String, String> metadata = new HashMap<>();
    metadata.put("A", "Id card");

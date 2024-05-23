@@ -18,9 +18,16 @@ import os
 import pathlib
 import subprocess
 from typing import Any, Dict
+import tempfile
+import shutil
 
-from sphinx.ext.doctest import (DocTestBuilder, TestcodeDirective,
-                                TestoutputDirective, doctest, sphinx)
+from sphinx.ext.doctest import (
+    DocTestBuilder,
+    TestcodeDirective,
+    TestoutputDirective,
+    doctest,
+    sphinx,
+)
 from sphinx.locale import __
 
 
@@ -34,6 +41,10 @@ class JavaTestcodeDirective(TestcodeDirective):
 class JavaDocTestBuilder(DocTestBuilder):
     """
     Runs java test snippets in the documentation.
+
+    The code in each testcode block is insert into a template Maven project,
+    run through exec:java, its output captured and post-processed, and finally
+    compared to whatever's in the corresponding testoutput.
     """
 
     name = "javadoctest"
@@ -45,46 +56,49 @@ class JavaDocTestBuilder(DocTestBuilder):
     def compile(
         self, code: str, name: str, type: str, flags: Any, dont_inherit: bool
     ) -> Any:
-        # go to project that contains all your arrow maven dependencies
-        path_arrow_project = pathlib.Path(__file__).parent.parent / "source" / "demo"
-        # create list of all arrow jar dependencies
-        subprocess.check_call(
-            [
-                "mvn",
-                "-q",
-                "dependency:build-classpath",
-                "-DincludeTypes=jar",
-                "-Dmdep.outputFile=.cp.tmp",
-                f"-Darrow.version={self.env.config.version}",
-            ],
-            cwd=path_arrow_project,
-            text=True,
-        )
-        if not (path_arrow_project / ".cp.tmp").exists():
-            raise RuntimeError(
-                __("invalid process to create jshell dependencies library")
+        source_dir = pathlib.Path(__file__).parent.parent / "source" / "demo"
+
+        with tempfile.TemporaryDirectory() as project_dir:
+            shutil.copytree(source_dir, project_dir, dirs_exist_ok=True)
+
+            template_file_path = (
+                pathlib.Path(project_dir)
+                / "src"
+                / "main"
+                / "java"
+                / "org"
+                / "example"
+                / "Example.java"
             )
 
-        # get list of all arrow jar dependencies
-        with open(path_arrow_project / ".cp.tmp") as f:
-            stdout_dependency = f.read()
-        if not stdout_dependency:
-            raise RuntimeError(
-                __("invalid process to list jshell dependencies library")
+            with open(template_file_path, "r") as infile:
+                template = infile.read()
+
+            filled_template = self.fill_template(template, code)
+
+            with open(template_file_path, "w") as outfile:
+                outfile.write(filled_template)
+
+            # Support JPMS (since Arrow 16)
+            modified_env = os.environ.copy()
+            modified_env["_JAVA_OPTIONS"] = "--add-opens=java.base/java.nio=ALL-UNNAMED"
+
+            test_proc = subprocess.Popen(
+                [
+                    "mvn",
+                    "-f",
+                    project_dir,
+                    "compile",
+                    "exec:java",
+                    "-Dexec.mainClass=org.example.Example",
+                ],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                text=True,
+                env=modified_env,
             )
 
-        # execute java testing code thru jshell and read output
-        # JDK11 support '-' This allows the pipe to work as expected without requiring a shell
-        # Migrating to /dev/stdin to also support JDK9+
-        proc_jshell_process = subprocess.Popen(
-            ["jshell", "-R--add-opens=java.base/java.nio=ALL-UNNAMED", "--class-path", stdout_dependency, "-s", "/dev/stdin"],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            text=True,
-        )
-        out_java_arrow, err_java_arrow = proc_jshell_process.communicate(code)
-        if err_java_arrow:
-            raise RuntimeError(__("invalid process to run jshell"))
+            out_java_arrow, err_java_arrow = test_proc.communicate()
 
         # continue with python logic code to do java output validation
         output = f"print('''{self.clean_output(out_java_arrow)}''')"
@@ -93,12 +107,53 @@ class JavaDocTestBuilder(DocTestBuilder):
         return compile(output, name, self.type, flags, dont_inherit)
 
     def clean_output(self, output: str):
-        if output[-3:] == '-> ':
-            output = output[:-3]
-        if output[-1:] == '\n':
-            output = output[:-1]
-        output = (4*' ').join(output.split('\t'))
-        return output
+        lines = output.split("\n")
+
+        # Remove log lines from output
+        lines = [l for l in lines if not l.startswith("[INFO]")]
+        lines = [l for l in lines if not l.startswith("[WARNING]")]
+        lines = [l for l in lines if not l.startswith("Download")]
+        lines = [l for l in lines if not l.startswith("Progress")]
+
+        result = "\n".join(lines)
+
+        # Sometimes the testoutput content is smushed onto the same line as
+        # following log line, probably just when the testcode code doesn't print
+        # its own final newline. This example is the only case I found so I
+        # didn't pull out the re module (i.e., this works)
+        result = result.replace(
+            "[INFO] ------------------------------------------------------------------------",
+            "",
+        )
+
+        # Convert all tabs to 4 spaces, Sphinx seems to eat tabs even if we
+        # explicitly put them in the testoutput block so we instead modify
+        # the output
+        result = (4 * " ").join(result.split("\t"))
+
+        return result.strip()
+
+    def fill_template(self, template, code):
+        # Detect the special case where cookbook code is already wrapped in a
+        # class and just use the code as-is without wrapping it up
+        if code.find("public class Example") >= 0:
+            return template + code
+
+        # Split input code into imports and not-imports
+        lines = code.split("\n")
+        code_imports = [l for l in lines if l.startswith("import")]
+        code_rest = [l for l in lines if not l.startswith("import")]
+
+        pieces = [
+            template,
+            "\n".join(code_imports),
+            "\n\npublic class Example {\n    public static void main(String[] args) {\n",
+            "\n".join(code_rest),
+            "    }\n}",
+        ]
+
+        return "\n".join(pieces)
+
 
 def setup(app) -> Dict[str, Any]:
     app.add_directive("testcode", JavaTestcodeDirective)
