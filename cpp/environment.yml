@@ -21,6 +21,7 @@ dependencies:
   - python=3.9
   - compilers
   - libarrow==16.0.0
+  - libarrow-flight==16.0.0
   - sphinx
   - gtest
   - gmock
