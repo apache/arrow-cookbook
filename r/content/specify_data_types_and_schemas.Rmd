@@ -21,19 +21,19 @@
 
 ## Introduction
 
-As discussed in previous chapters, Arrow automatically infers the most 
-appropriate data type when reading in data or converting R objects to Arrow 
-objects.  However, you might want to manually tell Arrow which data types to 
-use, for example, to ensure interoperability with databases and data warehouse 
+As discussed in previous chapters, Arrow automatically infers the most
+appropriate data type when reading in data or converting R objects to Arrow
+objects.  However, you might want to manually tell Arrow which data types to
+use, for example, to ensure interoperability with databases and data warehouse
 systems.  This chapter includes recipes for:
 
 * changing the data types of existing Arrow objects
 * defining data types during the process of creating Arrow objects
 
-A table showing the default mappings between R and Arrow data types can be found 
+A table showing the default mappings between R and Arrow data types can be found
 in [R data type to Arrow data type mappings](https://arrow.apache.org/docs/r/articles/arrow.html#r-to-arrow).
 
-A table containing Arrow data types, and their R equivalents can be found in 
+A table containing Arrow data types, and their R equivalents can be found in
 [Arrow data type to R data type mapping](https://arrow.apache.org/docs/r/articles/arrow.html#arrow-to-r).
 
 ## Update data type of an existing Arrow Array
@@ -63,7 +63,7 @@ test_that("cast_array works as expected", {
 
 ### Discussion
 
-There are some data types which are not compatible with each other. Errors will 
+There are some data types which are not compatible with each other. Errors will
 occur if you try to cast between incompatible data types.
 
 ```{r, incompat, eval = FALSE}
@@ -122,7 +122,7 @@ test_that("cast_table works as expected", {
 
 ## Specify data types when creating an Arrow table from an R object
 
-You want to manually specify Arrow data types when converting an object from a 
+You want to manually specify Arrow data types when converting an object from a
 data frame to an Arrow object.
 
 ### Solution
@@ -187,4 +187,3 @@ test_that("use_schema_dataset works as expected", {
 ```{r, include=FALSE}
 unlink("oscars_data", recursive = TRUE)
 ```
-
