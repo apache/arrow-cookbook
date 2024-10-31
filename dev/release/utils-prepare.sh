@@ -50,7 +50,7 @@ update_versions() {
 
   pushd "${ARROW_COOKBOOK_DIR}/cpp"
   sed -i.bak -E \
-    -e "s/libarrow==${base_version}/libarrow==${next_version}/" \
+    -e "s/libarrow(-?[a-z]*)==${base_version}/libarrow\1==${next_version}/" \
     -e "s/pyarrow==${base_version}/pyarrow==${next_version}/" \
     environment.yml
   rm -f environment.yml.bak
