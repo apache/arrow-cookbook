@@ -44,6 +44,8 @@ See https://arrow.apache.org/cookbook/ for the latest published version using th
 latest stable version of Apache Arrow.
 See https://arrow.apache.org/cookbook/dev for the latest published version using
 the development version of Apache Arrow.
+Please note that the development version of the cookbook will be out of date
+while we work to rebuild some of our nightly build infrastructure.
 
 Building All Cookbooks
 ----------------------
