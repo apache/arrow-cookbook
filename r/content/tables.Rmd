@@ -191,9 +191,7 @@ test_that("dplyr_func_warning", {
      arrow_table(starwars) %>%
       mutate(name_split = str_split_fixed(name, " ", 2)) %>%
       collect(),
-    'Expression str_split_fixed(name, " ", 2) not supported in Arrow; pulling data into R',
-    fixed = TRUE
-  )
+    'In str_split_fixed\\(name, " ", 2\\):.*Expression not supported in Arrow.*Pulling data into R')
 
 })
 ```
