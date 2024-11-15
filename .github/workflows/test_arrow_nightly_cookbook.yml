@@ -67,7 +67,7 @@ jobs:
         run:
           make cpp
       - name: Upload cpp book
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: cpp_book
           path: build/cpp
