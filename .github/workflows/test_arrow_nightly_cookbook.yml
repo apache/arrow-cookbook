@@ -100,7 +100,7 @@ jobs:
       ARROW_NIGHTLY: ${{ matrix.arrow_nightly }}
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - uses: actions/setup-java@v3
@@ -124,7 +124,7 @@ jobs:
       ARROW_NIGHTLY: ${{ matrix.arrow_nightly }}
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - uses: actions/setup-java@v3
