@@ -92,9 +92,9 @@ class ParquetStorageService : public arrow::flight::FlightServerBase {
                       const arrow::flight::Ticket& request,
                       std::unique_ptr<arrow::flight::FlightDataStream>* stream) override {
     ARROW_ASSIGN_OR_RAISE(auto input, root_->OpenInputFile(request.ticket));
-    std::unique_ptr<parquet::arrow::FileReader> reader;
-    ARROW_RETURN_NOT_OK(parquet::arrow::OpenFile(std::move(input),
-                                                 arrow::default_memory_pool(), &reader));
+    ARROW_ASSIGN_OR_RAISE(
+        auto reader,
+        parquet::arrow::OpenFile(std::move(input), arrow::default_memory_pool()));
 
     std::shared_ptr<arrow::Table> table;
     ARROW_RETURN_NOT_OK(reader->ReadTable(&table));
@@ -135,9 +135,9 @@ class ParquetStorageService : public arrow::flight::FlightServerBase {
   arrow::Result<arrow::flight::FlightInfo> MakeFlightInfo(
       const arrow::fs::FileInfo& file_info) {
     ARROW_ASSIGN_OR_RAISE(auto input, root_->OpenInputFile(file_info));
-    std::unique_ptr<parquet::arrow::FileReader> reader;
-    ARROW_RETURN_NOT_OK(parquet::arrow::OpenFile(std::move(input),
-                                                 arrow::default_memory_pool(), &reader));
+    ARROW_ASSIGN_OR_RAISE(
+        auto reader,
+        parquet::arrow::OpenFile(std::move(input), arrow::default_memory_pool()));
 
     std::shared_ptr<arrow::Schema> schema;
     ARROW_RETURN_NOT_OK(reader->GetSchema(&schema));
@@ -222,9 +222,8 @@ arrow::Status TestPutGetDelete() {
                         FindTestDataFile("airquality.parquet"));
   ARROW_ASSIGN_OR_RAISE(std::shared_ptr<arrow::io::RandomAccessFile> input,
                         fs->OpenInputFile(airquality_path));
-  std::unique_ptr<parquet::arrow::FileReader> reader;
-  ARROW_RETURN_NOT_OK(
-      parquet::arrow::OpenFile(std::move(input), arrow::default_memory_pool(), &reader));
+  ARROW_ASSIGN_OR_RAISE(auto reader, parquet::arrow::OpenFile(
+                                         std::move(input), arrow::default_memory_pool()));
 
   auto descriptor = arrow::flight::FlightDescriptor::Path({"airquality.parquet"});
   std::shared_ptr<arrow::Schema> schema;
