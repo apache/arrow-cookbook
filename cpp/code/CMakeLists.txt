@@ -40,6 +40,7 @@ endif()
 # Create test targets
 enable_testing()
 
+find_package(GTest REQUIRED)
 include(GoogleTest)
 
 function(RECIPE TARGET)
@@ -53,13 +54,13 @@ function(RECIPE TARGET)
         target_link_libraries(
             ${TARGET}
             ArrowDataset::arrow_dataset_shared
-            ArrowFlight::arrow_flight_shared gtest
+            ArrowFlight::arrow_flight_shared GTest::gtest
         )
     else()
         target_link_libraries(parquet_shared INTERFACE arrow_shared)
         target_link_libraries(arrow_dataset_shared INTERFACE parquet_shared)
         target_link_libraries(arrow_flight_shared INTERFACE arrow_shared)
-        target_link_libraries(${TARGET} arrow_dataset_shared arrow_flight_shared gtest)
+        target_link_libraries(${TARGET} arrow_dataset_shared arrow_flight_shared GTest::gtest)
     endif()
     if (MSVC)
         target_compile_options(${TARGET} PRIVATE /W4 /WX)

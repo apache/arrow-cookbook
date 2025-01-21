@@ -1,5 +1,5 @@
 Sphinx>=4.0.2
-pyarrow==18.1.0
+pyarrow==19.0.0
 pandas>=1.2.5
 opentelemetry-api>=1.0.0
 opentelemetry-sdk>=1.0.0
