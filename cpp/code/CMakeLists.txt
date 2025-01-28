@@ -56,8 +56,6 @@ if(DEFINED ENV{ARROW_NIGHTLY})
         DESTINATION "${arrow_SOURCE_DIR}/cpp/src/arrow/util")
     file(INSTALL "${arrow_BINARY_DIR}/src/parquet/parquet_version.h"
         DESTINATION "${arrow_SOURCE_DIR}/cpp/src/parquet")
-
-    # NOTE: I had to add this to make headers available which I find weird
     target_include_directories(
         arrow_shared
         INTERFACE "$<BUILD_INTERFACE:${arrow_SOURCE_DIR}/cpp/src>"
