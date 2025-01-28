@@ -69,10 +69,6 @@ else()
     find_package(ArrowDataset REQUIRED)
     find_package(ArrowFlight REQUIRED)
     find_package(Parquet REQUIRED)
-
-    # Add protobuf to flight
-    find_package(Threads)
-    find_package(gRPC CONFIG REQUIRED)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -117,6 +113,10 @@ recipe(basic_arrow)
 recipe(creating_arrow_objects)
 recipe(datasets)
 recipe(flight)
+
+# Add protobuf to flight
+find_package(Threads)
+find_package(gRPC CONFIG REQUIRED)
 
 set(PROTO_FILES
     protos/helloworld.proto
