@@ -95,7 +95,7 @@ output block when the recipe is rendered into the cookbook.
 ## Referencing Arrow C++ Documentation
 
 The Arrow project has its own documentation for the C++ implementation that
-is hosted at https://arrow.apache.org/docs/cpp/index.html. Fortunately,
+is hosted at <https://arrow.apache.org/docs/cpp/index.html>. Fortunately,
 this documentation is also built with Sphinx and so we can use the extension
 `intersphinx` to reference sections of this documentation. To do so simply
 write a standard Sphinx reference like so:

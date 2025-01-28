@@ -28,15 +28,15 @@ if(DEFINED ENV{ARROW_NIGHTLY})
     set(CMAKE_BUILD_TYPE Debug)
     set(ARROW_BUILD_SHARED True)
     set(ARROW_DEPENDENCY_SOURCE "AUTO")
-    set(ARROW_SIMD_LEVEL NONE) # macOS-specific workaround
     set(ARROW_ENABLE_THREADING ON)
+    set(ARROW_SIMD_LEVEL NONE) # macOS-specific workaround
 
     set(ARROW_ACERO ON)
     set(ARROW_COMPUTE ON)
     set(ARROW_DATASET ON)
     set(ARROW_FILESYSTEM ON)
-    set(ARROW_IPC ON)
     set(ARROW_FLIGHT ON)
+    set(ARROW_IPC ON)
     set(ARROW_PARQUET ON)
 
     include(FetchContent)
