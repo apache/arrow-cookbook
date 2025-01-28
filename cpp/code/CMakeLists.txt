@@ -49,6 +49,19 @@ if(DEFINED ENV{ARROW_NIGHTLY})
     )
 
     FetchContent_MakeAvailable(Arrow)
+
+    # These are some Linux-only things the FetchContent build needs in order
+    # to compile
+    file(INSTALL "${arrow_BINARY_DIR}/src/arrow/util/config.h"
+        DESTINATION "${arrow_SOURCE_DIR}/cpp/src/arrow/util")
+    file(INSTALL "${arrow_BINARY_DIR}/src/parquet/parquet_version.h"
+        DESTINATION "${arrow_SOURCE_DIR}/cpp/src/parquet")
+
+    # NOTE: I had to add this to make headers available which I find weird
+    target_include_directories(
+        arrow_shared
+        INTERFACE "$<BUILD_INTERFACE:${arrow_SOURCE_DIR}/cpp/src>"
+    )
 else()
     find_package(Arrow REQUIRED)
     find_package(ArrowDataset REQUIRED)
