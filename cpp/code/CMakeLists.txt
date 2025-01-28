@@ -62,6 +62,8 @@ if(DEFINED ENV{ARROW_NIGHTLY})
         arrow_shared
         INTERFACE "$<BUILD_INTERFACE:${arrow_SOURCE_DIR}/cpp/src>"
     )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")
+
 else()
     find_package(Arrow REQUIRED)
     find_package(ArrowDataset REQUIRED)
