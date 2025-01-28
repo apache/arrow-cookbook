@@ -121,6 +121,7 @@ cmake build. For example:
 ```
 mkdir cpp/code/build
 cd cpp/code/build
+# Optional: Run `export ARROW_NIGHTLY=1` to build Arrow from git.
 cmake ../code -DCMAKE_BUILD_TYPE=Debug
 cmake --build .
 ctest
