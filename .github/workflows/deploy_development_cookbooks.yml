@@ -66,6 +66,8 @@ jobs:
         run:
           echo ${CONDA_PREFIX}
       - name: Build cookbook
+        env:
+          - ARROW_NIGHTLY: 1
         run:
           make cpp
       - name: Upload cpp book

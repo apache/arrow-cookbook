@@ -24,14 +24,37 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 endif()
 
 # Add Arrow and other required packages
-find_package(Arrow REQUIRED)
-if(NOT ${ARROW_VERSION} VERSION_GREATER "9.0.0")
-  get_filename_component(ARROW_CMAKE_BASE_DIR ${Arrow_CONFIG} DIRECTORY)
-  list(INSERT CMAKE_MODULE_PATH 0 ${ARROW_CMAKE_BASE_DIR})
+if(DEFINED ENV{ARROW_NIGHTLY})
+    set(CMAKE_BUILD_TYPE Debug)
+    set(ARROW_BUILD_SHARED True)
+    set(ARROW_DEPENDENCY_SOURCE "AUTO")
+    set(ARROW_SIMD_LEVEL NONE) # macOS-specific workaround
+    set(ARROW_ENABLE_THREADING ON)
+
+    set(ARROW_ACERO ON)
+    set(ARROW_COMPUTE ON)
+    set(ARROW_DATASET ON)
+    set(ARROW_FILESYSTEM ON)
+    set(ARROW_IPC ON)
+    set(ARROW_FLIGHT ON)
+    set(ARROW_PARQUET ON)
+
+    include(FetchContent)
+
+    FetchContent_Declare(Arrow
+        GIT_REPOSITORY https://github.com/apache/arrow.git
+        GIT_TAG main
+        GIT_SHALLOW TRUE SOURCE_SUBDIR cpp
+        OVERRIDE_FIND_PACKAGE
+    )
+
+    FetchContent_MakeAvailable(Arrow)
+else()
+    find_package(Arrow REQUIRED)
+    find_package(ArrowDataset REQUIRED)
+    find_package(ArrowFlight REQUIRED)
+    find_package(Parquet REQUIRED)
 endif()
-find_package(ArrowDataset REQUIRED)
-find_package(ArrowFlight REQUIRED)
-find_package(Parquet REQUIRED)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_CLANG_TIDY "clang-tidy")
