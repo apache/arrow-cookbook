@@ -86,6 +86,7 @@ class JavaDocTestBuilder(DocTestBuilder):
             test_proc = subprocess.Popen(
                 [
                     "mvn",
+                    "--batch-mode",
                     "-f",
                     project_dir,
                     "compile",
