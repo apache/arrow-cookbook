@@ -19,6 +19,11 @@
 #
 set -ue
 
+: ${BUMP_DEFAULT:=1}
+: ${BUMP_CPP:=${BUMP_DEFAULT}}
+: ${BUMP_PYTHON:=${BUMP_DEFAULT}}
+: ${BUMP_JAVA:=0}
+
 SOURCE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 if [ "$#" -ne 2 ]; then

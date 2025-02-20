@@ -25,40 +25,46 @@ update_versions() {
   local nightly_major_version=$(($major_version+1))
   local nightly_version_snapshot="${nightly_major_version}.0.0-SNAPSHOT"
 
-  pushd "${ARROW_COOKBOOK_DIR}/java/source/demo"
-  mvn versions:set-property -Dproperty=arrow.version -DnewVersion=${next_version}
-  find . -type f -name pom.xml.versionsBackup -delete
-  git add pom.xml
-  popd
+  if [ "${BUMP_JAVA:-0}" -eq 1 ]; then
+    pushd "${ARROW_COOKBOOK_DIR}/java/source/demo"
+    mvn versions:set-property -Dproperty=arrow.version -DnewVersion=${next_version}
+    find . -type f -name pom.xml.versionsBackup -delete
+    git add pom.xml
+    popd
 
-  pushd "${ARROW_COOKBOOK_DIR}/java/source"
-  sed -i.bak -E \
-    -e "s/version = \"${base_version}\"/version = \"${next_version}\"/" \
-    -e "s/version = \"${next_version}-SNAPSHOT\"/version = \"${nightly_version_snapshot}\"/" \
-    conf.py
-  rm -f conf.py.bak
-  git add conf.py
-  popd
+    pushd "${ARROW_COOKBOOK_DIR}/java/source"
+    sed -i.bak -E \
+      -e "s/version = \"${base_version}\"/version = \"${next_version}\"/" \
+      -e "s/version = \"${next_version}-SNAPSHOT\"/version = \"${nightly_version_snapshot}\"/" \
+      conf.py
+    rm -f conf.py.bak
+    git add conf.py
+    popd
+  fi
 
-  pushd "${ARROW_COOKBOOK_DIR}/python"
-  sed -i.bak -E -e \
-    "s/pyarrow==${base_version}/pyarrow==${next_version}/" \
-    requirements.txt
-  rm -f requirements.txt.bak
-  git add requirements.txt
-  popd
+  if [ "${BUMP_PYTHON:-0}" -eq 1 ]; then
+    pushd "${ARROW_COOKBOOK_DIR}/python"
+    sed -i.bak -E -e \
+      "s/pyarrow==${base_version}/pyarrow==${next_version}/" \
+      requirements.txt
+    rm -f requirements.txt.bak
+    git add requirements.txt
+    popd
+  fi
 
-  pushd "${ARROW_COOKBOOK_DIR}/cpp"
-  sed -i.bak -E \
-    -e "s/libarrow(-?[a-z]*)==${base_version}/libarrow\1==${next_version}/" \
-    -e "s/pyarrow==${base_version}/pyarrow==${next_version}/" \
-    environment.yml
-  rm -f environment.yml.bak
+  if [ "${BUMP_CPP:-0}" -eq 1 ]; then
+    pushd "${ARROW_COOKBOOK_DIR}/cpp"
+    sed -i.bak -E \
+      -e "s/libarrow(-?[a-z]*)==${base_version}/libarrow\1==${next_version}/" \
+      -e "s/pyarrow==${base_version}/pyarrow==${next_version}/" \
+      environment.yml
+    rm -f environment.yml.bak
 
-  conda-lock --file environment.yml --kind explicit -p linux-aarch64 -p linux-64 -p osx-arm64
-  git add environment.yml
-  git add conda-linux-64.lock
-  git add conda-linux-aarch64.lock
-  git add conda-osx-arm64.lock
-  popd
+    conda-lock --file environment.yml --kind explicit -p linux-aarch64 -p linux-64 -p osx-arm64
+    git add environment.yml
+    git add conda-linux-64.lock
+    git add conda-linux-aarch64.lock
+    git add conda-osx-arm64.lock
+    popd
+  fi
 }
