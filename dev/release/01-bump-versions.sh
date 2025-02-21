@@ -19,6 +19,11 @@
 #
 set -ue
 
+: ${BUMP_DEFAULT:=1}
+: ${BUMP_CPP:=${BUMP_DEFAULT}}
+: ${BUMP_PYTHON:=${BUMP_DEFAULT}}
+: ${BUMP_JAVA:=0}
+
 SOURCE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 if [ "$#" -ne 2 ]; then
@@ -32,6 +37,18 @@ old_version=$1
 new_version=$2
 version_tag="apache-arrow-${new_version}"
 
+# Use the BUMP_XYZ vars to create a tag string for the commit
+TAGS=""
+if [ "${BUMP_CPP:-0}" -eq 1 ]; then
+  TAGS="${TAGS}[C++]"
+fi
+if [ "${BUMP_JAVA:-0}" -eq 1 ]; then
+  TAGS="${TAGS}[Java]"
+fi
+if [ "${BUMP_PYTHON:-0}" -eq 1 ]; then
+  TAGS="${TAGS}[Python]"
+fi
+
 echo "Prepare ${new_version}"
 update_versions "${old_version}" "${new_version}"
-git commit -m "MINOR: [Release] Update versions for ${new_version}"
+git commit -m "MINOR: [Release]$TAGS Update versions for ${new_version}"
