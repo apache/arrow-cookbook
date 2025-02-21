@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Reading and Writing Datasets &#8212; Apache Arrow C++ Cookbook  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=49eeb2a1" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Arrow Flight" href="flight.html" />
+    <link rel="prev" title="Creating Arrow Objects" href="create.html" />
+  
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+  <!-- Matomo -->
+  <script>
+    var _paq = window._paq = window._paq || [];
+    /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+    /* We explicitly disable cookie tracking to avoid privacy issues */
+    _paq.push(['disableCookies']);
+    _paq.push(['trackPageView']);
+    _paq.push(['enableLinkTracking']);
+    (function() {
+      var u="https://analytics.apache.org/";
+      _paq.push(['setTrackerUrl', u+'matomo.php']);
+      _paq.push(['setSiteId', '20']);
+      var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+      g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+    })();
+  </script>
+  <!-- End Matomo Code -->
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="reading-and-writing-datasets">
+<h1><a class="toc-backref" href="#id7" role="doc-backlink">Reading and Writing Datasets</a><a class="headerlink" href="#reading-and-writing-datasets" title="Link to this heading">¶</a></h1>
+<p>This section contains a number of recipes for reading and writing
+datasets.  Datasets are a collection of one or more files containing
+tabular data.</p>
+<nav class="contents" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#reading-and-writing-datasets" id="id7">Reading and Writing Datasets</a></p>
+<ul>
+<li><p><a class="reference internal" href="#read-a-partitioned-dataset" id="id8">Read a Partitioned Dataset</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+<section id="read-a-partitioned-dataset">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">Read a Partitioned Dataset</a><a class="headerlink" href="#read-a-partitioned-dataset" title="Link to this heading">¶</a></h2>
+<p>The individual data files that make up a dataset will often be
+distributed across several different directories according to some
+kind of partitioning scheme.</p>
+<p>This simplifies management of the data and also allows for partial
+reads of the dataset by inspecting the file paths and utilizing the
+guarantees provided by the partitioning scheme.</p>
+<p>This recipe demonstrates the basics of reading a partitioned dataset.
+First let us inspect our data:</p>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text">A listing of files in our dataset</span><a class="headerlink" href="#id1" title="Link to this code">¶</a></div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">directory_base</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">airquality_basedir</span><span class="p">;</span>
+
+<span class="c1">// Create a filesystem</span>
+<span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">arrow</span><span class="o">::</span><span class="n">fs</span><span class="o">::</span><span class="n">LocalFileSystem</span><span class="o">&gt;</span><span class="w"> </span><span class="n">fs</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">make_shared</span><span class="o">&lt;</span><span class="n">arrow</span><span class="o">::</span><span class="n">fs</span><span class="o">::</span><span class="n">LocalFileSystem</span><span class="o">&gt;</span><span class="p">();</span>
+
+<span class="c1">// Create a file selector which describes which files are part of</span>
+<span class="c1">// the dataset.  This selector performs a recursive search of a base</span>
+<span class="c1">// directory which is typical with partitioned datasets.  You can also</span>
+<span class="c1">// create a dataset from a list of one or more paths.</span>
+<span class="n">arrow</span><span class="o">::</span><span class="n">fs</span><span class="o">::</span><span class="n">FileSelector</span><span class="w"> </span><span class="n">selector</span><span class="p">;</span>
+<span class="n">selector</span><span class="p">.</span><span class="n">base_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">directory_base</span><span class="p">;</span>
+<span class="n">selector</span><span class="p">.</span><span class="n">recursive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+
+<span class="c1">// List out the files so we can see how our data is partitioned.</span>
+<span class="c1">// This step is not necessary for reading a dataset</span>
+<span class="n">ARROW_ASSIGN_OR_RAISE</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">arrow</span><span class="o">::</span><span class="n">fs</span><span class="o">::</span><span class="n">FileInfo</span><span class="o">&gt;</span><span class="w"> </span><span class="n">file_infos</span><span class="p">,</span>
+<span class="w">                      </span><span class="n">fs</span><span class="o">-&gt;</span><span class="n">GetFileInfo</span><span class="p">(</span><span class="n">selector</span><span class="p">));</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">num_printed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">file_infos</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">path</span><span class="p">.</span><span class="n">IsFile</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">rout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">path</span><span class="p">.</span><span class="n">path</span><span class="p">().</span><span class="n">substr</span><span class="p">(</span><span class="n">directory_base</span><span class="p">.</span><span class="n">size</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">++</span><span class="n">num_printed</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="n">rout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;...&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="w">      </span><span class="k">break</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="literal-block-wrapper docutils container" id="id2">
+<div class="code-block-caption"><span class="caption-text">Code Output</span><a class="headerlink" href="#id2" title="Link to this code">¶</a></div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">Month</span><span class="o">=</span><span class="mi">9</span><span class="o">/</span><span class="n">Day</span><span class="o">=</span><span class="mi">11</span><span class="o">/</span><span class="n">chunk</span><span class="o">-</span><span class="mf">0.</span><span class="n">parquet</span>
+<span class="o">/</span><span class="n">Month</span><span class="o">=</span><span class="mi">9</span><span class="o">/</span><span class="n">Day</span><span class="o">=</span><span class="mi">19</span><span class="o">/</span><span class="n">chunk</span><span class="o">-</span><span class="mf">0.</span><span class="n">parquet</span>
+<span class="o">/</span><span class="n">Month</span><span class="o">=</span><span class="mi">9</span><span class="o">/</span><span class="n">Day</span><span class="o">=</span><span class="mi">23</span><span class="o">/</span><span class="n">chunk</span><span class="o">-</span><span class="mf">0.</span><span class="n">parquet</span>
+<span class="o">/</span><span class="n">Month</span><span class="o">=</span><span class="mi">9</span><span class="o">/</span><span class="n">Day</span><span class="o">=</span><span class="mi">7</span><span class="o">/</span><span class="n">chunk</span><span class="o">-</span><span class="mf">0.</span><span class="n">parquet</span>
+<span class="o">/</span><span class="n">Month</span><span class="o">=</span><span class="mi">9</span><span class="o">/</span><span class="n">Day</span><span class="o">=</span><span class="mi">18</span><span class="o">/</span><span class="n">chunk</span><span class="o">-</span><span class="mf">0.</span><span class="n">parquet</span>
+<span class="o">/</span><span class="n">Month</span><span class="o">=</span><span class="mi">9</span><span class="o">/</span><span class="n">Day</span><span class="o">=</span><span class="mi">10</span><span class="o">/</span><span class="n">chunk</span><span class="o">-</span><span class="mf">0.</span><span class="n">parquet</span>
+<span class="o">/</span><span class="n">Month</span><span class="o">=</span><span class="mi">9</span><span class="o">/</span><span class="n">Day</span><span class="o">=</span><span class="mi">9</span><span class="o">/</span><span class="n">chunk</span><span class="o">-</span><span class="mf">0.</span><span class="n">parquet</span>
+<span class="o">/</span><span class="n">Month</span><span class="o">=</span><span class="mi">9</span><span class="o">/</span><span class="n">Day</span><span class="o">=</span><span class="mi">26</span><span class="o">/</span><span class="n">chunk</span><span class="o">-</span><span class="mf">0.</span><span class="n">parquet</span>
+<span class="o">/</span><span class="n">Month</span><span class="o">=</span><span class="mi">9</span><span class="o">/</span><span class="n">Day</span><span class="o">=</span><span class="mi">28</span><span class="o">/</span><span class="n">chunk</span><span class="o">-</span><span class="mf">0.</span><span class="n">parquet</span>
+<span class="o">/</span><span class="n">Month</span><span class="o">=</span><span class="mi">9</span><span class="o">/</span><span class="n">Day</span><span class="o">=</span><span class="mi">27</span><span class="o">/</span><span class="n">chunk</span><span class="o">-</span><span class="mf">0.</span><span class="n">parquet</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This partitioning scheme of key=value is referred to as “hive”
+partitioning within Arrow.</p>
+</div>
+<p>Now that we have a filesystem and a selector we can go ahead and create
+a dataset.  To do this we need to pick a format and a partitioning
+scheme.  Once we have all of the pieces we need we can create an
+arrow::dataset::Dataset instance.</p>
+<div class="literal-block-wrapper docutils container" id="id3">
+<div class="code-block-caption"><span class="caption-text">Creating an arrow::dataset::Dataset instance</span><a class="headerlink" href="#id3" title="Link to this code">¶</a></div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// Create a file format which describes the format of the files.</span>
+<span class="c1">// Here we specify we are reading parquet files.  We could pick a different format</span>
+<span class="c1">// such as Arrow-IPC files or CSV files or we could customize the parquet format with</span>
+<span class="c1">// additional reading &amp; parsing options.</span>
+<span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">arrow</span><span class="o">::</span><span class="n">dataset</span><span class="o">::</span><span class="n">ParquetFileFormat</span><span class="o">&gt;</span><span class="w"> </span><span class="n">format</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">make_shared</span><span class="o">&lt;</span><span class="n">arrow</span><span class="o">::</span><span class="n">dataset</span><span class="o">::</span><span class="n">ParquetFileFormat</span><span class="o">&gt;</span><span class="p">();</span>
+
+<span class="c1">// Create a partitioning factory.  A partitioning factory will be used by a dataset</span>
+<span class="c1">// factory to infer the partitioning schema from the filenames.  All we need to</span>
+<span class="c1">// specify is the flavor of partitioning which, in our case, is &quot;hive&quot;.</span>
+<span class="c1">//</span>
+<span class="c1">// Alternatively, we could manually create a partitioning scheme from a schema.  This</span>
+<span class="c1">// is typically not necessary for hive partitioning as inference works well.</span>
+<span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">arrow</span><span class="o">::</span><span class="n">dataset</span><span class="o">::</span><span class="n">PartitioningFactory</span><span class="o">&gt;</span><span class="w"> </span><span class="n">partitioning_factory</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">arrow</span><span class="o">::</span><span class="n">dataset</span><span class="o">::</span><span class="n">HivePartitioning</span><span class="o">::</span><span class="n">MakeFactory</span><span class="p">();</span>
+
+<span class="n">arrow</span><span class="o">::</span><span class="n">dataset</span><span class="o">::</span><span class="n">FileSystemFactoryOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">partitioning</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">partitioning_factory</span><span class="p">;</span>
+
+<span class="c1">// Create a dataset factory</span>
+<span class="n">ARROW_ASSIGN_OR_RAISE</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">arrow</span><span class="o">::</span><span class="n">dataset</span><span class="o">::</span><span class="n">DatasetFactory</span><span class="o">&gt;</span><span class="w"> </span><span class="n">dataset_factory</span><span class="p">,</span>
+<span class="w">    </span><span class="n">arrow</span><span class="o">::</span><span class="n">dataset</span><span class="o">::</span><span class="n">FileSystemDatasetFactory</span><span class="o">::</span><span class="n">Make</span><span class="p">(</span><span class="n">fs</span><span class="p">,</span><span class="w"> </span><span class="n">selector</span><span class="p">,</span><span class="w"> </span><span class="n">format</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">));</span>
+
+<span class="c1">// Create the dataset, this will scan the dataset directory to find all the files</span>
+<span class="c1">// and may scan some file metadata in order to determine the dataset schema.</span>
+<span class="n">ARROW_ASSIGN_OR_RAISE</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">arrow</span><span class="o">::</span><span class="n">dataset</span><span class="o">::</span><span class="n">Dataset</span><span class="o">&gt;</span><span class="w"> </span><span class="n">dataset</span><span class="p">,</span>
+<span class="w">                      </span><span class="n">dataset_factory</span><span class="o">-&gt;</span><span class="n">Finish</span><span class="p">());</span>
+
+<span class="n">rout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;We discovered the following schema for the dataset:&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span>
+<span class="w">     </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span>
+<span class="w">     </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">dataset</span><span class="o">-&gt;</span><span class="n">schema</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">ToString</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="literal-block-wrapper docutils container" id="id4">
+<div class="code-block-caption"><span class="caption-text">Code Output</span><a class="headerlink" href="#id4" title="Link to this code">¶</a></div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">We</span> <span class="n">discovered</span> <span class="n">the</span> <span class="n">following</span> <span class="n">schema</span> <span class="k">for</span> <span class="n">the</span> <span class="n">dataset</span><span class="p">:</span>
+
+<span class="n">Ozone</span><span class="p">:</span> <span class="n">int32</span>
+<span class="n">Solar</span><span class="o">.</span><span class="n">R</span><span class="p">:</span> <span class="n">int32</span>
+<span class="n">Wind</span><span class="p">:</span> <span class="n">double</span>
+<span class="n">Temp</span><span class="p">:</span> <span class="n">int32</span>
+<span class="n">Month</span><span class="p">:</span> <span class="n">int32</span>
+<span class="n">Day</span><span class="p">:</span> <span class="n">int32</span>
+</pre></div>
+</div>
+</div>
+<p>Once we have a dataset object we can read in the data.  Reading the data
+from a dataset is sometimes called “scanning” the dataset and the object
+we use to do this is an arrow::dataset::Scanner.  The following snippet
+shows how to scan the entire dataset into an in-memory table:</p>
+<div class="literal-block-wrapper docutils container" id="id5">
+<div class="code-block-caption"><span class="caption-text">Scanning a dataset into an arrow::Table</span><a class="headerlink" href="#id5" title="Link to this code">¶</a></div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// Create a scanner</span>
+<span class="n">arrow</span><span class="o">::</span><span class="n">dataset</span><span class="o">::</span><span class="n">ScannerBuilder</span><span class="w"> </span><span class="nf">scanner_builder</span><span class="p">(</span><span class="n">dataset</span><span class="p">);</span>
+<span class="n">ARROW_RETURN_NOT_OK</span><span class="p">(</span><span class="n">scanner_builder</span><span class="p">.</span><span class="n">UseThreads</span><span class="p">(</span><span class="nb">true</span><span class="p">));</span>
+<span class="n">ARROW_ASSIGN_OR_RAISE</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">arrow</span><span class="o">::</span><span class="n">dataset</span><span class="o">::</span><span class="n">Scanner</span><span class="o">&gt;</span><span class="w"> </span><span class="n">scanner</span><span class="p">,</span>
+<span class="w">                      </span><span class="n">scanner_builder</span><span class="p">.</span><span class="n">Finish</span><span class="p">());</span>
+
+<span class="c1">// Scan the dataset.  There are a variety of other methods available on the scanner as</span>
+<span class="c1">// well</span>
+<span class="n">ARROW_ASSIGN_OR_RAISE</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">arrow</span><span class="o">::</span><span class="n">Table</span><span class="o">&gt;</span><span class="w"> </span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="n">scanner</span><span class="o">-&gt;</span><span class="n">ToTable</span><span class="p">());</span>
+<span class="n">rout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Read in a table with &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">table</span><span class="o">-&gt;</span><span class="n">num_rows</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; rows and &quot;</span>
+<span class="w">     </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">table</span><span class="o">-&gt;</span><span class="n">num_columns</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; columns&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="literal-block-wrapper docutils container" id="id6">
+<div class="code-block-caption"><span class="caption-text">Code Output</span><a class="headerlink" href="#id6" title="Link to this code">¶</a></div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Read</span> <span class="ow">in</span> <span class="n">a</span> <span class="n">table</span> <span class="k">with</span> <span class="mi">153</span> <span class="n">rows</span> <span class="ow">and</span> <span class="mi">6</span> <span class="n">columns</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="index.html">
+    <img class="logo" src="_static/arrow-logo_vertical_black-txt_transparent-bg.svg" alt="Logo" />
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=apache&repo=arrow-cookbook&type=none&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="basic.html">Working with the C++ Implementation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="create.html">Creating Arrow Objects</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Reading and Writing Datasets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#read-a-partitioned-dataset">Read a Partitioned Dataset</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="flight.html">Arrow Flight</a></li>
+</ul>
+
+
+<hr />
+<ul>
+    
+    <li class="toctree-l1"><a href="https://arrow.apache.org/docs/cpp/index.html">User Guide</a></li>
+    
+    <li class="toctree-l1"><a href="https://arrow.apache.org/docs/cpp/api.html">API Reference</a></li>
+    
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="create.html" title="previous chapter">Creating Arrow Objects</a></li>
+      <li>Next: <a href="flight.html" title="next chapter">Arrow Flight</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2022, Apache Software Foundation.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="_sources/datasets.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
