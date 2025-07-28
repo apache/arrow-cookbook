@@ -237,10 +237,9 @@ arrow::Status TestPutGetDelete() {
   metadata_reader = std::move(put_stream.reader);
 
   // Upload data
-  std::shared_ptr<arrow::RecordBatchReader> batch_reader;
   std::vector<int> row_groups(reader->num_row_groups());
   std::iota(row_groups.begin(), row_groups.end(), 0);
-  ARROW_RETURN_NOT_OK(reader->GetRecordBatchReader(row_groups, &batch_reader));
+  ARROW_ASSIGN_OR_RAISE(auto batch_reader, reader->GetRecordBatchReader(row_groups))
   int64_t batches = 0;
   while (true) {
     ARROW_ASSIGN_OR_RAISE(auto batch, batch_reader->Next());
