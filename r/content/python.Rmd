@@ -32,6 +32,8 @@ You want to use PyArrow to create an Arrow object in an R session.
 
 ```{r, pyarrow_object}
 library(reticulate)
+py_require("pyarrow")
+
 pa <- import("pyarrow")
 pyarrow_scalar <- pa$scalar(42)
 pyarrow_scalar
