@@ -24,11 +24,15 @@
 #include <filesystem>
 #include <memory>
 
+#include "arrow/compute/initialize.h"
 #include "common.h"
 
 class DatasetReadingTest : public ::testing::Test {
  public:
   void SetUp() override {
+    // Initialize compute functions before the test runs
+    ASSERT_OK(arrow::compute::Initialize());
+
     airquality_partitioned_dir_ =
         std::filesystem::temp_directory_path() / "cookbook_cpp_airquality";
     std::shared_ptr<arrow::fs::FileSystem> fs =
