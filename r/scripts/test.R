@@ -55,5 +55,9 @@ dir.create(td)
 # Extract R code from files
 purrr::walk(files, extract_r_code, dir = td)
 
+# Fixes CI for newer reticulate by forcing reticulate to manage itself even if
+# it finds other Python installations on the host
+Sys.setenv(RETICULATE_PYTHON="managed")
+
 # Run tests
 testthat::test_dir(path = td)
