@@ -16,15 +16,13 @@
 
 name: cookbook-cpp-dev
 channels:
-  - arrow-nightlies
   - conda-forge
 dependencies:
   - python=3.9
   - compilers
-  - arrow-nightlies::libarrow
+  - cmake
   - sphinx
   - gtest
   - gmock
-  - arrow-nightlies::pyarrow
   - clang-tools
   - zlib
