@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>3 Reading and Writing Data - Multiple Files | Apache Arrow R Cookbook</title>
+  <meta name="description" content="3 Reading and Writing Data - Multiple Files | Apache Arrow R Cookbook" />
+  <meta name="generator" content="bookdown 0.43 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="3 Reading and Writing Data - Multiple Files | Apache Arrow R Cookbook" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="3 Reading and Writing Data - Multiple Files | Apache Arrow R Cookbook" />
+  
+  
+  
+
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="reading-and-writing-data---single-files.html"/>
+<link rel="next" href="creating-arrow-objects.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+  
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+</style>
+
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Preface</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="index.html"><a href="index.html#what-is-arrow"><i class="fa fa-check"></i><b>1.1</b> What is Arrow?</a></li>
+<li class="chapter" data-level="1.2" data-path="index.html"><a href="index.html#alternative-resources"><i class="fa fa-check"></i><b>1.2</b> Alternative resources</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html"><i class="fa fa-check"></i><b>2</b> Reading and Writing Data - Single Files</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#introduction"><i class="fa fa-check"></i><b>2.1</b> Introduction</a></li>
+<li class="chapter" data-level="2.2" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#convert-data-from-a-data-frame-to-an-arrow-table"><i class="fa fa-check"></i><b>2.2</b> Convert data from a data frame to an Arrow Table</a>
+<ul>
+<li class="chapter" data-level="2.2.1" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#solution"><i class="fa fa-check"></i><b>2.2.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="2.3" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#convert-data-from-an-arrow-table-to-a-data-frame"><i class="fa fa-check"></i><b>2.3</b> Convert data from an Arrow Table to a data frame</a>
+<ul>
+<li class="chapter" data-level="2.3.1" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#solution-1"><i class="fa fa-check"></i><b>2.3.1</b> Solution</a></li>
+<li class="chapter" data-level="2.3.2" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#discussion"><i class="fa fa-check"></i><b>2.3.2</b> Discussion</a></li>
+</ul></li>
+<li class="chapter" data-level="2.4" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#write-a-parquet-file"><i class="fa fa-check"></i><b>2.4</b> Write a Parquet file</a>
+<ul>
+<li class="chapter" data-level="2.4.1" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#solution-2"><i class="fa fa-check"></i><b>2.4.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="2.5" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#read-a-parquet-file"><i class="fa fa-check"></i><b>2.5</b> Read a Parquet file</a>
+<ul>
+<li class="chapter" data-level="2.5.1" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#solution-3"><i class="fa fa-check"></i><b>2.5.1</b> Solution</a></li>
+<li class="chapter" data-level="2.5.2" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#discussion-1"><i class="fa fa-check"></i><b>2.5.2</b> Discussion</a></li>
+</ul></li>
+<li class="chapter" data-level="2.6" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#read-a-parquet-file-from-s3"><i class="fa fa-check"></i><b>2.6</b> Read a Parquet file from S3</a>
+<ul>
+<li class="chapter" data-level="2.6.1" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#solution-4"><i class="fa fa-check"></i><b>2.6.1</b> Solution</a></li>
+<li class="chapter" data-level="2.6.2" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#see-also"><i class="fa fa-check"></i><b>2.6.2</b> See also</a></li>
+</ul></li>
+<li class="chapter" data-level="2.7" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#filter-columns-while-reading-a-parquet-file"><i class="fa fa-check"></i><b>2.7</b> Filter columns while reading a Parquet file</a>
+<ul>
+<li class="chapter" data-level="2.7.1" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#solution-5"><i class="fa fa-check"></i><b>2.7.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="2.8" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#write-a-feather-v2arrow-ipc-file"><i class="fa fa-check"></i><b>2.8</b> Write a Feather V2/Arrow IPC file</a>
+<ul>
+<li class="chapter" data-level="2.8.1" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#solution-6"><i class="fa fa-check"></i><b>2.8.1</b> Solution</a></li>
+<li class="chapter" data-level="2.8.2" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#discussion-2"><i class="fa fa-check"></i><b>2.8.2</b> Discussion</a></li>
+</ul></li>
+<li class="chapter" data-level="2.9" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#read-a-featherarrow-ipc-file"><i class="fa fa-check"></i><b>2.9</b> Read a Feather/Arrow IPC file</a>
+<ul>
+<li class="chapter" data-level="2.9.1" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#solution-7"><i class="fa fa-check"></i><b>2.9.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="2.10" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#write-streaming-arrow-ipc-files"><i class="fa fa-check"></i><b>2.10</b> Write streaming Arrow IPC files</a>
+<ul>
+<li class="chapter" data-level="2.10.1" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#solution-8"><i class="fa fa-check"></i><b>2.10.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="2.11" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#read-streaming-arrow-ipc-files"><i class="fa fa-check"></i><b>2.11</b> Read streaming Arrow IPC files</a>
+<ul>
+<li class="chapter" data-level="2.11.1" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#solution-9"><i class="fa fa-check"></i><b>2.11.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="2.12" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#write-a-csv-file"><i class="fa fa-check"></i><b>2.12</b> Write a CSV file</a>
+<ul>
+<li class="chapter" data-level="2.12.1" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#solution-10"><i class="fa fa-check"></i><b>2.12.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="2.13" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#read-a-csv-file"><i class="fa fa-check"></i><b>2.13</b> Read a CSV file</a>
+<ul>
+<li class="chapter" data-level="2.13.1" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#solution-11"><i class="fa fa-check"></i><b>2.13.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="2.14" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#read-a-json-file"><i class="fa fa-check"></i><b>2.14</b> Read a JSON file</a>
+<ul>
+<li class="chapter" data-level="2.14.1" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#solution-12"><i class="fa fa-check"></i><b>2.14.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="2.15" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#write-a-compressed-single-data-file"><i class="fa fa-check"></i><b>2.15</b> Write a compressed single data file</a>
+<ul>
+<li class="chapter" data-level="2.15.1" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#solution-13"><i class="fa fa-check"></i><b>2.15.1</b> Solution</a></li>
+<li class="chapter" data-level="2.15.2" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#see-also-1"><i class="fa fa-check"></i><b>2.15.2</b> See also</a></li>
+</ul></li>
+<li class="chapter" data-level="2.16" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#read-compressed-data"><i class="fa fa-check"></i><b>2.16</b> Read compressed data</a>
+<ul>
+<li class="chapter" data-level="2.16.1" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#solution-14"><i class="fa fa-check"></i><b>2.16.1</b> Solution</a></li>
+<li class="chapter" data-level="2.16.2" data-path="reading-and-writing-data---single-files.html"><a href="reading-and-writing-data---single-files.html#discussion-3"><i class="fa fa-check"></i><b>2.16.2</b> Discussion</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html"><i class="fa fa-check"></i><b>3</b> Reading and Writing Data - Multiple Files</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html#introduction-1"><i class="fa fa-check"></i><b>3.1</b> Introduction</a></li>
+<li class="chapter" data-level="3.2" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html#write-data-to-disk---parquet"><i class="fa fa-check"></i><b>3.2</b> Write data to disk - Parquet</a>
+<ul>
+<li class="chapter" data-level="3.2.1" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html#solution-15"><i class="fa fa-check"></i><b>3.2.1</b> Solution</a></li>
+<li class="chapter" data-level="3.2.2" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html#discussion-4"><i class="fa fa-check"></i><b>3.2.2</b> Discussion</a></li>
+</ul></li>
+<li class="chapter" data-level="3.3" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html#write-partitioned-data---parquet"><i class="fa fa-check"></i><b>3.3</b> Write partitioned data - Parquet</a>
+<ul>
+<li class="chapter" data-level="3.3.1" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html#solution-16"><i class="fa fa-check"></i><b>3.3.1</b> Solution</a></li>
+<li class="chapter" data-level="3.3.2" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html#discussion-5"><i class="fa fa-check"></i><b>3.3.2</b> Discussion</a></li>
+</ul></li>
+<li class="chapter" data-level="3.4" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html#read-partitioned-data"><i class="fa fa-check"></i><b>3.4</b> Read partitioned data</a>
+<ul>
+<li class="chapter" data-level="3.4.1" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html#solution-17"><i class="fa fa-check"></i><b>3.4.1</b> Solution</a></li>
+<li class="chapter" data-level="3.4.2" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html#discussion-6"><i class="fa fa-check"></i><b>3.4.2</b> Discussion</a></li>
+</ul></li>
+<li class="chapter" data-level="3.5" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html#write-data-to-disk---featherarrow-ipc-format"><i class="fa fa-check"></i><b>3.5</b> Write data to disk - Feather/Arrow IPC format</a>
+<ul>
+<li class="chapter" data-level="3.5.1" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html#solution-18"><i class="fa fa-check"></i><b>3.5.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="3.6" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html#read-in-featherarrow-ipc-data-as-an-arrow-dataset"><i class="fa fa-check"></i><b>3.6</b> Read in Feather/Arrow IPC data as an Arrow Dataset</a>
+<ul>
+<li class="chapter" data-level="3.6.1" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html#solution-19"><i class="fa fa-check"></i><b>3.6.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="3.7" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html#write-data-to-disk---csv-format"><i class="fa fa-check"></i><b>3.7</b> Write data to disk - CSV format</a>
+<ul>
+<li class="chapter" data-level="3.7.1" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html#solution-20"><i class="fa fa-check"></i><b>3.7.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="3.8" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html#read-in-csv-data-as-an-arrow-dataset"><i class="fa fa-check"></i><b>3.8</b> Read in CSV data as an Arrow Dataset</a>
+<ul>
+<li class="chapter" data-level="3.8.1" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html#solution-21"><i class="fa fa-check"></i><b>3.8.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="3.9" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html#read-in-a-csv-dataset-no-headers"><i class="fa fa-check"></i><b>3.9</b> Read in a CSV dataset (no headers)</a>
+<ul>
+<li class="chapter" data-level="3.9.1" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html#solution-22"><i class="fa fa-check"></i><b>3.9.1</b> Solution</a></li>
+<li class="chapter" data-level="3.9.2" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html#discussion-7"><i class="fa fa-check"></i><b>3.9.2</b> Discussion</a></li>
+</ul></li>
+<li class="chapter" data-level="3.10" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html#write-compressed-partitioned-data"><i class="fa fa-check"></i><b>3.10</b> Write compressed partitioned data</a>
+<ul>
+<li class="chapter" data-level="3.10.1" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html#solution-23"><i class="fa fa-check"></i><b>3.10.1</b> Solution</a></li>
+<li class="chapter" data-level="3.10.2" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html#discussion-8"><i class="fa fa-check"></i><b>3.10.2</b> Discussion</a></li>
+</ul></li>
+<li class="chapter" data-level="3.11" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html#read-compressed-data-1"><i class="fa fa-check"></i><b>3.11</b> Read compressed data</a>
+<ul>
+<li class="chapter" data-level="3.11.1" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html#solution-24"><i class="fa fa-check"></i><b>3.11.1</b> Solution</a></li>
+<li class="chapter" data-level="3.11.2" data-path="reading-and-writing-data---multiple-files.html"><a href="reading-and-writing-data---multiple-files.html#discussion-9"><i class="fa fa-check"></i><b>3.11.2</b> Discussion</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="creating-arrow-objects.html"><a href="creating-arrow-objects.html"><i class="fa fa-check"></i><b>4</b> Creating Arrow Objects</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="creating-arrow-objects.html"><a href="creating-arrow-objects.html#create-an-arrow-array-from-an-r-object"><i class="fa fa-check"></i><b>4.1</b> Create an Arrow Array from an R object</a>
+<ul>
+<li class="chapter" data-level="4.1.1" data-path="creating-arrow-objects.html"><a href="creating-arrow-objects.html#solution-25"><i class="fa fa-check"></i><b>4.1.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="4.2" data-path="creating-arrow-objects.html"><a href="creating-arrow-objects.html#create-a-arrow-table-from-an-r-object"><i class="fa fa-check"></i><b>4.2</b> Create a Arrow Table from an R object</a>
+<ul>
+<li class="chapter" data-level="4.2.1" data-path="creating-arrow-objects.html"><a href="creating-arrow-objects.html#solution-26"><i class="fa fa-check"></i><b>4.2.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="4.3" data-path="creating-arrow-objects.html"><a href="creating-arrow-objects.html#view-the-contents-of-an-arrow-table-or-recordbatch"><i class="fa fa-check"></i><b>4.3</b> View the contents of an Arrow Table or RecordBatch</a>
+<ul>
+<li class="chapter" data-level="4.3.1" data-path="creating-arrow-objects.html"><a href="creating-arrow-objects.html#solution-27"><i class="fa fa-check"></i><b>4.3.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="4.4" data-path="creating-arrow-objects.html"><a href="creating-arrow-objects.html#manually-create-a-recordbatch-from-an-r-object."><i class="fa fa-check"></i><b>4.4</b> Manually create a RecordBatch from an R object.</a>
+<ul>
+<li class="chapter" data-level="4.4.1" data-path="creating-arrow-objects.html"><a href="creating-arrow-objects.html#solution-28"><i class="fa fa-check"></i><b>4.4.1</b> Solution</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="defining-data-types.html"><a href="defining-data-types.html"><i class="fa fa-check"></i><b>5</b> Defining Data Types</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="defining-data-types.html"><a href="defining-data-types.html#introduction-2"><i class="fa fa-check"></i><b>5.1</b> Introduction</a></li>
+<li class="chapter" data-level="5.2" data-path="defining-data-types.html"><a href="defining-data-types.html#update-data-type-of-an-existing-arrow-array"><i class="fa fa-check"></i><b>5.2</b> Update data type of an existing Arrow Array</a>
+<ul>
+<li class="chapter" data-level="5.2.1" data-path="defining-data-types.html"><a href="defining-data-types.html#solution-29"><i class="fa fa-check"></i><b>5.2.1</b> Solution</a></li>
+<li class="chapter" data-level="5.2.2" data-path="defining-data-types.html"><a href="defining-data-types.html#discussion-10"><i class="fa fa-check"></i><b>5.2.2</b> Discussion</a></li>
+</ul></li>
+<li class="chapter" data-level="5.3" data-path="defining-data-types.html"><a href="defining-data-types.html#update-data-type-of-a-field-in-an-existing-arrow-table"><i class="fa fa-check"></i><b>5.3</b> Update data type of a field in an existing Arrow Table</a>
+<ul>
+<li class="chapter" data-level="5.3.1" data-path="defining-data-types.html"><a href="defining-data-types.html#solution-30"><i class="fa fa-check"></i><b>5.3.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="5.4" data-path="defining-data-types.html"><a href="defining-data-types.html#specify-data-types-when-creating-an-arrow-table-from-an-r-object"><i class="fa fa-check"></i><b>5.4</b> Specify data types when creating an Arrow table from an R object</a>
+<ul>
+<li class="chapter" data-level="5.4.1" data-path="defining-data-types.html"><a href="defining-data-types.html#solution-31"><i class="fa fa-check"></i><b>5.4.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="5.5" data-path="defining-data-types.html"><a href="defining-data-types.html#specify-data-types-when-reading-in-files"><i class="fa fa-check"></i><b>5.5</b> Specify data types when reading in files</a>
+<ul>
+<li class="chapter" data-level="5.5.1" data-path="defining-data-types.html"><a href="defining-data-types.html#solution-32"><i class="fa fa-check"></i><b>5.5.1</b> Solution</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html"><i class="fa fa-check"></i><b>6</b> Manipulating Data - Arrays</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#introduction-3"><i class="fa fa-check"></i><b>6.1</b> Introduction</a></li>
+<li class="chapter" data-level="6.2" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#filter-by-values-matching-a-predicate-or-mask"><i class="fa fa-check"></i><b>6.2</b> Filter by values matching a predicate or mask</a>
+<ul>
+<li class="chapter" data-level="6.2.1" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#solution-33"><i class="fa fa-check"></i><b>6.2.1</b> Solution</a></li>
+<li class="chapter" data-level="6.2.2" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#discussion-11"><i class="fa fa-check"></i><b>6.2.2</b> Discussion</a></li>
+</ul></li>
+<li class="chapter" data-level="6.3" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#compute-meanminmax-etc-value-of-an-array"><i class="fa fa-check"></i><b>6.3</b> Compute Mean/Min/Max, etc value of an Array</a>
+<ul>
+<li class="chapter" data-level="6.3.1" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#solution-34"><i class="fa fa-check"></i><b>6.3.1</b> Solution</a></li>
+<li class="chapter" data-level="6.3.2" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#discussion-12"><i class="fa fa-check"></i><b>6.3.2</b> Discussion</a></li>
+</ul></li>
+<li class="chapter" data-level="6.4" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#count-occurrences-of-elements-in-an-array"><i class="fa fa-check"></i><b>6.4</b> Count occurrences of elements in an Array</a>
+<ul>
+<li class="chapter" data-level="6.4.1" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#solution-35"><i class="fa fa-check"></i><b>6.4.1</b> Solution</a></li>
+<li class="chapter" data-level="6.4.2" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#discussion-13"><i class="fa fa-check"></i><b>6.4.2</b> Discussion</a></li>
+</ul></li>
+<li class="chapter" data-level="6.5" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#apply-arithmetic-functions-to-arrays."><i class="fa fa-check"></i><b>6.5</b> Apply arithmetic functions to Arrays.</a>
+<ul>
+<li class="chapter" data-level="6.5.1" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#solution-36"><i class="fa fa-check"></i><b>6.5.1</b> Solution</a></li>
+<li class="chapter" data-level="6.5.2" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#discussion-14"><i class="fa fa-check"></i><b>6.5.2</b> Discussion</a></li>
+</ul></li>
+<li class="chapter" data-level="6.6" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#call-arrow-compute-functions-directly-on-arrays"><i class="fa fa-check"></i><b>6.6</b> Call Arrow compute functions directly on Arrays</a>
+<ul>
+<li class="chapter" data-level="6.6.1" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#solution-37"><i class="fa fa-check"></i><b>6.6.1</b> Solution</a></li>
+<li class="chapter" data-level="6.6.2" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#discussion-15"><i class="fa fa-check"></i><b>6.6.2</b> Discussion</a></li>
+<li class="chapter" data-level="6.6.3" data-path="manipulating-data---arrays.html"><a href="manipulating-data---arrays.html#see-also-2"><i class="fa fa-check"></i><b>6.6.3</b> See also</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="manipulating-data---tables.html"><a href="manipulating-data---tables.html"><i class="fa fa-check"></i><b>7</b> Manipulating Data - Tables</a>
+<ul>
+<li class="chapter" data-level="7.1" data-path="manipulating-data---tables.html"><a href="manipulating-data---tables.html#introduction-4"><i class="fa fa-check"></i><b>7.1</b> Introduction</a></li>
+<li class="chapter" data-level="7.2" data-path="manipulating-data---tables.html"><a href="manipulating-data---tables.html#use-dplyr-verbs-in-arrow"><i class="fa fa-check"></i><b>7.2</b> Use dplyr verbs in Arrow</a>
+<ul>
+<li class="chapter" data-level="7.2.1" data-path="manipulating-data---tables.html"><a href="manipulating-data---tables.html#solution-38"><i class="fa fa-check"></i><b>7.2.1</b> Solution</a></li>
+<li class="chapter" data-level="7.2.2" data-path="manipulating-data---tables.html"><a href="manipulating-data---tables.html#discussion-16"><i class="fa fa-check"></i><b>7.2.2</b> Discussion</a></li>
+<li class="chapter" data-level="7.2.3" data-path="manipulating-data---tables.html"><a href="manipulating-data---tables.html#see-also-3"><i class="fa fa-check"></i><b>7.2.3</b> See also</a></li>
+</ul></li>
+<li class="chapter" data-level="7.3" data-path="manipulating-data---tables.html"><a href="manipulating-data---tables.html#use-r-functions-in-dplyr-verbs-in-arrow"><i class="fa fa-check"></i><b>7.3</b> Use R functions in dplyr verbs in Arrow</a>
+<ul>
+<li class="chapter" data-level="7.3.1" data-path="manipulating-data---tables.html"><a href="manipulating-data---tables.html#solution-39"><i class="fa fa-check"></i><b>7.3.1</b> Solution</a></li>
+<li class="chapter" data-level="7.3.2" data-path="manipulating-data---tables.html"><a href="manipulating-data---tables.html#discussion-17"><i class="fa fa-check"></i><b>7.3.2</b> Discussion</a></li>
+</ul></li>
+<li class="chapter" data-level="7.4" data-path="manipulating-data---tables.html"><a href="manipulating-data---tables.html#use-arrow-functions-in-dplyr-verbs-in-arrow"><i class="fa fa-check"></i><b>7.4</b> Use Arrow functions in dplyr verbs in Arrow</a>
+<ul>
+<li class="chapter" data-level="7.4.1" data-path="manipulating-data---tables.html"><a href="manipulating-data---tables.html#solution-40"><i class="fa fa-check"></i><b>7.4.1</b> Solution</a></li>
+<li class="chapter" data-level="7.4.2" data-path="manipulating-data---tables.html"><a href="manipulating-data---tables.html#discussion-18"><i class="fa fa-check"></i><b>7.4.2</b> Discussion</a></li>
+</ul></li>
+<li class="chapter" data-level="7.5" data-path="manipulating-data---tables.html"><a href="manipulating-data---tables.html#compute-window-aggregates"><i class="fa fa-check"></i><b>7.5</b> Compute Window Aggregates</a>
+<ul>
+<li class="chapter" data-level="7.5.1" data-path="manipulating-data---tables.html"><a href="manipulating-data---tables.html#solution-41"><i class="fa fa-check"></i><b>7.5.1</b> Solution</a></li>
+<li class="chapter" data-level="7.5.2" data-path="manipulating-data---tables.html"><a href="manipulating-data---tables.html#discusson"><i class="fa fa-check"></i><b>7.5.2</b> Discusson</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="using-pyarrow-from-r.html"><a href="using-pyarrow-from-r.html"><i class="fa fa-check"></i><b>8</b> Using PyArrow from R</a>
+<ul>
+<li class="chapter" data-level="8.1" data-path="using-pyarrow-from-r.html"><a href="using-pyarrow-from-r.html#introduction-5"><i class="fa fa-check"></i><b>8.1</b> Introduction</a></li>
+<li class="chapter" data-level="8.2" data-path="using-pyarrow-from-r.html"><a href="using-pyarrow-from-r.html#create-an-arrow-object-using-pyarrow-in-r"><i class="fa fa-check"></i><b>8.2</b> Create an Arrow object using PyArrow in R</a>
+<ul>
+<li class="chapter" data-level="8.2.1" data-path="using-pyarrow-from-r.html"><a href="using-pyarrow-from-r.html#solution-42"><i class="fa fa-check"></i><b>8.2.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="8.3" data-path="using-pyarrow-from-r.html"><a href="using-pyarrow-from-r.html#call-a-pyarrow-function-from-r"><i class="fa fa-check"></i><b>8.3</b> Call a PyArrow function from R</a>
+<ul>
+<li class="chapter" data-level="8.3.1" data-path="using-pyarrow-from-r.html"><a href="using-pyarrow-from-r.html#solution-43"><i class="fa fa-check"></i><b>8.3.1</b> Solution</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="9" data-path="flight.html"><a href="flight.html"><i class="fa fa-check"></i><b>9</b> Flight</a>
+<ul>
+<li class="chapter" data-level="9.1" data-path="flight.html"><a href="flight.html#introduction-6"><i class="fa fa-check"></i><b>9.1</b> Introduction</a></li>
+<li class="chapter" data-level="9.2" data-path="flight.html"><a href="flight.html#connect-to-a-flight-server"><i class="fa fa-check"></i><b>9.2</b> Connect to a Flight server</a>
+<ul>
+<li class="chapter" data-level="9.2.1" data-path="flight.html"><a href="flight.html#solution-44"><i class="fa fa-check"></i><b>9.2.1</b> Solution</a></li>
+<li class="chapter" data-level="9.2.2" data-path="flight.html"><a href="flight.html#see-also-4"><i class="fa fa-check"></i><b>9.2.2</b> See also</a></li>
+</ul></li>
+<li class="chapter" data-level="9.3" data-path="flight.html"><a href="flight.html#send-data-to-a-flight-server"><i class="fa fa-check"></i><b>9.3</b> Send data to a Flight server</a>
+<ul>
+<li class="chapter" data-level="9.3.1" data-path="flight.html"><a href="flight.html#solution-45"><i class="fa fa-check"></i><b>9.3.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="9.4" data-path="flight.html"><a href="flight.html#check-what-resources-exist-on-a-flight-server"><i class="fa fa-check"></i><b>9.4</b> Check what resources exist on a Flight server</a>
+<ul>
+<li class="chapter" data-level="9.4.1" data-path="flight.html"><a href="flight.html#solution-46"><i class="fa fa-check"></i><b>9.4.1</b> Solution</a></li>
+</ul></li>
+<li class="chapter" data-level="9.5" data-path="flight.html"><a href="flight.html#retrieve-data-from-a-flight-server"><i class="fa fa-check"></i><b>9.5</b> Retrieve data from a Flight server</a>
+<ul>
+<li class="chapter" data-level="9.5.1" data-path="flight.html"><a href="flight.html#solution-47"><i class="fa fa-check"></i><b>9.5.1</b> Solution</a></li>
+</ul></li>
+</ul></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Apache Arrow R Cookbook</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="reading-and-writing-data---multiple-files" class="section level1 hasAnchor" number="3">
+<h1><span class="header-section-number">3</span> Reading and Writing Data - Multiple Files<a href="reading-and-writing-data---multiple-files.html#reading-and-writing-data---multiple-files" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<div id="introduction-1" class="section level2 hasAnchor" number="3.1">
+<h2><span class="header-section-number">3.1</span> Introduction<a href="reading-and-writing-data---multiple-files.html#introduction-1" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>When reading files into R using Apache Arrow, you can read:</p>
+<ul>
+<li>a single file into memory as a data frame or an Arrow Table</li>
+<li>a single file that is too large to fit in memory as an Arrow Dataset</li>
+<li>multiple and partitioned files as an Arrow Dataset</li>
+</ul>
+<p>This chapter contains recipes related to using Apache Arrow to read and
+write files too large for memory and multiple or partitioned files as an
+Arrow Dataset. There are a number of
+circumstances in which you may want to read in the data as an Arrow Dataset:</p>
+<ul>
+<li>your single data file is too large to load into memory</li>
+<li>your data are partitioned among numerous files</li>
+<li>you want faster performance from your <code>dplyr</code> queries</li>
+<li>you want to be able to take advantage of Arrow’s compute functions</li>
+</ul>
+<p>It is possible to read in partitioned data in Parquet, Feather (also known as Arrow IPC), and CSV or
+other text-delimited formats. If you are choosing a partitioned multiple file format, we
+recommend Parquet or Feather (Arrow IPC ), both of which can have improved performance
+when compared to CSVs due to their capabilities around metadata and compression.</p>
+</div>
+<div id="write-data-to-disk---parquet" class="section level2 hasAnchor" number="3.2">
+<h2><span class="header-section-number">3.2</span> Write data to disk - Parquet<a href="reading-and-writing-data---multiple-files.html#write-data-to-disk---parquet" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>You want to write data to disk in a single Parquet file.</p>
+<div id="solution-15" class="section level3 hasAnchor" number="3.2.1">
+<h3><span class="header-section-number">3.2.1</span> Solution<a href="reading-and-writing-data---multiple-files.html#solution-15" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="reading-and-writing-data---multiple-files.html#cb31-1" tabindex="-1"></a><span class="fu">write_dataset</span>(<span class="at">dataset =</span> airquality, <span class="at">path =</span> <span class="st">&quot;airquality_data&quot;</span>)</span></code></pre></div>
+</div>
+<div id="discussion-4" class="section level3 hasAnchor" number="3.2.2">
+<h3><span class="header-section-number">3.2.2</span> Discussion<a href="reading-and-writing-data---multiple-files.html#discussion-4" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>The default format for <code>open_dataset()</code> and <code>write_dataset()</code> is Parquet.</p>
+</div>
+</div>
+<div id="write-partitioned-data---parquet" class="section level2 hasAnchor" number="3.3">
+<h2><span class="header-section-number">3.3</span> Write partitioned data - Parquet<a href="reading-and-writing-data---multiple-files.html#write-partitioned-data---parquet" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>You want to save multiple Parquet data files to disk in partitions based on columns in the data.</p>
+<div id="solution-16" class="section level3 hasAnchor" number="3.3.1">
+<h3><span class="header-section-number">3.3.1</span> Solution<a href="reading-and-writing-data---multiple-files.html#solution-16" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="reading-and-writing-data---multiple-files.html#cb32-1" tabindex="-1"></a><span class="fu">write_dataset</span>(airquality, <span class="st">&quot;airquality_partitioned&quot;</span>, <span class="at">partitioning =</span> <span class="fu">c</span>(<span class="st">&quot;Month&quot;</span>))</span></code></pre></div>
+<p>As you can see, this has created folders based on the supplied partition variable <code>Month</code>.</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="reading-and-writing-data---multiple-files.html#cb33-1" tabindex="-1"></a><span class="fu">list.files</span>(<span class="st">&quot;airquality_partitioned&quot;</span>)</span></code></pre></div>
+<pre><code>## [1] &quot;Month=5&quot; &quot;Month=6&quot; &quot;Month=7&quot; &quot;Month=8&quot; &quot;Month=9&quot;</code></pre>
+</div>
+<div id="discussion-5" class="section level3 hasAnchor" number="3.3.2">
+<h3><span class="header-section-number">3.3.2</span> Discussion<a href="reading-and-writing-data---multiple-files.html#discussion-5" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>The data is written to separate folders based on the values in the <code>Month</code>
+column. The default behaviour is to use Hive-style (i.e. “col_name=value” folder names)
+partitions.</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="reading-and-writing-data---multiple-files.html#cb35-1" tabindex="-1"></a><span class="co"># Take a look at the files in this directory</span></span>
+<span id="cb35-2"><a href="reading-and-writing-data---multiple-files.html#cb35-2" tabindex="-1"></a><span class="fu">list.files</span>(<span class="st">&quot;airquality_partitioned&quot;</span>, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<pre><code>## [1] &quot;Month=5/part-0.parquet&quot; &quot;Month=6/part-0.parquet&quot; &quot;Month=7/part-0.parquet&quot;
+## [4] &quot;Month=8/part-0.parquet&quot; &quot;Month=9/part-0.parquet&quot;</code></pre>
+<p>You can specify multiple partitioning variables to add extra levels of partitioning.</p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="reading-and-writing-data---multiple-files.html#cb37-1" tabindex="-1"></a><span class="fu">write_dataset</span>(airquality, <span class="st">&quot;airquality_partitioned_deeper&quot;</span>, <span class="at">partitioning =</span> <span class="fu">c</span>(<span class="st">&quot;Month&quot;</span>, <span class="st">&quot;Day&quot;</span>))</span>
+<span id="cb37-2"><a href="reading-and-writing-data---multiple-files.html#cb37-2" tabindex="-1"></a><span class="fu">list.files</span>(<span class="st">&quot;airquality_partitioned_deeper&quot;</span>)</span></code></pre></div>
+<pre><code>## [1] &quot;Month=5&quot; &quot;Month=6&quot; &quot;Month=7&quot; &quot;Month=8&quot; &quot;Month=9&quot;</code></pre>
+<p>If you take a look in one of these folders, you will see that the data is then partitioned by the second partition variable, <code>Day</code>.</p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="reading-and-writing-data---multiple-files.html#cb39-1" tabindex="-1"></a><span class="co"># Take a look at the files in this directory</span></span>
+<span id="cb39-2"><a href="reading-and-writing-data---multiple-files.html#cb39-2" tabindex="-1"></a><span class="fu">list.files</span>(<span class="st">&quot;airquality_partitioned_deeper/Month=5&quot;</span>, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<pre><code>##  [1] &quot;Day=1/part-0.parquet&quot;  &quot;Day=10/part-0.parquet&quot; &quot;Day=11/part-0.parquet&quot;
+##  [4] &quot;Day=12/part-0.parquet&quot; &quot;Day=13/part-0.parquet&quot; &quot;Day=14/part-0.parquet&quot;
+##  [7] &quot;Day=15/part-0.parquet&quot; &quot;Day=16/part-0.parquet&quot; &quot;Day=17/part-0.parquet&quot;
+## [10] &quot;Day=18/part-0.parquet&quot; &quot;Day=19/part-0.parquet&quot; &quot;Day=2/part-0.parquet&quot; 
+## [13] &quot;Day=20/part-0.parquet&quot; &quot;Day=21/part-0.parquet&quot; &quot;Day=22/part-0.parquet&quot;
+## [16] &quot;Day=23/part-0.parquet&quot; &quot;Day=24/part-0.parquet&quot; &quot;Day=25/part-0.parquet&quot;
+## [19] &quot;Day=26/part-0.parquet&quot; &quot;Day=27/part-0.parquet&quot; &quot;Day=28/part-0.parquet&quot;
+## [22] &quot;Day=29/part-0.parquet&quot; &quot;Day=3/part-0.parquet&quot;  &quot;Day=30/part-0.parquet&quot;
+## [25] &quot;Day=31/part-0.parquet&quot; &quot;Day=4/part-0.parquet&quot;  &quot;Day=5/part-0.parquet&quot; 
+## [28] &quot;Day=6/part-0.parquet&quot;  &quot;Day=7/part-0.parquet&quot;  &quot;Day=8/part-0.parquet&quot; 
+## [31] &quot;Day=9/part-0.parquet&quot;</code></pre>
+<p>There are two different ways to specify variables to use for partitioning -
+either via the <code>partitioning</code> variable as above, or by using <code>dplyr::group_by()</code> on your data - the group variables will form the partitions.</p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="reading-and-writing-data---multiple-files.html#cb41-1" tabindex="-1"></a><span class="fu">write_dataset</span>(<span class="at">dataset =</span> <span class="fu">group_by</span>(airquality, Month, Day),</span>
+<span id="cb41-2"><a href="reading-and-writing-data---multiple-files.html#cb41-2" tabindex="-1"></a>  <span class="at">path =</span> <span class="st">&quot;airquality_groupby&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="reading-and-writing-data---multiple-files.html#cb42-1" tabindex="-1"></a><span class="co"># Take a look at the files in this directory</span></span>
+<span id="cb42-2"><a href="reading-and-writing-data---multiple-files.html#cb42-2" tabindex="-1"></a><span class="fu">list.files</span>(<span class="st">&quot;airquality_groupby&quot;</span>, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<pre><code>##   [1] &quot;Month=5/Day=1/part-0.parquet&quot;  &quot;Month=5/Day=10/part-0.parquet&quot;
+##   [3] &quot;Month=5/Day=11/part-0.parquet&quot; &quot;Month=5/Day=12/part-0.parquet&quot;
+##   [5] &quot;Month=5/Day=13/part-0.parquet&quot; &quot;Month=5/Day=14/part-0.parquet&quot;
+##   [7] &quot;Month=5/Day=15/part-0.parquet&quot; &quot;Month=5/Day=16/part-0.parquet&quot;
+##   [9] &quot;Month=5/Day=17/part-0.parquet&quot; &quot;Month=5/Day=18/part-0.parquet&quot;
+##  [11] &quot;Month=5/Day=19/part-0.parquet&quot; &quot;Month=5/Day=2/part-0.parquet&quot; 
+##  [13] &quot;Month=5/Day=20/part-0.parquet&quot; &quot;Month=5/Day=21/part-0.parquet&quot;
+##  [15] &quot;Month=5/Day=22/part-0.parquet&quot; &quot;Month=5/Day=23/part-0.parquet&quot;
+##  [17] &quot;Month=5/Day=24/part-0.parquet&quot; &quot;Month=5/Day=25/part-0.parquet&quot;
+##  [19] &quot;Month=5/Day=26/part-0.parquet&quot; &quot;Month=5/Day=27/part-0.parquet&quot;
+##  [21] &quot;Month=5/Day=28/part-0.parquet&quot; &quot;Month=5/Day=29/part-0.parquet&quot;
+##  [23] &quot;Month=5/Day=3/part-0.parquet&quot;  &quot;Month=5/Day=30/part-0.parquet&quot;
+##  [25] &quot;Month=5/Day=31/part-0.parquet&quot; &quot;Month=5/Day=4/part-0.parquet&quot; 
+##  [27] &quot;Month=5/Day=5/part-0.parquet&quot;  &quot;Month=5/Day=6/part-0.parquet&quot; 
+##  [29] &quot;Month=5/Day=7/part-0.parquet&quot;  &quot;Month=5/Day=8/part-0.parquet&quot; 
+##  [31] &quot;Month=5/Day=9/part-0.parquet&quot;  &quot;Month=6/Day=1/part-0.parquet&quot; 
+##  [33] &quot;Month=6/Day=10/part-0.parquet&quot; &quot;Month=6/Day=11/part-0.parquet&quot;
+##  [35] &quot;Month=6/Day=12/part-0.parquet&quot; &quot;Month=6/Day=13/part-0.parquet&quot;
+##  [37] &quot;Month=6/Day=14/part-0.parquet&quot; &quot;Month=6/Day=15/part-0.parquet&quot;
+##  [39] &quot;Month=6/Day=16/part-0.parquet&quot; &quot;Month=6/Day=17/part-0.parquet&quot;
+##  [41] &quot;Month=6/Day=18/part-0.parquet&quot; &quot;Month=6/Day=19/part-0.parquet&quot;
+##  [43] &quot;Month=6/Day=2/part-0.parquet&quot;  &quot;Month=6/Day=20/part-0.parquet&quot;
+##  [45] &quot;Month=6/Day=21/part-0.parquet&quot; &quot;Month=6/Day=22/part-0.parquet&quot;
+##  [47] &quot;Month=6/Day=23/part-0.parquet&quot; &quot;Month=6/Day=24/part-0.parquet&quot;
+##  [49] &quot;Month=6/Day=25/part-0.parquet&quot; &quot;Month=6/Day=26/part-0.parquet&quot;
+##  [51] &quot;Month=6/Day=27/part-0.parquet&quot; &quot;Month=6/Day=28/part-0.parquet&quot;
+##  [53] &quot;Month=6/Day=29/part-0.parquet&quot; &quot;Month=6/Day=3/part-0.parquet&quot; 
+##  [55] &quot;Month=6/Day=30/part-0.parquet&quot; &quot;Month=6/Day=4/part-0.parquet&quot; 
+##  [57] &quot;Month=6/Day=5/part-0.parquet&quot;  &quot;Month=6/Day=6/part-0.parquet&quot; 
+##  [59] &quot;Month=6/Day=7/part-0.parquet&quot;  &quot;Month=6/Day=8/part-0.parquet&quot; 
+##  [61] &quot;Month=6/Day=9/part-0.parquet&quot;  &quot;Month=7/Day=1/part-0.parquet&quot; 
+##  [63] &quot;Month=7/Day=10/part-0.parquet&quot; &quot;Month=7/Day=11/part-0.parquet&quot;
+##  [65] &quot;Month=7/Day=12/part-0.parquet&quot; &quot;Month=7/Day=13/part-0.parquet&quot;
+##  [67] &quot;Month=7/Day=14/part-0.parquet&quot; &quot;Month=7/Day=15/part-0.parquet&quot;
+##  [69] &quot;Month=7/Day=16/part-0.parquet&quot; &quot;Month=7/Day=17/part-0.parquet&quot;
+##  [71] &quot;Month=7/Day=18/part-0.parquet&quot; &quot;Month=7/Day=19/part-0.parquet&quot;
+##  [73] &quot;Month=7/Day=2/part-0.parquet&quot;  &quot;Month=7/Day=20/part-0.parquet&quot;
+##  [75] &quot;Month=7/Day=21/part-0.parquet&quot; &quot;Month=7/Day=22/part-0.parquet&quot;
+##  [77] &quot;Month=7/Day=23/part-0.parquet&quot; &quot;Month=7/Day=24/part-0.parquet&quot;
+##  [79] &quot;Month=7/Day=25/part-0.parquet&quot; &quot;Month=7/Day=26/part-0.parquet&quot;
+##  [81] &quot;Month=7/Day=27/part-0.parquet&quot; &quot;Month=7/Day=28/part-0.parquet&quot;
+##  [83] &quot;Month=7/Day=29/part-0.parquet&quot; &quot;Month=7/Day=3/part-0.parquet&quot; 
+##  [85] &quot;Month=7/Day=30/part-0.parquet&quot; &quot;Month=7/Day=31/part-0.parquet&quot;
+##  [87] &quot;Month=7/Day=4/part-0.parquet&quot;  &quot;Month=7/Day=5/part-0.parquet&quot; 
+##  [89] &quot;Month=7/Day=6/part-0.parquet&quot;  &quot;Month=7/Day=7/part-0.parquet&quot; 
+##  [91] &quot;Month=7/Day=8/part-0.parquet&quot;  &quot;Month=7/Day=9/part-0.parquet&quot; 
+##  [93] &quot;Month=8/Day=1/part-0.parquet&quot;  &quot;Month=8/Day=10/part-0.parquet&quot;
+##  [95] &quot;Month=8/Day=11/part-0.parquet&quot; &quot;Month=8/Day=12/part-0.parquet&quot;
+##  [97] &quot;Month=8/Day=13/part-0.parquet&quot; &quot;Month=8/Day=14/part-0.parquet&quot;
+##  [99] &quot;Month=8/Day=15/part-0.parquet&quot; &quot;Month=8/Day=16/part-0.parquet&quot;
+## [101] &quot;Month=8/Day=17/part-0.parquet&quot; &quot;Month=8/Day=18/part-0.parquet&quot;
+## [103] &quot;Month=8/Day=19/part-0.parquet&quot; &quot;Month=8/Day=2/part-0.parquet&quot; 
+## [105] &quot;Month=8/Day=20/part-0.parquet&quot; &quot;Month=8/Day=21/part-0.parquet&quot;
+## [107] &quot;Month=8/Day=22/part-0.parquet&quot; &quot;Month=8/Day=23/part-0.parquet&quot;
+## [109] &quot;Month=8/Day=24/part-0.parquet&quot; &quot;Month=8/Day=25/part-0.parquet&quot;
+## [111] &quot;Month=8/Day=26/part-0.parquet&quot; &quot;Month=8/Day=27/part-0.parquet&quot;
+## [113] &quot;Month=8/Day=28/part-0.parquet&quot; &quot;Month=8/Day=29/part-0.parquet&quot;
+## [115] &quot;Month=8/Day=3/part-0.parquet&quot;  &quot;Month=8/Day=30/part-0.parquet&quot;
+## [117] &quot;Month=8/Day=31/part-0.parquet&quot; &quot;Month=8/Day=4/part-0.parquet&quot; 
+## [119] &quot;Month=8/Day=5/part-0.parquet&quot;  &quot;Month=8/Day=6/part-0.parquet&quot; 
+## [121] &quot;Month=8/Day=7/part-0.parquet&quot;  &quot;Month=8/Day=8/part-0.parquet&quot; 
+## [123] &quot;Month=8/Day=9/part-0.parquet&quot;  &quot;Month=9/Day=1/part-0.parquet&quot; 
+## [125] &quot;Month=9/Day=10/part-0.parquet&quot; &quot;Month=9/Day=11/part-0.parquet&quot;
+## [127] &quot;Month=9/Day=12/part-0.parquet&quot; &quot;Month=9/Day=13/part-0.parquet&quot;
+## [129] &quot;Month=9/Day=14/part-0.parquet&quot; &quot;Month=9/Day=15/part-0.parquet&quot;
+## [131] &quot;Month=9/Day=16/part-0.parquet&quot; &quot;Month=9/Day=17/part-0.parquet&quot;
+## [133] &quot;Month=9/Day=18/part-0.parquet&quot; &quot;Month=9/Day=19/part-0.parquet&quot;
+## [135] &quot;Month=9/Day=2/part-0.parquet&quot;  &quot;Month=9/Day=20/part-0.parquet&quot;
+## [137] &quot;Month=9/Day=21/part-0.parquet&quot; &quot;Month=9/Day=22/part-0.parquet&quot;
+## [139] &quot;Month=9/Day=23/part-0.parquet&quot; &quot;Month=9/Day=24/part-0.parquet&quot;
+## [141] &quot;Month=9/Day=25/part-0.parquet&quot; &quot;Month=9/Day=26/part-0.parquet&quot;
+## [143] &quot;Month=9/Day=27/part-0.parquet&quot; &quot;Month=9/Day=28/part-0.parquet&quot;
+## [145] &quot;Month=9/Day=29/part-0.parquet&quot; &quot;Month=9/Day=3/part-0.parquet&quot; 
+## [147] &quot;Month=9/Day=30/part-0.parquet&quot; &quot;Month=9/Day=4/part-0.parquet&quot; 
+## [149] &quot;Month=9/Day=5/part-0.parquet&quot;  &quot;Month=9/Day=6/part-0.parquet&quot; 
+## [151] &quot;Month=9/Day=7/part-0.parquet&quot;  &quot;Month=9/Day=8/part-0.parquet&quot; 
+## [153] &quot;Month=9/Day=9/part-0.parquet&quot;</code></pre>
+<p>Each of these folders contains 1 or more Parquet files containing the relevant partition of the data.</p>
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="reading-and-writing-data---multiple-files.html#cb44-1" tabindex="-1"></a><span class="fu">list.files</span>(<span class="st">&quot;airquality_groupby/Month=5/Day=10&quot;</span>)</span></code></pre></div>
+<pre><code>## [1] &quot;part-0.parquet&quot;</code></pre>
+<p>Note that when there was an <code>NA</code> value in the partition column,
+these values are written to the <code>col_name=__HIVE_DEFAULT_PARTITION__</code>
+directory.</p>
+</div>
+</div>
+<div id="read-partitioned-data" class="section level2 hasAnchor" number="3.4">
+<h2><span class="header-section-number">3.4</span> Read partitioned data<a href="reading-and-writing-data---multiple-files.html#read-partitioned-data" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>You want to read partitioned data files as an Arrow Dataset.</p>
+<div id="solution-17" class="section level3 hasAnchor" number="3.4.1">
+<h3><span class="header-section-number">3.4.1</span> Solution<a href="reading-and-writing-data---multiple-files.html#solution-17" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="reading-and-writing-data---multiple-files.html#cb46-1" tabindex="-1"></a><span class="co"># Read data from directory</span></span>
+<span id="cb46-2"><a href="reading-and-writing-data---multiple-files.html#cb46-2" tabindex="-1"></a>air_data <span class="ot">&lt;-</span> <span class="fu">open_dataset</span>(<span class="st">&quot;airquality_partitioned_deeper&quot;</span>)</span>
+<span id="cb46-3"><a href="reading-and-writing-data---multiple-files.html#cb46-3" tabindex="-1"></a></span>
+<span id="cb46-4"><a href="reading-and-writing-data---multiple-files.html#cb46-4" tabindex="-1"></a><span class="co"># View data</span></span>
+<span id="cb46-5"><a href="reading-and-writing-data---multiple-files.html#cb46-5" tabindex="-1"></a>air_data</span></code></pre></div>
+<pre><code>## FileSystemDataset with 153 Parquet files
+## 6 columns
+## Ozone: int32
+## Solar.R: int32
+## Wind: double
+## Temp: int32
+## Month: int32
+## Day: int32
+## 
+## See $metadata for additional Schema metadata</code></pre>
+</div>
+<div id="discussion-6" class="section level3 hasAnchor" number="3.4.2">
+<h3><span class="header-section-number">3.4.2</span> Discussion<a href="reading-and-writing-data---multiple-files.html#discussion-6" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>Partitioning allows you to split data across
+multiple files and folders, avoiding problems associated with storing all your data
+in a single file. This can provide further advantages when using Arrow, as Arrow will only
+read in the necessary partitioned files needed for any given analysis.</p>
+</div>
+</div>
+<div id="write-data-to-disk---featherarrow-ipc-format" class="section level2 hasAnchor" number="3.5">
+<h2><span class="header-section-number">3.5</span> Write data to disk - Feather/Arrow IPC format<a href="reading-and-writing-data---multiple-files.html#write-data-to-disk---featherarrow-ipc-format" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>You want to write data to disk in a single Feather/Arrow IPC file.</p>
+<div id="solution-18" class="section level3 hasAnchor" number="3.5.1">
+<h3><span class="header-section-number">3.5.1</span> Solution<a href="reading-and-writing-data---multiple-files.html#solution-18" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb48-1"><a href="reading-and-writing-data---multiple-files.html#cb48-1" tabindex="-1"></a><span class="fu">write_dataset</span>(<span class="at">dataset =</span> airquality,</span>
+<span id="cb48-2"><a href="reading-and-writing-data---multiple-files.html#cb48-2" tabindex="-1"></a>  <span class="at">path =</span> <span class="st">&quot;airquality_data_feather&quot;</span>,</span>
+<span id="cb48-3"><a href="reading-and-writing-data---multiple-files.html#cb48-3" tabindex="-1"></a>  <span class="at">format =</span> <span class="st">&quot;feather&quot;</span>)</span></code></pre></div>
+</div>
+</div>
+<div id="read-in-featherarrow-ipc-data-as-an-arrow-dataset" class="section level2 hasAnchor" number="3.6">
+<h2><span class="header-section-number">3.6</span> Read in Feather/Arrow IPC data as an Arrow Dataset<a href="reading-and-writing-data---multiple-files.html#read-in-featherarrow-ipc-data-as-an-arrow-dataset" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>You want to read in Feather/Arrow IPC data as an Arrow Dataset</p>
+<div id="solution-19" class="section level3 hasAnchor" number="3.6.1">
+<h3><span class="header-section-number">3.6.1</span> Solution<a href="reading-and-writing-data---multiple-files.html#solution-19" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="reading-and-writing-data---multiple-files.html#cb49-1" tabindex="-1"></a><span class="co"># write Arrow file to use in this example</span></span>
+<span id="cb49-2"><a href="reading-and-writing-data---multiple-files.html#cb49-2" tabindex="-1"></a><span class="fu">write_dataset</span>(<span class="at">dataset =</span> airquality,</span>
+<span id="cb49-3"><a href="reading-and-writing-data---multiple-files.html#cb49-3" tabindex="-1"></a>  <span class="at">path =</span> <span class="st">&quot;airquality_data_arrow&quot;</span>,</span>
+<span id="cb49-4"><a href="reading-and-writing-data---multiple-files.html#cb49-4" tabindex="-1"></a>  <span class="at">format =</span> <span class="st">&quot;arrow&quot;</span>)</span>
+<span id="cb49-5"><a href="reading-and-writing-data---multiple-files.html#cb49-5" tabindex="-1"></a></span>
+<span id="cb49-6"><a href="reading-and-writing-data---multiple-files.html#cb49-6" tabindex="-1"></a><span class="co"># read into R</span></span>
+<span id="cb49-7"><a href="reading-and-writing-data---multiple-files.html#cb49-7" tabindex="-1"></a><span class="fu">open_dataset</span>(<span class="st">&quot;airquality_data_arrow&quot;</span>, <span class="at">format =</span> <span class="st">&quot;arrow&quot;</span>)</span></code></pre></div>
+<pre><code>## FileSystemDataset with 1 Feather file
+## 6 columns
+## Ozone: int32
+## Solar.R: int32
+## Wind: double
+## Temp: int32
+## Month: int32
+## Day: int32
+## 
+## See $metadata for additional Schema metadata</code></pre>
+</div>
+</div>
+<div id="write-data-to-disk---csv-format" class="section level2 hasAnchor" number="3.7">
+<h2><span class="header-section-number">3.7</span> Write data to disk - CSV format<a href="reading-and-writing-data---multiple-files.html#write-data-to-disk---csv-format" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>You want to write data to disk in a single CSV file.</p>
+<div id="solution-20" class="section level3 hasAnchor" number="3.7.1">
+<h3><span class="header-section-number">3.7.1</span> Solution<a href="reading-and-writing-data---multiple-files.html#solution-20" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb51-1"><a href="reading-and-writing-data---multiple-files.html#cb51-1" tabindex="-1"></a><span class="fu">write_dataset</span>(<span class="at">dataset =</span> airquality,</span>
+<span id="cb51-2"><a href="reading-and-writing-data---multiple-files.html#cb51-2" tabindex="-1"></a>  <span class="at">path =</span> <span class="st">&quot;airquality_data_csv&quot;</span>,</span>
+<span id="cb51-3"><a href="reading-and-writing-data---multiple-files.html#cb51-3" tabindex="-1"></a>  <span class="at">format =</span> <span class="st">&quot;csv&quot;</span>)</span></code></pre></div>
+</div>
+</div>
+<div id="read-in-csv-data-as-an-arrow-dataset" class="section level2 hasAnchor" number="3.8">
+<h2><span class="header-section-number">3.8</span> Read in CSV data as an Arrow Dataset<a href="reading-and-writing-data---multiple-files.html#read-in-csv-data-as-an-arrow-dataset" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>You want to read in CSV data as an Arrow Dataset</p>
+<div id="solution-21" class="section level3 hasAnchor" number="3.8.1">
+<h3><span class="header-section-number">3.8.1</span> Solution<a href="reading-and-writing-data---multiple-files.html#solution-21" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb52-1"><a href="reading-and-writing-data---multiple-files.html#cb52-1" tabindex="-1"></a><span class="co"># write CSV file to use in this example</span></span>
+<span id="cb52-2"><a href="reading-and-writing-data---multiple-files.html#cb52-2" tabindex="-1"></a><span class="fu">write_dataset</span>(<span class="at">dataset =</span> airquality,</span>
+<span id="cb52-3"><a href="reading-and-writing-data---multiple-files.html#cb52-3" tabindex="-1"></a>  <span class="at">path =</span> <span class="st">&quot;airquality_data_csv&quot;</span>,</span>
+<span id="cb52-4"><a href="reading-and-writing-data---multiple-files.html#cb52-4" tabindex="-1"></a>  <span class="at">format =</span> <span class="st">&quot;csv&quot;</span>)</span>
+<span id="cb52-5"><a href="reading-and-writing-data---multiple-files.html#cb52-5" tabindex="-1"></a></span>
+<span id="cb52-6"><a href="reading-and-writing-data---multiple-files.html#cb52-6" tabindex="-1"></a><span class="co"># read into R</span></span>
+<span id="cb52-7"><a href="reading-and-writing-data---multiple-files.html#cb52-7" tabindex="-1"></a><span class="fu">open_dataset</span>(<span class="st">&quot;airquality_data_csv&quot;</span>, <span class="at">format =</span> <span class="st">&quot;csv&quot;</span>)</span></code></pre></div>
+<pre><code>## FileSystemDataset with 1 csv file
+## 6 columns
+## Ozone: int64
+## Solar.R: int64
+## Wind: double
+## Temp: int64
+## Month: int64
+## Day: int64</code></pre>
+</div>
+</div>
+<div id="read-in-a-csv-dataset-no-headers" class="section level2 hasAnchor" number="3.9">
+<h2><span class="header-section-number">3.9</span> Read in a CSV dataset (no headers)<a href="reading-and-writing-data---multiple-files.html#read-in-a-csv-dataset-no-headers" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>You want to read in a dataset containing CSVs with no headers</p>
+<div id="solution-22" class="section level3 hasAnchor" number="3.9.1">
+<h3><span class="header-section-number">3.9.1</span> Solution<a href="reading-and-writing-data---multiple-files.html#solution-22" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="reading-and-writing-data---multiple-files.html#cb54-1" tabindex="-1"></a><span class="co"># write CSV file to use in this example</span></span>
+<span id="cb54-2"><a href="reading-and-writing-data---multiple-files.html#cb54-2" tabindex="-1"></a>dataset_1 <span class="ot">&lt;-</span> airquality[<span class="dv">1</span><span class="sc">:</span><span class="dv">40</span>, <span class="fu">c</span>(<span class="st">&quot;Month&quot;</span>, <span class="st">&quot;Day&quot;</span>, <span class="st">&quot;Temp&quot;</span>)]</span>
+<span id="cb54-3"><a href="reading-and-writing-data---multiple-files.html#cb54-3" tabindex="-1"></a>dataset_2 <span class="ot">&lt;-</span> airquality[<span class="dv">41</span><span class="sc">:</span><span class="dv">80</span>, <span class="fu">c</span>(<span class="st">&quot;Month&quot;</span>, <span class="st">&quot;Day&quot;</span>, <span class="st">&quot;Temp&quot;</span>)]</span>
+<span id="cb54-4"><a href="reading-and-writing-data---multiple-files.html#cb54-4" tabindex="-1"></a></span>
+<span id="cb54-5"><a href="reading-and-writing-data---multiple-files.html#cb54-5" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">&quot;airquality&quot;</span>)</span>
+<span id="cb54-6"><a href="reading-and-writing-data---multiple-files.html#cb54-6" tabindex="-1"></a><span class="fu">write.table</span>(dataset_1, <span class="st">&quot;airquality/part-1.csv&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;,&quot;</span>, <span class="at">row.names =</span> <span class="cn">FALSE</span>, <span class="at">col.names =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb54-7"><a href="reading-and-writing-data---multiple-files.html#cb54-7" tabindex="-1"></a><span class="fu">write.table</span>(dataset_2, <span class="st">&quot;airquality/part-2.csv&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;,&quot;</span>, <span class="at">row.names =</span> <span class="cn">FALSE</span>, <span class="at">col.names =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb54-8"><a href="reading-and-writing-data---multiple-files.html#cb54-8" tabindex="-1"></a></span>
+<span id="cb54-9"><a href="reading-and-writing-data---multiple-files.html#cb54-9" tabindex="-1"></a><span class="co"># read into R</span></span>
+<span id="cb54-10"><a href="reading-and-writing-data---multiple-files.html#cb54-10" tabindex="-1"></a><span class="fu">open_dataset</span>(<span class="st">&quot;airquality&quot;</span>, <span class="at">format =</span> <span class="st">&quot;csv&quot;</span>, <span class="at">column_names =</span> <span class="fu">c</span>(<span class="st">&quot;Month&quot;</span>, <span class="st">&quot;Day&quot;</span>, <span class="st">&quot;Temp&quot;</span>))</span></code></pre></div>
+<pre><code>## FileSystemDataset with 2 csv files
+## 3 columns
+## Month: int64
+## Day: int64
+## Temp: int64</code></pre>
+</div>
+<div id="discussion-7" class="section level3 hasAnchor" number="3.9.2">
+<h3><span class="header-section-number">3.9.2</span> Discussion<a href="reading-and-writing-data---multiple-files.html#discussion-7" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>If your dataset is made up of headerless CSV files, you must supply the names of
+each column. You can do this in multiple ways - either via the <code>column_names</code>
+parameter (as shown above) or via a schema:</p>
+<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb56-1"><a href="reading-and-writing-data---multiple-files.html#cb56-1" tabindex="-1"></a><span class="fu">open_dataset</span>(<span class="st">&quot;airquality&quot;</span>, <span class="at">format =</span> <span class="st">&quot;csv&quot;</span>, <span class="at">schema =</span> <span class="fu">schema</span>(<span class="st">&quot;Month&quot;</span> <span class="ot">=</span> <span class="fu">int32</span>(), <span class="st">&quot;Day&quot;</span> <span class="ot">=</span> <span class="fu">int32</span>(), <span class="st">&quot;Temp&quot;</span> <span class="ot">=</span> <span class="fu">int32</span>()))</span></code></pre></div>
+<pre><code>## FileSystemDataset with 2 csv files
+## 3 columns
+## Month: int32
+## Day: int32
+## Temp: int32</code></pre>
+<p>One additional advantage of using a schema is that you also have control of the
+data types of the columns. If you provide both column names and a schema, the values
+in <code>column_names</code> must match the <code>schema</code> field names.</p>
+</div>
+</div>
+<div id="write-compressed-partitioned-data" class="section level2 hasAnchor" number="3.10">
+<h2><span class="header-section-number">3.10</span> Write compressed partitioned data<a href="reading-and-writing-data---multiple-files.html#write-compressed-partitioned-data" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>You want to save partitioned files, compressed with a specified compression algorithm.</p>
+<div id="solution-23" class="section level3 hasAnchor" number="3.10.1">
+<h3><span class="header-section-number">3.10.1</span> Solution<a href="reading-and-writing-data---multiple-files.html#solution-23" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="sourceCode" id="cb58"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb58-1"><a href="reading-and-writing-data---multiple-files.html#cb58-1" tabindex="-1"></a><span class="co"># Create a temporary directory</span></span>
+<span id="cb58-2"><a href="reading-and-writing-data---multiple-files.html#cb58-2" tabindex="-1"></a>td <span class="ot">&lt;-</span> <span class="fu">tempfile</span>()</span>
+<span id="cb58-3"><a href="reading-and-writing-data---multiple-files.html#cb58-3" tabindex="-1"></a><span class="fu">dir.create</span>(td)</span>
+<span id="cb58-4"><a href="reading-and-writing-data---multiple-files.html#cb58-4" tabindex="-1"></a></span>
+<span id="cb58-5"><a href="reading-and-writing-data---multiple-files.html#cb58-5" tabindex="-1"></a><span class="co"># Write dataset to file</span></span>
+<span id="cb58-6"><a href="reading-and-writing-data---multiple-files.html#cb58-6" tabindex="-1"></a><span class="fu">write_dataset</span>(iris, <span class="at">path =</span> td, <span class="at">compression =</span> <span class="st">&quot;gzip&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb59"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb59-1"><a href="reading-and-writing-data---multiple-files.html#cb59-1" tabindex="-1"></a><span class="co"># View files in the directory</span></span>
+<span id="cb59-2"><a href="reading-and-writing-data---multiple-files.html#cb59-2" tabindex="-1"></a><span class="fu">list.files</span>(td, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<pre><code>## [1] &quot;part-0.parquet&quot;</code></pre>
+</div>
+<div id="discussion-8" class="section level3 hasAnchor" number="3.10.2">
+<h3><span class="header-section-number">3.10.2</span> Discussion<a href="reading-and-writing-data---multiple-files.html#discussion-8" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>You can supply the <code>compression</code> argument to <code>write_dataset()</code> as long as
+the compression algorithm is compatible with the chosen format. See <code>?write_dataset()</code>
+for more information on supported compression algorithms and default settings.</p>
+</div>
+</div>
+<div id="read-compressed-data-1" class="section level2 hasAnchor" number="3.11">
+<h2><span class="header-section-number">3.11</span> Read compressed data<a href="reading-and-writing-data---multiple-files.html#read-compressed-data-1" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>You want to read in data which has been compressed.</p>
+<div id="solution-24" class="section level3 hasAnchor" number="3.11.1">
+<h3><span class="header-section-number">3.11.1</span> Solution<a href="reading-and-writing-data---multiple-files.html#solution-24" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="sourceCode" id="cb61"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb61-1"><a href="reading-and-writing-data---multiple-files.html#cb61-1" tabindex="-1"></a><span class="co"># Create a temporary directory</span></span>
+<span id="cb61-2"><a href="reading-and-writing-data---multiple-files.html#cb61-2" tabindex="-1"></a>td <span class="ot">&lt;-</span> <span class="fu">tempfile</span>()</span>
+<span id="cb61-3"><a href="reading-and-writing-data---multiple-files.html#cb61-3" tabindex="-1"></a><span class="fu">dir.create</span>(td)</span>
+<span id="cb61-4"><a href="reading-and-writing-data---multiple-files.html#cb61-4" tabindex="-1"></a></span>
+<span id="cb61-5"><a href="reading-and-writing-data---multiple-files.html#cb61-5" tabindex="-1"></a><span class="co"># Write dataset to file</span></span>
+<span id="cb61-6"><a href="reading-and-writing-data---multiple-files.html#cb61-6" tabindex="-1"></a><span class="fu">write_dataset</span>(iris, <span class="at">path =</span> td, <span class="at">compression =</span> <span class="st">&quot;gzip&quot;</span>)</span>
+<span id="cb61-7"><a href="reading-and-writing-data---multiple-files.html#cb61-7" tabindex="-1"></a></span>
+<span id="cb61-8"><a href="reading-and-writing-data---multiple-files.html#cb61-8" tabindex="-1"></a><span class="co"># Read in data</span></span>
+<span id="cb61-9"><a href="reading-and-writing-data---multiple-files.html#cb61-9" tabindex="-1"></a>ds <span class="ot">&lt;-</span> <span class="fu">open_dataset</span>(td) <span class="sc">%&gt;%</span></span>
+<span id="cb61-10"><a href="reading-and-writing-data---multiple-files.html#cb61-10" tabindex="-1"></a>  <span class="fu">collect</span>()</span>
+<span id="cb61-11"><a href="reading-and-writing-data---multiple-files.html#cb61-11" tabindex="-1"></a></span>
+<span id="cb61-12"><a href="reading-and-writing-data---multiple-files.html#cb61-12" tabindex="-1"></a>ds</span></code></pre></div>
+<pre><code>## # A tibble: 150 × 5
+##    Sepal.Length Sepal.Width Petal.Length Petal.Width Species
+##           &lt;dbl&gt;       &lt;dbl&gt;        &lt;dbl&gt;       &lt;dbl&gt; &lt;fct&gt;  
+##  1          5.1         3.5          1.4         0.2 setosa 
+##  2          4.9         3            1.4         0.2 setosa 
+##  3          4.7         3.2          1.3         0.2 setosa 
+##  4          4.6         3.1          1.5         0.2 setosa 
+##  5          5           3.6          1.4         0.2 setosa 
+##  6          5.4         3.9          1.7         0.4 setosa 
+##  7          4.6         3.4          1.4         0.3 setosa 
+##  8          5           3.4          1.5         0.2 setosa 
+##  9          4.4         2.9          1.4         0.2 setosa 
+## 10          4.9         3.1          1.5         0.1 setosa 
+## # ℹ 140 more rows</code></pre>
+</div>
+<div id="discussion-9" class="section level3 hasAnchor" number="3.11.2">
+<h3><span class="header-section-number">3.11.2</span> Discussion<a href="reading-and-writing-data---multiple-files.html#discussion-9" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>Note that Arrow automatically detects the compression and you do not have to
+supply it in the call to <code>open_dataset()</code> or the <code>read_*()</code> functions.</p>
+
+<!---
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+</div>
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="reading-and-writing-data---single-files.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="creating-arrow-objects.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+  "sharing": {
+    "github": false,
+    "facebook": true,
+    "twitter": true,
+    "linkedin": false,
+    "weibo": false,
+    "instapaper": false,
+    "vk": false,
+    "whatsapp": false,
+    "all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+  },
+  "fontsettings": {
+    "theme": "white",
+    "family": "sans",
+    "size": 2
+  },
+  "edit": {
+    "link": "https://github.com/apache/arrow-cookbook/edit/main/r/content/datasets.Rmd",
+    "text": "Edit"
+  },
+  "history": {
+    "link": null,
+    "text": null
+  },
+  "view": {
+    "link": null,
+    "text": null
+  },
+  "download": null,
+  "search": {
+    "engine": "fuse",
+    "options": null
+  },
+  "toc": {
+    "collapse": "subsection"
+  }
+});
+});
+</script>
+
+</body>
+
+</html>

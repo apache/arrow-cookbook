@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Dataset &#8212; Apache Arrow Java Cookbook  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=49eeb2a1" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Substrait" href="substrait.html" />
+    <link rel="prev" title="Arrow Flight" href="flight.html" />
+  
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+  <!-- Matomo -->
+  <script>
+    var _paq = window._paq = window._paq || [];
+    /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+    /* We explicitly disable cookie tracking to avoid privacy issues */
+    _paq.push(['disableCookies']);
+    _paq.push(['trackPageView']);
+    _paq.push(['enableLinkTracking']);
+    (function() {
+      var u="https://analytics.apache.org/";
+      _paq.push(['setTrackerUrl', u+'matomo.php']);
+      _paq.push(['setSiteId', '20']);
+      var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+      g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+    })();
+  </script>
+  <!-- End Matomo Code -->
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="dataset">
+<span id="arrow-dataset"></span><h1><a class="toc-backref" href="#id4" role="doc-backlink">Dataset</a><a class="headerlink" href="#dataset" title="Link to this heading">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference external" href="https://arrow.apache.org/docs/dev/java/dataset.html">Arrow Java Dataset</a>: Java implementation of Arrow Datasets library. Implement Dataset Java API by JNI to C++.</p></li>
+</ul>
+<nav class="contents" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#dataset" id="id4">Dataset</a></p>
+<ul>
+<li><p><a class="reference internal" href="#constructing-datasets" id="id5">Constructing Datasets</a></p></li>
+<li><p><a class="reference internal" href="#getting-the-schema" id="id6">Getting the Schema</a></p>
+<ul>
+<li><p><a class="reference internal" href="#during-dataset-construction" id="id7">During Dataset Construction</a></p></li>
+<li><p><a class="reference internal" href="#from-a-dataset" id="id8">From a Dataset</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#query-parquet-file" id="id9">Query Parquet File</a></p>
+<ul>
+<li><p><a class="reference internal" href="#query-data-content-for-file" id="id10">Query Data Content For File</a></p></li>
+<li><p><a class="reference internal" href="#query-data-content-for-directory" id="id11">Query Data Content For Directory</a></p></li>
+<li><p><a class="reference internal" href="#query-data-content-with-projection" id="id12">Query Data Content with Projection</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#query-arrow-files" id="id13">Query Arrow Files</a></p>
+<ul>
+<li><p><a class="reference internal" href="#id1" id="id14">Query Data Content For File</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#query-orc-file" id="id15">Query ORC File</a></p>
+<ul>
+<li><p><a class="reference internal" href="#id2" id="id16">Query Data Content For File</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#query-csv-file" id="id17">Query CSV File</a></p>
+<ul>
+<li><p><a class="reference internal" href="#id3" id="id18">Query Data Content For File</a></p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+<section id="constructing-datasets">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Constructing Datasets</a><a class="headerlink" href="#constructing-datasets" title="Link to this heading">¶</a></h2>
+<p>We can construct a dataset with an auto-inferred schema.</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.file.FileFormat</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.file.FileSystemDatasetFactory</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.jni.NativeMemoryPool</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.scanner.ScanOptions</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.scanner.Scanner</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.source.Dataset</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.source.DatasetFactory</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.memory.BufferAllocator</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.memory.RootAllocator</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">java.util.stream.StreamSupport</span><span class="p">;</span>
+
+<span class="n">String</span><span class="w"> </span><span class="n">uri</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;file:&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">System</span><span class="p">.</span><span class="na">getProperty</span><span class="p">(</span><span class="s">&quot;user.dir&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;/thirdpartydeps/parquetfiles/data1.parquet&quot;</span><span class="p">;</span>
+<span class="n">ScanOptions</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ScanOptions</span><span class="p">(</span><span class="cm">/*batchSize*/</span><span class="w"> </span><span class="mi">32768</span><span class="p">);</span>
+<span class="k">try</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">BufferAllocator</span><span class="w"> </span><span class="n">allocator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">RootAllocator</span><span class="p">();</span>
+<span class="w">    </span><span class="n">DatasetFactory</span><span class="w"> </span><span class="n">datasetFactory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">FileSystemDatasetFactory</span><span class="p">(</span><span class="n">allocator</span><span class="p">,</span><span class="w"> </span><span class="n">NativeMemoryPool</span><span class="p">.</span><span class="na">getDefault</span><span class="p">(),</span><span class="w"> </span><span class="n">FileFormat</span><span class="p">.</span><span class="na">PARQUET</span><span class="p">,</span><span class="w"> </span><span class="n">uri</span><span class="p">);</span>
+<span class="w">    </span><span class="n">Dataset</span><span class="w"> </span><span class="n">dataset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">datasetFactory</span><span class="p">.</span><span class="na">finish</span><span class="p">();</span>
+<span class="w">    </span><span class="n">Scanner</span><span class="w"> </span><span class="n">scanner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dataset</span><span class="p">.</span><span class="na">newScan</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+<span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="n">StreamSupport</span><span class="p">.</span><span class="na">stream</span><span class="p">(</span><span class="n">scanner</span><span class="p">.</span><span class="na">scan</span><span class="p">().</span><span class="na">spliterator</span><span class="p">(),</span><span class="w"> </span><span class="kc">false</span><span class="p">).</span><span class="na">count</span><span class="p">());</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">Exception</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">e</span><span class="p">.</span><span class="na">printStackTrace</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>1
+</pre></div>
+</div>
+<p>Let construct our dataset with predefined schema.</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.file.FileFormat</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.file.FileSystemDatasetFactory</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.jni.NativeMemoryPool</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.scanner.ScanOptions</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.scanner.Scanner</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.source.Dataset</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.source.DatasetFactory</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.memory.BufferAllocator</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.memory.RootAllocator</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">java.util.stream.StreamSupport</span><span class="p">;</span>
+
+<span class="n">String</span><span class="w"> </span><span class="n">uri</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;file:&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">System</span><span class="p">.</span><span class="na">getProperty</span><span class="p">(</span><span class="s">&quot;user.dir&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;/thirdpartydeps/parquetfiles/data1.parquet&quot;</span><span class="p">;</span>
+<span class="n">ScanOptions</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ScanOptions</span><span class="p">(</span><span class="cm">/*batchSize*/</span><span class="w"> </span><span class="mi">32768</span><span class="p">);</span>
+<span class="k">try</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">BufferAllocator</span><span class="w"> </span><span class="n">allocator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">RootAllocator</span><span class="p">();</span>
+<span class="w">    </span><span class="n">DatasetFactory</span><span class="w"> </span><span class="n">datasetFactory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">FileSystemDatasetFactory</span><span class="p">(</span><span class="n">allocator</span><span class="p">,</span><span class="w"> </span><span class="n">NativeMemoryPool</span><span class="p">.</span><span class="na">getDefault</span><span class="p">(),</span><span class="w"> </span><span class="n">FileFormat</span><span class="p">.</span><span class="na">PARQUET</span><span class="p">,</span><span class="w"> </span><span class="n">uri</span><span class="p">);</span>
+<span class="w">    </span><span class="n">Dataset</span><span class="w"> </span><span class="n">dataset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">datasetFactory</span><span class="p">.</span><span class="na">finish</span><span class="p">(</span><span class="n">datasetFactory</span><span class="p">.</span><span class="na">inspect</span><span class="p">());</span>
+<span class="w">    </span><span class="n">Scanner</span><span class="w"> </span><span class="n">scanner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dataset</span><span class="p">.</span><span class="na">newScan</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+<span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="n">StreamSupport</span><span class="p">.</span><span class="na">stream</span><span class="p">(</span><span class="n">scanner</span><span class="p">.</span><span class="na">scan</span><span class="p">().</span><span class="na">spliterator</span><span class="p">(),</span><span class="w"> </span><span class="kc">false</span><span class="p">).</span><span class="na">count</span><span class="p">());</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">Exception</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">e</span><span class="p">.</span><span class="na">printStackTrace</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>1
+</pre></div>
+</div>
+</section>
+<section id="getting-the-schema">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Getting the Schema</a><a class="headerlink" href="#getting-the-schema" title="Link to this heading">¶</a></h2>
+<section id="during-dataset-construction">
+<h3><a class="toc-backref" href="#id7" role="doc-backlink">During Dataset Construction</a><a class="headerlink" href="#during-dataset-construction" title="Link to this heading">¶</a></h3>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.file.FileFormat</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.file.FileSystemDatasetFactory</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.jni.NativeMemoryPool</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.source.DatasetFactory</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.memory.BufferAllocator</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.memory.RootAllocator</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.vector.types.pojo.Schema</span><span class="p">;</span>
+
+<span class="n">String</span><span class="w"> </span><span class="n">uri</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;file:&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">System</span><span class="p">.</span><span class="na">getProperty</span><span class="p">(</span><span class="s">&quot;user.dir&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;/thirdpartydeps/parquetfiles/data1.parquet&quot;</span><span class="p">;</span>
+<span class="k">try</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">BufferAllocator</span><span class="w"> </span><span class="n">allocator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">RootAllocator</span><span class="p">();</span>
+<span class="w">    </span><span class="n">DatasetFactory</span><span class="w"> </span><span class="n">datasetFactory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">FileSystemDatasetFactory</span><span class="p">(</span><span class="n">allocator</span><span class="p">,</span><span class="w"> </span><span class="n">NativeMemoryPool</span><span class="p">.</span><span class="na">getDefault</span><span class="p">(),</span><span class="w"> </span><span class="n">FileFormat</span><span class="p">.</span><span class="na">PARQUET</span><span class="p">,</span><span class="w"> </span><span class="n">uri</span><span class="p">)</span>
+<span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">Schema</span><span class="w"> </span><span class="n">schema</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">datasetFactory</span><span class="p">.</span><span class="na">inspect</span><span class="p">();</span>
+
+<span class="w">    </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="n">schema</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">Exception</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">e</span><span class="p">.</span><span class="na">printStackTrace</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Schema&lt;id: Int(32, true), name: Utf8&gt;(metadata: {parquet.avro.schema={&quot;type&quot;:&quot;record&quot;,&quot;name&quot;:&quot;User&quot;,&quot;namespace&quot;:&quot;org.apache.arrow.dataset&quot;,&quot;fields&quot;:[{&quot;name&quot;:&quot;id&quot;,&quot;type&quot;:[&quot;int&quot;,&quot;null&quot;]},{&quot;name&quot;:&quot;name&quot;,&quot;type&quot;:[&quot;string&quot;,&quot;null&quot;]}]}, writer.model.name=avro})
+</pre></div>
+</div>
+</section>
+<section id="from-a-dataset">
+<h3><a class="toc-backref" href="#id8" role="doc-backlink">From a Dataset</a><a class="headerlink" href="#from-a-dataset" title="Link to this heading">¶</a></h3>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.file.FileFormat</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.file.FileSystemDatasetFactory</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.jni.NativeMemoryPool</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.scanner.ScanOptions</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.scanner.Scanner</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.source.Dataset</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.source.DatasetFactory</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.memory.BufferAllocator</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.memory.RootAllocator</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.vector.types.pojo.Schema</span><span class="p">;</span>
+
+<span class="n">String</span><span class="w"> </span><span class="n">uri</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;file:&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">System</span><span class="p">.</span><span class="na">getProperty</span><span class="p">(</span><span class="s">&quot;user.dir&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;/thirdpartydeps/parquetfiles/data1.parquet&quot;</span><span class="p">;</span>
+<span class="n">ScanOptions</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ScanOptions</span><span class="p">(</span><span class="cm">/*batchSize*/</span><span class="w"> </span><span class="mi">32768</span><span class="p">);</span>
+<span class="k">try</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">BufferAllocator</span><span class="w"> </span><span class="n">allocator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">RootAllocator</span><span class="p">();</span>
+<span class="w">    </span><span class="n">DatasetFactory</span><span class="w"> </span><span class="n">datasetFactory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">FileSystemDatasetFactory</span><span class="p">(</span><span class="n">allocator</span><span class="p">,</span><span class="w"> </span><span class="n">NativeMemoryPool</span><span class="p">.</span><span class="na">getDefault</span><span class="p">(),</span><span class="w"> </span><span class="n">FileFormat</span><span class="p">.</span><span class="na">PARQUET</span><span class="p">,</span><span class="w"> </span><span class="n">uri</span><span class="p">);</span>
+<span class="w">    </span><span class="n">Dataset</span><span class="w"> </span><span class="n">dataset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">datasetFactory</span><span class="p">.</span><span class="na">finish</span><span class="p">();</span>
+<span class="w">    </span><span class="n">Scanner</span><span class="w"> </span><span class="n">scanner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dataset</span><span class="p">.</span><span class="na">newScan</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+<span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">Schema</span><span class="w"> </span><span class="n">schema</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanner</span><span class="p">.</span><span class="na">schema</span><span class="p">();</span>
+
+<span class="w">    </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="n">schema</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">Exception</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">e</span><span class="p">.</span><span class="na">printStackTrace</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Schema&lt;id: Int(32, true), name: Utf8&gt;(metadata: {parquet.avro.schema={&quot;type&quot;:&quot;record&quot;,&quot;name&quot;:&quot;User&quot;,&quot;namespace&quot;:&quot;org.apache.arrow.dataset&quot;,&quot;fields&quot;:[{&quot;name&quot;:&quot;id&quot;,&quot;type&quot;:[&quot;int&quot;,&quot;null&quot;]},{&quot;name&quot;:&quot;name&quot;,&quot;type&quot;:[&quot;string&quot;,&quot;null&quot;]}]}, writer.model.name=avro})
+</pre></div>
+</div>
+</section>
+</section>
+<section id="query-parquet-file">
+<h2><a class="toc-backref" href="#id9" role="doc-backlink">Query Parquet File</a><a class="headerlink" href="#query-parquet-file" title="Link to this heading">¶</a></h2>
+<p>Let query information for a parquet file.</p>
+<section id="query-data-content-for-file">
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">Query Data Content For File</a><a class="headerlink" href="#query-data-content-for-file" title="Link to this heading">¶</a></h3>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.file.FileFormat</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.file.FileSystemDatasetFactory</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.jni.NativeMemoryPool</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.scanner.ScanOptions</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.scanner.Scanner</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.source.Dataset</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.source.DatasetFactory</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.memory.BufferAllocator</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.memory.RootAllocator</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.vector.VectorSchemaRoot</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.vector.ipc.ArrowReader</span><span class="p">;</span>
+
+<span class="n">String</span><span class="w"> </span><span class="n">uri</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;file:&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">System</span><span class="p">.</span><span class="na">getProperty</span><span class="p">(</span><span class="s">&quot;user.dir&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;/thirdpartydeps/parquetfiles/data1.parquet&quot;</span><span class="p">;</span>
+<span class="n">ScanOptions</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ScanOptions</span><span class="p">(</span><span class="cm">/*batchSize*/</span><span class="w"> </span><span class="mi">32768</span><span class="p">);</span>
+<span class="k">try</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">BufferAllocator</span><span class="w"> </span><span class="n">allocator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">RootAllocator</span><span class="p">();</span>
+<span class="w">    </span><span class="n">DatasetFactory</span><span class="w"> </span><span class="n">datasetFactory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">FileSystemDatasetFactory</span><span class="p">(</span><span class="n">allocator</span><span class="p">,</span><span class="w"> </span><span class="n">NativeMemoryPool</span><span class="p">.</span><span class="na">getDefault</span><span class="p">(),</span><span class="w"> </span><span class="n">FileFormat</span><span class="p">.</span><span class="na">PARQUET</span><span class="p">,</span><span class="w"> </span><span class="n">uri</span><span class="p">);</span>
+<span class="w">    </span><span class="n">Dataset</span><span class="w"> </span><span class="n">dataset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">datasetFactory</span><span class="p">.</span><span class="na">finish</span><span class="p">();</span>
+<span class="w">    </span><span class="n">Scanner</span><span class="w"> </span><span class="n">scanner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dataset</span><span class="p">.</span><span class="na">newScan</span><span class="p">(</span><span class="n">options</span><span class="p">);</span>
+<span class="w">    </span><span class="n">ArrowReader</span><span class="w"> </span><span class="n">reader</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanner</span><span class="p">.</span><span class="na">scanBatches</span><span class="p">()</span>
+<span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">reader</span><span class="p">.</span><span class="na">loadNextBatch</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">try</span><span class="w"> </span><span class="p">(</span><span class="n">VectorSchemaRoot</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reader</span><span class="p">.</span><span class="na">getVectorSchemaRoot</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">print</span><span class="p">(</span><span class="n">root</span><span class="p">.</span><span class="na">contentToTSVString</span><span class="p">());</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">Exception</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">e</span><span class="p">.</span><span class="na">printStackTrace</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>id    name
+1    David
+2    Gladis
+3    Juan
+</pre></div>
+</div>
+<p>Let’s try to read a Parquet file with gzip compression and 3 row groups:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ parquet-tools meta data4_3rg_gzip.parquet
+
+file schema: schema
+age:         OPTIONAL INT64 R:0 D:1
+name:        OPTIONAL BINARY L:STRING R:0 D:1
+row group 1: RC:4 TS:182 OFFSET:4
+row group 2: RC:4 TS:190 OFFSET:420
+row group 3: RC:3 TS:179 OFFSET:838
+</pre></div>
+</div>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.file.FileFormat</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.file.FileSystemDatasetFactory</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.jni.NativeMemoryPool</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.scanner.ScanOptions</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.scanner.Scanner</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.source.Dataset</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.source.DatasetFactory</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.memory.BufferAllocator</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.memory.RootAllocator</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.vector.VectorSchemaRoot</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.vector.ipc.ArrowReader</span><span class="p">;</span>
+
+<span class="n">String</span><span class="w"> </span><span class="n">uri</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;file:&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">System</span><span class="p">.</span><span class="na">getProperty</span><span class="p">(</span><span class="s">&quot;user.dir&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;/thirdpartydeps/parquetfiles/data4_3rg_gzip.parquet&quot;</span><span class="p">;</span>
+<span class="n">ScanOptions</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ScanOptions</span><span class="p">(</span><span class="cm">/*batchSize*/</span><span class="w"> </span><span class="mi">32768</span><span class="p">);</span>
+<span class="k">try</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">BufferAllocator</span><span class="w"> </span><span class="n">allocator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">RootAllocator</span><span class="p">();</span>
+<span class="w">    </span><span class="n">DatasetFactory</span><span class="w"> </span><span class="n">datasetFactory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">FileSystemDatasetFactory</span><span class="p">(</span><span class="n">allocator</span><span class="p">,</span><span class="w"> </span><span class="n">NativeMemoryPool</span><span class="p">.</span><span class="na">getDefault</span><span class="p">(),</span><span class="w"> </span><span class="n">FileFormat</span><span class="p">.</span><span class="na">PARQUET</span><span class="p">,</span><span class="w"> </span><span class="n">uri</span><span class="p">);</span>
+<span class="w">    </span><span class="n">Dataset</span><span class="w"> </span><span class="n">dataset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">datasetFactory</span><span class="p">.</span><span class="na">finish</span><span class="p">();</span>
+<span class="w">    </span><span class="n">Scanner</span><span class="w"> </span><span class="n">scanner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dataset</span><span class="p">.</span><span class="na">newScan</span><span class="p">(</span><span class="n">options</span><span class="p">);</span>
+<span class="w">    </span><span class="n">ArrowReader</span><span class="w"> </span><span class="n">reader</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanner</span><span class="p">.</span><span class="na">scanBatches</span><span class="p">()</span>
+<span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">totalBatchSize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">reader</span><span class="p">.</span><span class="na">loadNextBatch</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">try</span><span class="w"> </span><span class="p">(</span><span class="n">VectorSchemaRoot</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reader</span><span class="p">.</span><span class="na">getVectorSchemaRoot</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">totalBatchSize</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">root</span><span class="p">.</span><span class="na">getRowCount</span><span class="p">();</span>
+<span class="w">            </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&quot;Number of rows per batch[&quot;</span><span class="o">+</span><span class="w"> </span><span class="n">count</span><span class="o">++</span><span class="w"> </span><span class="o">+</span><span class="s">&quot;]: &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">root</span><span class="p">.</span><span class="na">getRowCount</span><span class="p">());</span>
+<span class="w">            </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">print</span><span class="p">(</span><span class="n">root</span><span class="p">.</span><span class="na">contentToTSVString</span><span class="p">());</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&quot;Total batch size: &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">totalBatchSize</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">Exception</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">e</span><span class="p">.</span><span class="na">printStackTrace</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Number of rows per batch[1]: 4
+age    name
+10    Jean
+10    Lu
+10    Kei
+10    Sophia
+Number of rows per batch[2]: 4
+age    name
+10    Mara
+20    Arit
+20    Neil
+20    Jason
+Number of rows per batch[3]: 3
+age    name
+20    John
+20    Peter
+20    Ismael
+Total batch size: 11
+</pre></div>
+</div>
+</section>
+<section id="query-data-content-for-directory">
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">Query Data Content For Directory</a><a class="headerlink" href="#query-data-content-for-directory" title="Link to this heading">¶</a></h3>
+<p>Consider that we have these files: data1: 3 rows, data2: 3 rows and data3: 250 rows.</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.file.FileFormat</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.file.FileSystemDatasetFactory</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.jni.NativeMemoryPool</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.scanner.ScanOptions</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.scanner.Scanner</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.source.Dataset</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.source.DatasetFactory</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.memory.BufferAllocator</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.memory.RootAllocator</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.vector.VectorSchemaRoot</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.vector.ipc.ArrowReader</span><span class="p">;</span>
+
+<span class="n">String</span><span class="w"> </span><span class="n">uri</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;file:&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">System</span><span class="p">.</span><span class="na">getProperty</span><span class="p">(</span><span class="s">&quot;user.dir&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;/thirdpartydeps/parquetfiles/&quot;</span><span class="p">;</span>
+<span class="n">ScanOptions</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ScanOptions</span><span class="p">(</span><span class="cm">/*batchSize*/</span><span class="w"> </span><span class="mi">100</span><span class="p">);</span>
+<span class="k">try</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">BufferAllocator</span><span class="w"> </span><span class="n">allocator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">RootAllocator</span><span class="p">();</span>
+<span class="w">    </span><span class="n">DatasetFactory</span><span class="w"> </span><span class="n">datasetFactory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">FileSystemDatasetFactory</span><span class="p">(</span><span class="n">allocator</span><span class="p">,</span><span class="w"> </span><span class="n">NativeMemoryPool</span><span class="p">.</span><span class="na">getDefault</span><span class="p">(),</span><span class="w"> </span><span class="n">FileFormat</span><span class="p">.</span><span class="na">PARQUET</span><span class="p">,</span><span class="w"> </span><span class="n">uri</span><span class="p">);</span>
+<span class="w">    </span><span class="n">Dataset</span><span class="w"> </span><span class="n">dataset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">datasetFactory</span><span class="p">.</span><span class="na">finish</span><span class="p">();</span>
+<span class="w">    </span><span class="n">Scanner</span><span class="w"> </span><span class="n">scanner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dataset</span><span class="p">.</span><span class="na">newScan</span><span class="p">(</span><span class="n">options</span><span class="p">);</span>
+<span class="w">    </span><span class="n">ArrowReader</span><span class="w"> </span><span class="n">reader</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanner</span><span class="p">.</span><span class="na">scanBatches</span><span class="p">()</span>
+<span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">reader</span><span class="p">.</span><span class="na">loadNextBatch</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">try</span><span class="w"> </span><span class="p">(</span><span class="n">VectorSchemaRoot</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reader</span><span class="p">.</span><span class="na">getVectorSchemaRoot</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&quot;Batch: &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">count</span><span class="o">++</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;, RowCount: &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">root</span><span class="p">.</span><span class="na">getRowCount</span><span class="p">());</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">Exception</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">e</span><span class="p">.</span><span class="na">printStackTrace</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Batch: 1, RowCount: 3
+Batch: 2, RowCount: 3
+Batch: 3, RowCount: 100
+Batch: 4, RowCount: 100
+Batch: 5, RowCount: 50
+Batch: 6, RowCount: 4
+Batch: 7, RowCount: 4
+Batch: 8, RowCount: 3
+</pre></div>
+</div>
+</section>
+<section id="query-data-content-with-projection">
+<h3><a class="toc-backref" href="#id12" role="doc-backlink">Query Data Content with Projection</a><a class="headerlink" href="#query-data-content-with-projection" title="Link to this heading">¶</a></h3>
+<p>In case we need to project only certain columns we could configure ScanOptions with projections needed.</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.file.FileFormat</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.file.FileSystemDatasetFactory</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.jni.NativeMemoryPool</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.scanner.ScanOptions</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.scanner.Scanner</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.source.Dataset</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.source.DatasetFactory</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.memory.BufferAllocator</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.memory.RootAllocator</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.vector.VectorSchemaRoot</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.vector.ipc.ArrowReader</span><span class="p">;</span>
+
+<span class="n">String</span><span class="w"> </span><span class="n">uri</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;file:&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">System</span><span class="p">.</span><span class="na">getProperty</span><span class="p">(</span><span class="s">&quot;user.dir&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;/thirdpartydeps/parquetfiles/data1.parquet&quot;</span><span class="p">;</span>
+<span class="n">String</span><span class="o">[]</span><span class="w"> </span><span class="n">projection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">String</span><span class="o">[]</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">};</span>
+<span class="n">ScanOptions</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ScanOptions</span><span class="p">(</span><span class="cm">/*batchSize*/</span><span class="w"> </span><span class="mi">32768</span><span class="p">,</span><span class="w"> </span><span class="n">Optional</span><span class="p">.</span><span class="na">of</span><span class="p">(</span><span class="n">projection</span><span class="p">));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">BufferAllocator</span><span class="w"> </span><span class="n">allocator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">RootAllocator</span><span class="p">();</span>
+<span class="w">    </span><span class="n">DatasetFactory</span><span class="w"> </span><span class="n">datasetFactory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">FileSystemDatasetFactory</span><span class="p">(</span><span class="n">allocator</span><span class="p">,</span><span class="w"> </span><span class="n">NativeMemoryPool</span><span class="p">.</span><span class="na">getDefault</span><span class="p">(),</span><span class="w"> </span><span class="n">FileFormat</span><span class="p">.</span><span class="na">PARQUET</span><span class="p">,</span><span class="w"> </span><span class="n">uri</span><span class="p">);</span>
+<span class="w">    </span><span class="n">Dataset</span><span class="w"> </span><span class="n">dataset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">datasetFactory</span><span class="p">.</span><span class="na">finish</span><span class="p">();</span>
+<span class="w">    </span><span class="n">Scanner</span><span class="w"> </span><span class="n">scanner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dataset</span><span class="p">.</span><span class="na">newScan</span><span class="p">(</span><span class="n">options</span><span class="p">);</span>
+<span class="w">    </span><span class="n">ArrowReader</span><span class="w"> </span><span class="n">reader</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanner</span><span class="p">.</span><span class="na">scanBatches</span><span class="p">()</span>
+<span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">reader</span><span class="p">.</span><span class="na">loadNextBatch</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">try</span><span class="w"> </span><span class="p">(</span><span class="n">VectorSchemaRoot</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reader</span><span class="p">.</span><span class="na">getVectorSchemaRoot</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">print</span><span class="p">(</span><span class="n">root</span><span class="p">.</span><span class="na">contentToTSVString</span><span class="p">());</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">Exception</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">e</span><span class="p">.</span><span class="na">printStackTrace</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>name
+David
+Gladis
+Juan
+</pre></div>
+</div>
+</section>
+</section>
+<section id="query-arrow-files">
+<h2><a class="toc-backref" href="#id13" role="doc-backlink">Query Arrow Files</a><a class="headerlink" href="#query-arrow-files" title="Link to this heading">¶</a></h2>
+<section id="id1">
+<h3><a class="toc-backref" href="#id14" role="doc-backlink">Query Data Content For File</a><a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<p>Let’s read an Arrow file with 3 record batches, each with 3 rows.</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.file.FileFormat</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.file.FileSystemDatasetFactory</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.jni.NativeMemoryPool</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.scanner.ScanOptions</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.scanner.Scanner</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.source.Dataset</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.source.DatasetFactory</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.memory.BufferAllocator</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.memory.RootAllocator</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.vector.VectorSchemaRoot</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.vector.ipc.ArrowReader</span><span class="p">;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">java.io.IOException</span><span class="p">;</span>
+
+<span class="n">String</span><span class="w"> </span><span class="n">uri</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;file:&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">System</span><span class="p">.</span><span class="na">getProperty</span><span class="p">(</span><span class="s">&quot;user.dir&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;/thirdpartydeps/arrowfiles/random_access.arrow&quot;</span><span class="p">;</span>
+<span class="n">ScanOptions</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ScanOptions</span><span class="p">(</span><span class="cm">/*batchSize*/</span><span class="w"> </span><span class="mi">32768</span><span class="p">);</span>
+<span class="k">try</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">BufferAllocator</span><span class="w"> </span><span class="n">allocator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">RootAllocator</span><span class="p">();</span>
+<span class="w">    </span><span class="n">DatasetFactory</span><span class="w"> </span><span class="n">datasetFactory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">FileSystemDatasetFactory</span><span class="p">(</span><span class="n">allocator</span><span class="p">,</span><span class="w"> </span><span class="n">NativeMemoryPool</span><span class="p">.</span><span class="na">getDefault</span><span class="p">(),</span><span class="w"> </span><span class="n">FileFormat</span><span class="p">.</span><span class="na">ARROW_IPC</span><span class="p">,</span><span class="w"> </span><span class="n">uri</span><span class="p">);</span>
+<span class="w">    </span><span class="n">Dataset</span><span class="w"> </span><span class="n">dataset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">datasetFactory</span><span class="p">.</span><span class="na">finish</span><span class="p">();</span>
+<span class="w">    </span><span class="n">Scanner</span><span class="w"> </span><span class="n">scanner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dataset</span><span class="p">.</span><span class="na">newScan</span><span class="p">(</span><span class="n">options</span><span class="p">);</span>
+<span class="w">    </span><span class="n">ArrowReader</span><span class="w"> </span><span class="n">reader</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanner</span><span class="p">.</span><span class="na">scanBatches</span><span class="p">()</span>
+<span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">reader</span><span class="p">.</span><span class="na">loadNextBatch</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">try</span><span class="w"> </span><span class="p">(</span><span class="n">VectorSchemaRoot</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reader</span><span class="p">.</span><span class="na">getVectorSchemaRoot</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&quot;Number of rows per batch[&quot;</span><span class="o">+</span><span class="w"> </span><span class="n">count</span><span class="o">++</span><span class="w"> </span><span class="o">+</span><span class="s">&quot;]: &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">root</span><span class="p">.</span><span class="na">getRowCount</span><span class="p">());</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">Exception</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">e</span><span class="p">.</span><span class="na">printStackTrace</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Number of rows per batch[1]: 3
+Number of rows per batch[2]: 3
+Number of rows per batch[3]: 3
+</pre></div>
+</div>
+</section>
+</section>
+<section id="query-orc-file">
+<h2><a class="toc-backref" href="#id15" role="doc-backlink">Query ORC File</a><a class="headerlink" href="#query-orc-file" title="Link to this heading">¶</a></h2>
+<section id="id2">
+<h3><a class="toc-backref" href="#id16" role="doc-backlink">Query Data Content For File</a><a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<p>Let’s read an ORC file with zlib compression 385 stripes, each with 5000 rows.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ orc-metadata demo-11-zlib.orc | more
+
+{ &quot;name&quot;: &quot;demo-11-zlib.orc&quot;,
+  &quot;type&quot;: &quot;struct&lt;_col0:int,_col1:string,_col2:string,_col3:string,_col4:int,_col5:string,_col6:int,_col7:int,_col8:int&gt;&quot;,
+  &quot;stripe count&quot;: 385,
+  &quot;compression&quot;: &quot;zlib&quot;, &quot;compression block&quot;: 262144,
+  &quot;stripes&quot;: [
+    { &quot;stripe&quot;: 0, &quot;rows&quot;: 5000,
+      &quot;offset&quot;: 3, &quot;length&quot;: 1031,
+      &quot;index&quot;: 266, &quot;data&quot;: 636, &quot;footer&quot;: 129
+    },
+...
+</pre></div>
+</div>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.file.FileFormat</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.file.FileSystemDatasetFactory</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.jni.NativeMemoryPool</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.scanner.ScanOptions</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.scanner.Scanner</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.source.Dataset</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.source.DatasetFactory</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.memory.BufferAllocator</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.memory.RootAllocator</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.vector.VectorSchemaRoot</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.vector.ipc.ArrowReader</span><span class="p">;</span>
+
+<span class="n">String</span><span class="w"> </span><span class="n">uri</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;file:&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">System</span><span class="p">.</span><span class="na">getProperty</span><span class="p">(</span><span class="s">&quot;user.dir&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;/thirdpartydeps/orc/data1-zlib.orc&quot;</span><span class="p">;</span>
+<span class="n">ScanOptions</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ScanOptions</span><span class="p">(</span><span class="cm">/*batchSize*/</span><span class="w"> </span><span class="mi">32768</span><span class="p">);</span>
+<span class="k">try</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">BufferAllocator</span><span class="w"> </span><span class="n">allocator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">RootAllocator</span><span class="p">();</span>
+<span class="w">    </span><span class="n">DatasetFactory</span><span class="w"> </span><span class="n">datasetFactory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">FileSystemDatasetFactory</span><span class="p">(</span><span class="n">allocator</span><span class="p">,</span><span class="w"> </span><span class="n">NativeMemoryPool</span><span class="p">.</span><span class="na">getDefault</span><span class="p">(),</span><span class="w"> </span><span class="n">FileFormat</span><span class="p">.</span><span class="na">ORC</span><span class="p">,</span><span class="w"> </span><span class="n">uri</span><span class="p">);</span>
+<span class="w">    </span><span class="n">Dataset</span><span class="w"> </span><span class="n">dataset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">datasetFactory</span><span class="p">.</span><span class="na">finish</span><span class="p">();</span>
+<span class="w">    </span><span class="n">Scanner</span><span class="w"> </span><span class="n">scanner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dataset</span><span class="p">.</span><span class="na">newScan</span><span class="p">(</span><span class="n">options</span><span class="p">);</span>
+<span class="w">    </span><span class="n">ArrowReader</span><span class="w"> </span><span class="n">reader</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanner</span><span class="p">.</span><span class="na">scanBatches</span><span class="p">()</span>
+<span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">totalBatchSize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">reader</span><span class="p">.</span><span class="na">loadNextBatch</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">try</span><span class="w"> </span><span class="p">(</span><span class="n">VectorSchemaRoot</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reader</span><span class="p">.</span><span class="na">getVectorSchemaRoot</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">totalBatchSize</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">root</span><span class="p">.</span><span class="na">getRowCount</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&quot;Total batch size: &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">totalBatchSize</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">Exception</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">e</span><span class="p">.</span><span class="na">printStackTrace</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Total batch size: 1920800
+</pre></div>
+</div>
+</section>
+</section>
+<section id="query-csv-file">
+<h2><a class="toc-backref" href="#id17" role="doc-backlink">Query CSV File</a><a class="headerlink" href="#query-csv-file" title="Link to this heading">¶</a></h2>
+<section id="id3">
+<h3><a class="toc-backref" href="#id18" role="doc-backlink">Query Data Content For File</a><a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<p>Let’s read a CSV file.</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.file.FileFormat</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.file.FileSystemDatasetFactory</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.jni.NativeMemoryPool</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.scanner.ScanOptions</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.scanner.Scanner</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.source.Dataset</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.dataset.source.DatasetFactory</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.memory.BufferAllocator</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.memory.RootAllocator</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.vector.VectorSchemaRoot</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.arrow.vector.ipc.ArrowReader</span><span class="p">;</span>
+
+<span class="n">String</span><span class="w"> </span><span class="n">uri</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;file:&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">System</span><span class="p">.</span><span class="na">getProperty</span><span class="p">(</span><span class="s">&quot;user.dir&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;/thirdpartydeps/csv/tech_acquisitions.csv&quot;</span><span class="p">;</span>
+<span class="n">ScanOptions</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ScanOptions</span><span class="p">(</span><span class="cm">/*batchSize*/</span><span class="w"> </span><span class="mi">32768</span><span class="p">);</span>
+<span class="k">try</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">BufferAllocator</span><span class="w"> </span><span class="n">allocator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">RootAllocator</span><span class="p">();</span>
+<span class="w">    </span><span class="n">DatasetFactory</span><span class="w"> </span><span class="n">datasetFactory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">FileSystemDatasetFactory</span><span class="p">(</span><span class="n">allocator</span><span class="p">,</span><span class="w"> </span><span class="n">NativeMemoryPool</span><span class="p">.</span><span class="na">getDefault</span><span class="p">(),</span><span class="w"> </span><span class="n">FileFormat</span><span class="p">.</span><span class="na">CSV</span><span class="p">,</span><span class="w"> </span><span class="n">uri</span><span class="p">);</span>
+<span class="w">    </span><span class="n">Dataset</span><span class="w"> </span><span class="n">dataset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">datasetFactory</span><span class="p">.</span><span class="na">finish</span><span class="p">();</span>
+<span class="w">    </span><span class="n">Scanner</span><span class="w"> </span><span class="n">scanner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dataset</span><span class="p">.</span><span class="na">newScan</span><span class="p">(</span><span class="n">options</span><span class="p">);</span>
+<span class="w">    </span><span class="n">ArrowReader</span><span class="w"> </span><span class="n">reader</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanner</span><span class="p">.</span><span class="na">scanBatches</span><span class="p">()</span>
+<span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">totalBatchSize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">reader</span><span class="p">.</span><span class="na">loadNextBatch</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">try</span><span class="w"> </span><span class="p">(</span><span class="n">VectorSchemaRoot</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reader</span><span class="p">.</span><span class="na">getVectorSchemaRoot</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">totalBatchSize</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">root</span><span class="p">.</span><span class="na">getRowCount</span><span class="p">();</span>
+<span class="w">            </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">print</span><span class="p">(</span><span class="n">root</span><span class="p">.</span><span class="na">contentToTSVString</span><span class="p">());</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&quot;Total batch size: &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">totalBatchSize</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">Exception</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">e</span><span class="p">.</span><span class="na">printStackTrace</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Acquirer    Acquiree    Amount in billions (USD)    Date of acquisition
+NVIDIA    Mellanox    6.9    04/05/2020
+AMD    Xilinx    35.0    27/10/2020
+Salesforce    Slack    27.7    01/12/2020
+Total batch size: 3
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="index.html">
+    <img class="logo" src="_static/arrow-logo_vertical_black-txt_transparent-bg.svg" alt="Logo" />
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=apache&repo=arrow-cookbook&type=none&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="create.html">Creating Arrow Objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema.html">Working with Schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="io.html">Reading and writing data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="flight.html">Arrow Flight</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Dataset</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#constructing-datasets">Constructing Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-the-schema">Getting the Schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#query-parquet-file">Query Parquet File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#query-arrow-files">Query Arrow Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#query-orc-file">Query ORC File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#query-csv-file">Query CSV File</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="substrait.html">Substrait</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data manipulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="avro.html">Avro</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jdbc.html">Arrow JDBC Adapter</a></li>
+</ul>
+
+
+<hr />
+<ul>
+    
+    <li class="toctree-l1"><a href="https://arrow.apache.org/docs/java/index.html">User Guide</a></li>
+    
+    <li class="toctree-l1"><a href="https://arrow.apache.org/docs/java/reference/index.html">API Reference</a></li>
+    
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="flight.html" title="previous chapter">Arrow Flight</a></li>
+      <li>Next: <a href="substrait.html" title="next chapter">Substrait</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2022, Apache Software Foundation.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="_sources/dataset.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

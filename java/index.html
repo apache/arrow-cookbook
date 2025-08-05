@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Apache Arrow Java Cookbook &#8212; Apache Arrow Java Cookbook  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=64f5c0e4" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Creating Arrow Objects" href="create.html" />
+  
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+  <!-- Matomo -->
+  <script>
+    var _paq = window._paq = window._paq || [];
+    /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+    /* We explicitly disable cookie tracking to avoid privacy issues */
+    _paq.push(['disableCookies']);
+    _paq.push(['trackPageView']);
+    _paq.push(['enableLinkTracking']);
+    (function() {
+      var u="https://analytics.apache.org/";
+      _paq.push(['setTrackerUrl', u+'matomo.php']);
+      _paq.push(['setSiteId', '20']);
+      var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+      g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+    })();
+  </script>
+  <!-- End Matomo Code -->
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="apache-arrow-java-cookbook">
+<h1>Apache Arrow Java Cookbook<a class="headerlink" href="#apache-arrow-java-cookbook" title="Link to this heading">¶</a></h1>
+<p>The Apache Arrow Cookbook is a collection of recipes which demonstrate how to solve many common tasks that users might need to perform when working with Arrow data. The examples in this cookbook will also serve as robust and well performing solutions to those tasks.</p>
+<p>To get started with Apache Arrow in Java, see the
+<a class="reference external" href="https://arrow.apache.org/docs/java/install.html">Installation Instructions</a>.</p>
+<p>This cookbook is tested with Apache Arrow 18.1.0.</p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="create.html">Creating Arrow Objects</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="create.html#creating-vectors-arrays">Creating Vectors (arrays)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="create.html#slicing">Slicing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="schema.html">Working with Schema</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="schema.html#creating-fields">Creating Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="schema.html#creating-the-schema">Creating the Schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="schema.html#adding-metadata-to-fields-and-schemas">Adding Metadata to Fields and Schemas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="schema.html#creating-vectorschemaroot">Creating VectorSchemaRoot</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="io.html">Reading and writing data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="io.html#writing">Writing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#reading">Reading</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="flight.html">Arrow Flight</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="flight.html#simple-key-value-storage-service-with-arrow-flight">Simple Key-Value Storage Service with Arrow Flight</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dataset.html">Dataset</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dataset.html#constructing-datasets">Constructing Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataset.html#getting-the-schema">Getting the Schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataset.html#query-parquet-file">Query Parquet File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataset.html#query-arrow-files">Query Arrow Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataset.html#query-orc-file">Query ORC File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataset.html#query-csv-file">Query CSV File</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="substrait.html">Substrait</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="substrait.html#querying-datasets">Querying Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="substrait.html#filtering-and-projecting-datasets">Filtering and Projecting Datasets</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data manipulation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="data.html#concatenate-vectorschemaroots">Concatenate VectorSchemaRoots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data.html#concatenate-value-vectors">Concatenate Value Vectors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data.html#compare-vectors-for-field-equality">Compare Vectors for Field Equality</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data.html#compare-vectors-equality">Compare Vectors Equality</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data.html#compare-values-on-the-array">Compare Values on the Array</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data.html#search-values-on-the-array">Search Values on the Array</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data.html#sort-values-on-the-array">Sort Values on the Array</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="avro.html">Avro</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="avro.html#avro-to-arrow">Avro to Arrow</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="jdbc.html">Arrow JDBC Adapter</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="jdbc.html#resultset-to-vectorschemaroot-conversion">ResultSet to VectorSchemaRoot Conversion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jdbc.html#configuring-array-subtypes">Configuring Array subtypes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jdbc.html#configuring-batch-size">Configuring batch size</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jdbc.html#configuring-numeric-decimal-precision-and-scale">Configuring numeric (decimal) precision and scale</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="#">
+    <img class="logo" src="_static/arrow-logo_vertical_black-txt_transparent-bg.svg" alt="Logo" />
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=apache&repo=arrow-cookbook&type=none&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="create.html">Creating Arrow Objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema.html">Working with Schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="io.html">Reading and writing data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="flight.html">Arrow Flight</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset.html">Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="substrait.html">Substrait</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data manipulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="avro.html">Avro</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jdbc.html">Arrow JDBC Adapter</a></li>
+</ul>
+
+
+<hr />
+<ul>
+    
+    <li class="toctree-l1"><a href="https://arrow.apache.org/docs/java/index.html">User Guide</a></li>
+    
+    <li class="toctree-l1"><a href="https://arrow.apache.org/docs/java/reference/index.html">API Reference</a></li>
+    
+    <li class="toctree-l1"><a href="../">All Cookbooks</a></li>
+    
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="create.html" title="next chapter">Creating Arrow Objects</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2022, Apache Software Foundation.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
