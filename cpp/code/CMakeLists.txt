@@ -24,14 +24,50 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 endif()
 
 # Add Arrow and other required packages
-find_package(Arrow REQUIRED)
-if(NOT ${ARROW_VERSION} VERSION_GREATER "9.0.0")
-  get_filename_component(ARROW_CMAKE_BASE_DIR ${Arrow_CONFIG} DIRECTORY)
-  list(INSERT CMAKE_MODULE_PATH 0 ${ARROW_CMAKE_BASE_DIR})
+if(DEFINED ENV{ARROW_NIGHTLY})
+    set(CMAKE_BUILD_TYPE Debug)
+    set(ARROW_BUILD_SHARED True)
+    set(ARROW_DEPENDENCY_SOURCE "AUTO")
+    set(ARROW_ENABLE_THREADING ON)
+    set(ARROW_SIMD_LEVEL NONE) # macOS-specific workaround
+
+    set(ARROW_ACERO ON)
+    set(ARROW_COMPUTE ON)
+    set(ARROW_DATASET ON)
+    set(ARROW_FILESYSTEM ON)
+    set(ARROW_FLIGHT ON)
+    set(ARROW_IPC ON)
+    set(ARROW_PARQUET ON)
+
+    include(FetchContent)
+
+    FetchContent_Declare(Arrow
+        GIT_REPOSITORY https://github.com/apache/arrow.git
+        GIT_TAG main
+        GIT_SHALLOW TRUE SOURCE_SUBDIR cpp
+        OVERRIDE_FIND_PACKAGE
+    )
+
+    FetchContent_MakeAvailable(Arrow)
+
+    # These are some Linux-only things the FetchContent build needs in order
+    # to compile
+    file(INSTALL "${arrow_BINARY_DIR}/src/arrow/util/config.h"
+        DESTINATION "${arrow_SOURCE_DIR}/cpp/src/arrow/util")
+    file(INSTALL "${arrow_BINARY_DIR}/src/parquet/parquet_version.h"
+        DESTINATION "${arrow_SOURCE_DIR}/cpp/src/parquet")
+    target_include_directories(
+        arrow_shared
+        INTERFACE "$<BUILD_INTERFACE:${arrow_SOURCE_DIR}/cpp/src>"
+    )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")
+
+else()
+    find_package(Arrow REQUIRED)
+    find_package(ArrowDataset REQUIRED)
+    find_package(ArrowFlight REQUIRED)
+    find_package(Parquet REQUIRED)
 endif()
-find_package(ArrowDataset REQUIRED)
-find_package(ArrowFlight REQUIRED)
-find_package(Parquet REQUIRED)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_CLANG_TIDY "clang-tidy")
@@ -76,10 +112,9 @@ recipe(creating_arrow_objects)
 recipe(datasets)
 recipe(flight)
 
-
 # Add protobuf to flight
-find_package(gRPC CONFIG REQUIRED)
 find_package(Threads)
+find_package(gRPC CONFIG REQUIRED)
 
 set(PROTO_FILES
     protos/helloworld.proto
