@@ -89,12 +89,12 @@ jobs:
           git rm -rf --ignore-unmatch ./dev
           mkdir dev
       - name: Download book artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: build_book
           path: ./dev
       - name: Download cpp book
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: cpp_book
           path: ./dev/cpp
