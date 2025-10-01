@@ -42,7 +42,7 @@ jobs:
         java-version: [ '11', '17', '18' ]
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - uses: actions/setup-java@v5
@@ -71,7 +71,7 @@ jobs:
         java-version: [ '11', '17', '18' ]
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - uses: actions/setup-java@v5
