@@ -20,3 +20,4 @@ r/*.Rproj
 *target/
 .DS_Store
 .cp.tmp
+python/compressed.csv.gz

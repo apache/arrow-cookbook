@@ -38,6 +38,7 @@ This cookbook is tested with Apache Arrow |version|.
    schema
    io
    flight
+   flight_sql
    dataset
    substrait
    data
