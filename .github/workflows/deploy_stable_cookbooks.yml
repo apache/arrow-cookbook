@@ -32,7 +32,7 @@ jobs:
       - name: Copy .asf.yaml
         run: cp .asf.yaml build/.asf.yaml
       - name: Upload book artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: build_book
           path: build/
@@ -69,7 +69,7 @@ jobs:
         run:
           make cpp
       - name: Upload cpp book
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: cpp_book
           path: build/cpp
