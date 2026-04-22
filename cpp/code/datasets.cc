@@ -87,9 +87,8 @@ class DatasetReadingTest : public ::testing::Test {
                           fs->OpenInputFile(airquality_path));
     std::unique_ptr<parquet::ParquetFileReader> parquet_reader =
         parquet::ParquetFileReader::Open(file);
-    std::unique_ptr<parquet::arrow::FileReader> reader;
-    ARROW_RETURN_NOT_OK(parquet::arrow::FileReader::Make(
-        arrow::default_memory_pool(), std::move(parquet_reader), &reader));
+    ARROW_ASSIGN_OR_RAISE(auto reader, parquet::arrow::FileReader::Make(
+        arrow::default_memory_pool(), std::move(parquet_reader)));
     std::shared_ptr<arrow::Table> table;
     ARROW_RETURN_NOT_OK(reader->ReadTable(&table));
     return table;
