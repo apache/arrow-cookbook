@@ -33,6 +33,5 @@ dependencies:
   - abseil-cpp
   - c-ares
   - re2
-  - thrift-cpp
   - rapidjson
   - snappy
