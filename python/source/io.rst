@@ -401,53 +401,55 @@ partitioned data coming from remote sources like S3 or HDFS.
 
     from pyarrow import fs
 
-    # List content of s3://ursa-labs-taxi-data/2011
+    # List content of s3://arrow-datasets/nyc-taxi-tiny/year=2011
     s3 = fs.SubTreeFileSystem(
-        "ursa-labs-taxi-data", 
-        fs.S3FileSystem(region="us-east-2", anonymous=True)
+        "arrow-datasets",
+        fs.S3FileSystem(region="us-east-1", anonymous=True)
     )
-    for entry in s3.get_file_info(fs.FileSelector("2011", recursive=True)):
+    for entry in s3.get_file_info(fs.FileSelector("nyc-taxi-tiny/year=2011", recursive=True)):
         if entry.type == fs.FileType.File:
             print(entry.path)
 
 .. testoutput::
 
-    2011/01/data.parquet
-    2011/02/data.parquet
-    2011/03/data.parquet
-    2011/04/data.parquet
-    2011/05/data.parquet
-    2011/06/data.parquet
-    2011/07/data.parquet
-    2011/08/data.parquet
-    2011/09/data.parquet
-    2011/10/data.parquet
-    2011/11/data.parquet
-    2011/12/data.parquet
+    nyc-taxi-tiny/year=2011/month=1/part-0.parquet
+    nyc-taxi-tiny/year=2011/month=10/part-0.parquet
+    nyc-taxi-tiny/year=2011/month=11/part-0.parquet
+    nyc-taxi-tiny/year=2011/month=12/part-0.parquet
+    nyc-taxi-tiny/year=2011/month=2/part-0.parquet
+    nyc-taxi-tiny/year=2011/month=3/part-0.parquet
+    nyc-taxi-tiny/year=2011/month=4/part-0.parquet
+    nyc-taxi-tiny/year=2011/month=5/part-0.parquet
+    nyc-taxi-tiny/year=2011/month=6/part-0.parquet
+    nyc-taxi-tiny/year=2011/month=7/part-0.parquet
+    nyc-taxi-tiny/year=2011/month=8/part-0.parquet
+    nyc-taxi-tiny/year=2011/month=9/part-0.parquet
 
-The data in the bucket can be loaded as a single big dataset partitioned
-by ``month`` using
+The data in the bucket can be loaded as a single big dataset using
+Hive-style partitioning (``year=.../month=...``) with
 
 .. testcode::
 
-    dataset = ds.dataset("s3://ursa-labs-taxi-data/2011",
-                         partitioning=["month"])
+    s3 = fs.S3FileSystem(region="us-east-1", anonymous=True)
+    dataset = ds.dataset("arrow-datasets/nyc-taxi-tiny/year=2011",
+                         filesystem=s3,
+                         partitioning="hive")
     for f in dataset.files[:10]:
         print(f)
     print("...")
 
 .. testoutput::
 
-    ursa-labs-taxi-data/2011/01/data.parquet
-    ursa-labs-taxi-data/2011/02/data.parquet
-    ursa-labs-taxi-data/2011/03/data.parquet
-    ursa-labs-taxi-data/2011/04/data.parquet
-    ursa-labs-taxi-data/2011/05/data.parquet
-    ursa-labs-taxi-data/2011/06/data.parquet
-    ursa-labs-taxi-data/2011/07/data.parquet
-    ursa-labs-taxi-data/2011/08/data.parquet
-    ursa-labs-taxi-data/2011/09/data.parquet
-    ursa-labs-taxi-data/2011/10/data.parquet
+    arrow-datasets/nyc-taxi-tiny/year=2011/month=1/part-0.parquet
+    arrow-datasets/nyc-taxi-tiny/year=2011/month=10/part-0.parquet
+    arrow-datasets/nyc-taxi-tiny/year=2011/month=11/part-0.parquet
+    arrow-datasets/nyc-taxi-tiny/year=2011/month=12/part-0.parquet
+    arrow-datasets/nyc-taxi-tiny/year=2011/month=2/part-0.parquet
+    arrow-datasets/nyc-taxi-tiny/year=2011/month=3/part-0.parquet
+    arrow-datasets/nyc-taxi-tiny/year=2011/month=4/part-0.parquet
+    arrow-datasets/nyc-taxi-tiny/year=2011/month=5/part-0.parquet
+    arrow-datasets/nyc-taxi-tiny/year=2011/month=6/part-0.parquet
+    arrow-datasets/nyc-taxi-tiny/year=2011/month=7/part-0.parquet
     ...
 
 The dataset can then be used with :meth:`pyarrow.dataset.Dataset.to_table`
@@ -457,25 +459,6 @@ or :meth:`pyarrow.dataset.Dataset.to_batches` like you would for a local one.
 
     It is possible to load partitioned data also in the ipc arrow
     format or in feather format.
-
-.. warning::
-
-    If the above code throws an error most likely the reason is your
-    AWS credentials are not set. Follow these instructions to get
-    ``AWS Access Key Id`` and ``AWS Secret Access Key``: 
-    `AWS Credentials <https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html>`_.
-
-    The credentials are normally stored in ``~/.aws/credentials`` (on Mac or Linux)
-    or in ``C:\Users\<USERNAME>\.aws\credentials`` (on Windows) file. 
-    You will need to either create or update this file in the appropriate location.
-
-    The contents of the file should look like this:
-
-    .. code-block:: bash 
-
-        [default]
-        aws_access_key_id=<YOUR_AWS_ACCESS_KEY_ID>
-        aws_secret_access_key=<YOUR_AWS_SECRET_ACCESS_KEY>
 
 
 
