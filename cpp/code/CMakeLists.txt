@@ -42,6 +42,8 @@ if(DEFINED ENV{ARROW_NIGHTLY})
   set(ARROW_IPC ON)
   set(ARROW_PARQUET ON)
 
+  find_package(OpenSSL REQUIRED)
+
   include(FetchContent)
 
   FetchContent_Declare(Arrow
