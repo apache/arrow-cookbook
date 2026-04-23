@@ -21,8 +21,17 @@ dependencies:
   - python=3.10
   - compilers
   - cmake
+  - ninja
   - sphinx
   - gtest
   - gmock
   - clang-tools
   - zlib
+  - grpc-cpp
+  - protobuf
+  - abseil-cpp
+  - c-ares
+  - re2
+  - thrift-cpp
+  - rapidjson
+  - snappy
