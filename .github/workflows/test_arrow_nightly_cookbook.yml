@@ -95,7 +95,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: [ '3.9' ]
+        python-version: [ '3.10' ]
         java-version: [ '11', '17', '18' ]
         arrow_nightly: ['1']
     env:
@@ -119,7 +119,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ '3.9' ]
+        python-version: [ '3.10' ]
         java-version: [ '11', '17', '18' ]
         arrow_nightly: ['1']
     env:
