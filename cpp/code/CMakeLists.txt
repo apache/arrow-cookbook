@@ -126,7 +126,9 @@ recipe(flight)
 
 # Add protobuf to flight
 find_package(Threads)
-find_package(gRPC CONFIG REQUIRED)
+if(NOT TARGET gRPC::grpc)
+  find_package(gRPC CONFIG REQUIRED)
+endif()
 
 set(PROTO_FILES
     protos/helloworld.proto

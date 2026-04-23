@@ -27,6 +27,7 @@ dependencies:
   - gmock
   - clang-tools
   - zlib
+  - openssl
   - grpc-cpp
   - protobuf
   - abseil-cpp
