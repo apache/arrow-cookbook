@@ -48,6 +48,8 @@ jobs:
   test_cpp_dev:
     name: "Test C++ Cookbook on Arrow Nightlies"
     runs-on: ubuntu-latest
+    env:
+      ARROW_NIGHTLY: 1
     defaults:
       run:
         shell: bash -l {0}

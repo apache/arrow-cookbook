@@ -97,7 +97,11 @@ class ParquetStorageService : public arrow::flight::FlightServerBase {
         parquet::arrow::OpenFile(std::move(input), arrow::default_memory_pool()));
 
     std::shared_ptr<arrow::Table> table;
+#if ARROW_VERSION_MAJOR >= 24
+    ARROW_ASSIGN_OR_RAISE(table, reader->ReadTable());
+#else
     ARROW_RETURN_NOT_OK(reader->ReadTable(&table));
+#endif
     // Note that we can't directly pass TableBatchReader to
     // RecordBatchStream because TableBatchReader keeps a non-owning
     // reference to the underlying Table, which would then get freed
@@ -148,7 +152,7 @@ class ParquetStorageService : public arrow::flight::FlightServerBase {
     endpoint.ticket.ticket = file_info.base_name();
     arrow::flight::Location location;
     ARROW_ASSIGN_OR_RAISE(location,
-        arrow::flight::Location::ForGrpcTcp("localhost", port()));
+                          arrow::flight::Location::ForGrpcTcp("localhost", port()));
     endpoint.locations.push_back(location);
 
     int64_t total_records = reader->parquet_reader()->metadata()->num_rows();
@@ -197,7 +201,7 @@ arrow::Status TestPutGetDelete() {
 
   arrow::flight::Location server_location;
   ARROW_ASSIGN_OR_RAISE(server_location,
-      arrow::flight::Location::ForGrpcTcp("0.0.0.0", 0));
+                        arrow::flight::Location::ForGrpcTcp("0.0.0.0", 0));
 
   arrow::flight::FlightServerOptions options(server_location);
   auto server = std::unique_ptr<arrow::flight::FlightServerBase>(
@@ -209,7 +213,7 @@ arrow::Status TestPutGetDelete() {
   StartRecipe("ParquetStorageService::Connect");
   arrow::flight::Location location;
   ARROW_ASSIGN_OR_RAISE(location,
-      arrow::flight::Location::ForGrpcTcp("localhost", server->port()));
+                        arrow::flight::Location::ForGrpcTcp("localhost", server->port()));
 
   std::unique_ptr<arrow::flight::FlightClient> client;
   ARROW_ASSIGN_OR_RAISE(client, arrow::flight::FlightClient::Connect(location));
@@ -315,7 +319,7 @@ arrow::Status TestClientOptions() {
 
   arrow::flight::Location server_location;
   ARROW_ASSIGN_OR_RAISE(server_location,
-      arrow::flight::Location::ForGrpcTcp("0.0.0.0", 0));
+                        arrow::flight::Location::ForGrpcTcp("0.0.0.0", 0));
 
   arrow::flight::FlightServerOptions options(server_location);
   auto server = std::unique_ptr<arrow::flight::FlightServerBase>(
@@ -329,12 +333,12 @@ arrow::Status TestClientOptions() {
 
   arrow::flight::Location location;
   ARROW_ASSIGN_OR_RAISE(location,
-      arrow::flight::Location::ForGrpcTcp("localhost", server->port()));
+                        arrow::flight::Location::ForGrpcTcp("localhost", server->port()));
 
   std::unique_ptr<arrow::flight::FlightClient> client;
   // pass client_options into Connect()
   ARROW_ASSIGN_OR_RAISE(client,
-      arrow::flight::FlightClient::Connect(location, client_options));
+                        arrow::flight::FlightClient::Connect(location, client_options));
   rout << "Connected to " << location.ToString() << std::endl;
   EndRecipe("TestClientOptions::Connect");
 
@@ -352,7 +356,7 @@ arrow::Status TestCustomGrpcImpl() {
   StartRecipe("CustomGrpcImpl::StartServer");
   arrow::flight::Location server_location;
   ARROW_ASSIGN_OR_RAISE(server_location,
-      arrow::flight::Location::ForGrpcTcp("0.0.0.0", 5000));
+                        arrow::flight::Location::ForGrpcTcp("0.0.0.0", 0));
 
   arrow::flight::FlightServerOptions options(server_location);
   auto server = std::unique_ptr<arrow::flight::FlightServerBase>(
@@ -372,8 +376,8 @@ arrow::Status TestCustomGrpcImpl() {
   EndRecipe("CustomGrpcImpl::StartServer");
 
   StartRecipe("CustomGrpcImpl::CreateClient");
-  auto client_channel =
-      grpc::CreateChannel("0.0.0.0:5000", grpc::InsecureChannelCredentials());
+  auto client_channel = grpc::CreateChannel("0.0.0.0:" + std::to_string(server->port()),
+                                            grpc::InsecureChannelCredentials());
 
   auto stub = HelloWorldService::NewStub(client_channel);
 

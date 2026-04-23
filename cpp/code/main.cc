@@ -19,12 +19,17 @@
 
 #include <filesystem>
 
+#include <arrow/compute/api.h>
 #include <arrow/status.h>
 #include "gtest/gtest.h"
 
 #include "common.h"
 
 int main(int argc, char** argv) {
+  if (!arrow::compute::Initialize().ok()) {
+    std::cerr << "Failed to initialize Arrow compute functions" << std::endl;
+    return -1;
+  }
   testing::InitGoogleTest(&argc, argv);
   int retval = RUN_ALL_TESTS();
   if (retval == 0 && HasRecipeOutput()) {

@@ -18,23 +18,66 @@
 cmake_minimum_required(VERSION 3.19)
 project(arrow-cookbook)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
 endif()
 
 # Add Arrow and other required packages
-find_package(Arrow REQUIRED)
-if(NOT ${ARROW_VERSION} VERSION_GREATER "9.0.0")
-  get_filename_component(ARROW_CMAKE_BASE_DIR ${Arrow_CONFIG} DIRECTORY)
-  list(INSERT CMAKE_MODULE_PATH 0 ${ARROW_CMAKE_BASE_DIR})
+if(DEFINED ENV{ARROW_NIGHTLY})
+  set(CMAKE_BUILD_TYPE Debug)
+  set(ARROW_BUILD_SHARED True)
+  set(ARROW_DEPENDENCY_SOURCE "AUTO")
+  set(ARROW_ENABLE_THREADING ON)
+  set(ARROW_SIMD_LEVEL NONE) # macOS-specific workaround
+
+  set(ARROW_WITH_SNAPPY ON)
+
+  set(ARROW_ACERO ON)
+  set(ARROW_COMPUTE ON)
+  set(ARROW_DATASET ON)
+  set(ARROW_FILESYSTEM ON)
+  set(ARROW_FLIGHT ON)
+  set(ARROW_IPC ON)
+  set(ARROW_PARQUET ON)
+
+  include(FetchContent)
+
+  FetchContent_Declare(Arrow
+        GIT_REPOSITORY https://github.com/apache/arrow.git
+        GIT_TAG main
+        GIT_SHALLOW TRUE SOURCE_SUBDIR cpp
+        OVERRIDE_FIND_PACKAGE
+    )
+
+  FetchContent_MakeAvailable(Arrow)
+
+  # These are some Linux-only things the FetchContent build needs in order
+  # to compile
+  file(INSTALL "${arrow_BINARY_DIR}/src/arrow/util/config.h"
+        DESTINATION "${arrow_SOURCE_DIR}/cpp/src/arrow/util")
+  file(INSTALL "${arrow_BINARY_DIR}/src/parquet/parquet_version.h"
+        DESTINATION "${arrow_SOURCE_DIR}/cpp/src/parquet")
+  target_include_directories(
+        arrow_shared
+        SYSTEM INTERFACE "$<BUILD_INTERFACE:${arrow_SOURCE_DIR}/cpp/src>"
+    )
+  # Force FetchContent Arrow headers to the front of every target's include
+  # list so they take priority over any system Arrow headers added transitively
+  # (e.g. /opt/homebrew/include from GTest::gtest).  Without this the recipe
+  # executables compile against the older installed Arrow headers but link
+  # against the FetchContent Arrow runtime, causing ABI mismatches.
+  include_directories(BEFORE SYSTEM "${arrow_SOURCE_DIR}/cpp/src")
+
+else()
+  find_package(Arrow REQUIRED)
+  find_package(ArrowDataset REQUIRED)
+  find_package(ArrowFlight REQUIRED)
+  find_package(Parquet REQUIRED)
 endif()
-find_package(ArrowDataset REQUIRED)
-find_package(ArrowFlight REQUIRED)
-find_package(Parquet REQUIRED)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(CMAKE_CXX_CLANG_TIDY "clang-tidy")
+  set(CMAKE_CXX_CLANG_TIDY "clang-tidy")
 endif()
 
 # Create test targets
@@ -44,31 +87,36 @@ find_package(GTest REQUIRED)
 include(GoogleTest)
 
 function(RECIPE TARGET)
-    add_executable(
+  add_executable(
             ${TARGET}
             ${TARGET}.cc
             common.cc
             main.cc
     )
-    if(TARGET Arrow::arrow_shared)
-        target_link_libraries(
+  if(TARGET Arrow::arrow_shared)
+    target_link_libraries(
             ${TARGET}
             ArrowDataset::arrow_dataset_shared
             ArrowFlight::arrow_flight_shared GTest::gtest
         )
-    else()
-        target_link_libraries(parquet_shared INTERFACE arrow_shared)
-        target_link_libraries(arrow_dataset_shared INTERFACE parquet_shared)
-        target_link_libraries(arrow_flight_shared INTERFACE arrow_shared)
-        target_link_libraries(${TARGET} arrow_dataset_shared arrow_flight_shared GTest::gtest)
+  else()
+    target_link_libraries(parquet_shared INTERFACE arrow_shared)
+    target_link_libraries(arrow_dataset_shared INTERFACE parquet_shared)
+    target_link_libraries(arrow_flight_shared INTERFACE arrow_shared)
+    target_link_libraries(${TARGET} arrow_dataset_shared arrow_flight_shared GTest::gtest)
+  endif()
+  if (MSVC)
+    target_compile_options(${TARGET} PRIVATE /W4 /WX)
+  else ()
+    target_compile_options(${TARGET} PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    # _Nullable/_Nonnull nullability annotations in absl macros trigger
+    # -Wnullability-extension under -Wpedantic; this is Clang-only.
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+      target_compile_options(${TARGET} PRIVATE -Wno-nullability-extension)
     endif()
-    if (MSVC)
-        target_compile_options(${TARGET} PRIVATE /W4 /WX)
-    else ()
-        target_compile_options(${TARGET} PRIVATE -Wall -Wextra -Wpedantic -Werror)
-    endif ()
+  endif ()
 
-    gtest_discover_tests(${TARGET})
+  gtest_discover_tests(${TARGET})
 endfunction()
 
 recipe(basic_arrow)
@@ -76,10 +124,9 @@ recipe(creating_arrow_objects)
 recipe(datasets)
 recipe(flight)
 
-
 # Add protobuf to flight
-find_package(gRPC CONFIG REQUIRED)
 find_package(Threads)
+find_package(gRPC CONFIG REQUIRED)
 
 set(PROTO_FILES
     protos/helloworld.proto
