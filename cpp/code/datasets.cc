@@ -91,7 +91,11 @@ class DatasetReadingTest : public ::testing::Test {
                           parquet::arrow::FileReader::Make(arrow::default_memory_pool(),
                                                            std::move(parquet_reader)));
     std::shared_ptr<arrow::Table> table;
+#if ARROW_VERSION_MAJOR >= 24
     ARROW_ASSIGN_OR_RAISE(table, reader->ReadTable());
+#else
+    ARROW_RETURN_NOT_OK(reader->ReadTable(&table));
+#endif
     return table;
   }
 

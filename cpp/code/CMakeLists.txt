@@ -108,7 +108,12 @@ function(RECIPE TARGET)
   if (MSVC)
     target_compile_options(${TARGET} PRIVATE /W4 /WX)
   else ()
-    target_compile_options(${TARGET} PRIVATE -Wall -Wextra -Wpedantic -Wno-nullability-extension -Werror)
+    target_compile_options(${TARGET} PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    # _Nullable/_Nonnull nullability annotations in absl macros trigger
+    # -Wnullability-extension under -Wpedantic; this is Clang-only.
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+      target_compile_options(${TARGET} PRIVATE -Wno-nullability-extension)
+    endif()
   endif ()
 
   gtest_discover_tests(${TARGET})

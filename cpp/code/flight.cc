@@ -97,7 +97,11 @@ class ParquetStorageService : public arrow::flight::FlightServerBase {
         parquet::arrow::OpenFile(std::move(input), arrow::default_memory_pool()));
 
     std::shared_ptr<arrow::Table> table;
+#if ARROW_VERSION_MAJOR >= 24
     ARROW_ASSIGN_OR_RAISE(table, reader->ReadTable());
+#else
+    ARROW_RETURN_NOT_OK(reader->ReadTable(&table));
+#endif
     // Note that we can't directly pass TableBatchReader to
     // RecordBatchStream because TableBatchReader keeps a non-owning
     // reference to the underlying Table, which would then get freed
