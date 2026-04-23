@@ -46,6 +46,11 @@ if(DEFINED ENV{ARROW_NIGHTLY})
 
   find_package(OpenSSL REQUIRED)
 
+  # Prevent re2 from registering its test targets with CTest.
+  # re2 uses its own variable instead of BUILD_TESTING.
+  # TODO: fix upstream in Arrow's bundled dependency handling.
+  set(RE2_BUILD_TESTING OFF CACHE BOOL "" FORCE)
+
   include(FetchContent)
 
   FetchContent_Declare(Arrow
