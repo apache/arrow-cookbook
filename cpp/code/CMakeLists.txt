@@ -71,11 +71,8 @@ if(DEFINED ENV{ARROW_NIGHTLY})
         arrow_shared
         SYSTEM INTERFACE "$<BUILD_INTERFACE:${arrow_SOURCE_DIR}/cpp/src>"
     )
-  # Force FetchContent Arrow headers to the front of every target's include
-  # list so they take priority over any system Arrow headers added transitively
-  # (e.g. /opt/homebrew/include from GTest::gtest).  Without this the recipe
-  # executables compile against the older installed Arrow headers but link
-  # against the FetchContent Arrow runtime, causing ABI mismatches.
+  # Help make sure the FetchContent build headers go in front if the system has
+  # stable Arrow DLLs installed too
   include_directories(BEFORE SYSTEM "${arrow_SOURCE_DIR}/cpp/src")
 
 else()
