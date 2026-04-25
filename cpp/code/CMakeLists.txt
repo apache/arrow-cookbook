@@ -19,17 +19,16 @@ cmake_minimum_required(VERSION 3.19)
 project(arrow-cookbook)
 
 set(CMAKE_CXX_STANDARD 20)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
 endif()
 
-# Add Arrow and other required packages
 if(DEFINED ENV{ARROW_NIGHTLY})
   set(CMAKE_BUILD_TYPE Debug)
   set(ARROW_BUILD_SHARED True)
   set(ARROW_DEPENDENCY_SOURCE "AUTO")
   set(ARROW_ENABLE_THREADING ON)
-  set(ARROW_SIMD_LEVEL NONE) # macOS-specific workaround
+  set(ARROW_SIMD_LEVEL NONE)  # macOS-specific workaround
 
   set(ARROW_WITH_SNAPPY ON)
   set(ARROW_THRIFT_SOURCE "BUNDLED")
@@ -87,53 +86,53 @@ else()
   find_package(Parquet REQUIRED)
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(CMAKE_CXX_CLANG_TIDY "clang-tidy")
 endif()
 
-# Create test targets
 enable_testing()
 
 find_package(GTest REQUIRED)
 include(GoogleTest)
 
+# Resolve which Arrow targets to link against and wire up their dependency
+# chains once here, before any recipe() calls.
+if(TARGET Arrow::arrow_shared AND (NOT DEFINED ARROW_GRPC_USE_SHARED OR ARROW_GRPC_USE_SHARED))
+  set(ARROW_RECIPE_LIBS
+      ArrowDataset::arrow_dataset_shared
+      ArrowFlight::arrow_flight_shared)
+elseif(TARGET arrow_flight_static)
+  # gRPC is statically bundled inside Arrow. Link against the static Arrow libs
+  # so there is only one copy of gRPC in the binary (avoids duplicate TLS slots).
+  target_link_libraries(parquet_static INTERFACE arrow_static)
+  target_link_libraries(arrow_dataset_static INTERFACE parquet_static)
+  target_link_libraries(arrow_flight_static INTERFACE arrow_static)
+  set(ARROW_RECIPE_LIBS arrow_dataset_static arrow_flight_static)
+else()
+  target_link_libraries(parquet_shared INTERFACE arrow_shared)
+  target_link_libraries(arrow_dataset_shared INTERFACE parquet_shared)
+  target_link_libraries(arrow_flight_shared INTERFACE arrow_shared)
+  set(ARROW_RECIPE_LIBS arrow_dataset_shared arrow_flight_shared)
+endif()
+
 function(RECIPE TARGET)
   add_executable(
-            ${TARGET}
-            ${TARGET}.cc
-            common.cc
-            main.cc
+        ${TARGET}
+        ${TARGET}.cc
+        common.cc
+        main.cc
     )
-  if(TARGET Arrow::arrow_shared AND (NOT DEFINED ARROW_GRPC_USE_SHARED OR ARROW_GRPC_USE_SHARED))
-    target_link_libraries(
-            ${TARGET}
-            ArrowDataset::arrow_dataset_shared
-            ArrowFlight::arrow_flight_shared GTest::gtest
-        )
-  elseif(TARGET arrow_flight_static)
-    # gRPC is statically bundled inside Arrow. Link against the static Arrow libs
-    # so there is only one copy of gRPC in the binary (avoids duplicate TLS slots).
-    target_link_libraries(parquet_static INTERFACE arrow_static)
-    target_link_libraries(arrow_dataset_static INTERFACE parquet_static)
-    target_link_libraries(arrow_flight_static INTERFACE arrow_static)
-    target_link_libraries(${TARGET} arrow_dataset_static arrow_flight_static GTest::gtest)
-  else()
-    target_link_libraries(parquet_shared INTERFACE arrow_shared)
-    target_link_libraries(arrow_dataset_shared INTERFACE parquet_shared)
-    target_link_libraries(arrow_flight_shared INTERFACE arrow_shared)
-    target_link_libraries(${TARGET} arrow_dataset_shared arrow_flight_shared GTest::gtest)
-  endif()
-  if (MSVC)
+  target_link_libraries(${TARGET} ${ARROW_RECIPE_LIBS} GTest::gtest)
+  if(MSVC)
     target_compile_options(${TARGET} PRIVATE /W4 /WX)
-  else ()
+  else()
     target_compile_options(${TARGET} PRIVATE -Wall -Wextra -Wpedantic -Werror)
-    # _Nullable/_Nonnull nullability annotations in absl macros trigger
-    # -Wnullability-extension under -Wpedantic; this is Clang-only.
     if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+      # _Nullable/_Nonnull nullability annotations in absl macros trigger
+      # -Wnullability-extension under -Wpedantic.
       target_compile_options(${TARGET} PRIVATE -Wno-nullability-extension)
     endif()
-  endif ()
-
+  endif()
   gtest_discover_tests(${TARGET})
 endfunction()
 
@@ -142,21 +141,13 @@ recipe(creating_arrow_objects)
 recipe(datasets)
 recipe(flight)
 
-# Add protobuf to flight
-find_package(Threads)
 if(NOT TARGET gRPC::grpc)
   find_package(gRPC CONFIG REQUIRED)
 endif()
 
-set(PROTO_FILES
-    protos/helloworld.proto
-)
+set(PROTO_FILES protos/helloworld.proto)
 
-target_link_libraries(flight
-    protobuf::libprotobuf
-    gRPC::grpc
-    gRPC::grpc++
-)
+target_link_libraries(flight protobuf::libprotobuf gRPC::grpc gRPC::grpc++)
 target_include_directories(flight PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 protobuf_generate(TARGET flight LANGUAGE cpp PROTOS ${PROTO_FILES})
 protobuf_generate(TARGET flight LANGUAGE grpc
