@@ -35,6 +35,7 @@ if(DEFINED ENV{ARROW_NIGHTLY})
   set(ARROW_THRIFT_SOURCE "BUNDLED")
   set(ARROW_PROTOBUF_SOURCE "BUNDLED")
   set(ARROW_GRPC_SOURCE "BUNDLED")
+  set(ARROW_BUILD_STATIC ON)
 
   set(ARROW_ACERO ON)
   set(ARROW_COMPUTE ON)
@@ -103,12 +104,19 @@ function(RECIPE TARGET)
             common.cc
             main.cc
     )
-  if(TARGET Arrow::arrow_shared)
+  if(TARGET Arrow::arrow_shared AND (NOT DEFINED ARROW_GRPC_USE_SHARED OR ARROW_GRPC_USE_SHARED))
     target_link_libraries(
             ${TARGET}
             ArrowDataset::arrow_dataset_shared
             ArrowFlight::arrow_flight_shared GTest::gtest
         )
+  elseif(TARGET arrow_flight_static)
+    # gRPC is statically bundled inside Arrow. Link against the static Arrow libs
+    # so there is only one copy of gRPC in the binary (avoids duplicate TLS slots).
+    target_link_libraries(parquet_static INTERFACE arrow_static)
+    target_link_libraries(arrow_dataset_static INTERFACE parquet_static)
+    target_link_libraries(arrow_flight_static INTERFACE arrow_static)
+    target_link_libraries(${TARGET} arrow_dataset_static arrow_flight_static GTest::gtest)
   else()
     target_link_libraries(parquet_shared INTERFACE arrow_shared)
     target_link_libraries(arrow_dataset_shared INTERFACE parquet_shared)

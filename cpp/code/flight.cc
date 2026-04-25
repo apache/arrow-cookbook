@@ -395,6 +395,7 @@ arrow::Status TestCustomGrpcImpl() {
 
   StartRecipe("CustomGrpcImpl::StopServer");
   ARROW_RETURN_NOT_OK(server->Shutdown());
+  ARROW_RETURN_NOT_OK(server->Wait());
   rout << "Server shut down successfully" << std::endl;
   EndRecipe("CustomGrpcImpl::StopServer");
 
