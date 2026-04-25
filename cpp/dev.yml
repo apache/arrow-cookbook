@@ -19,6 +19,10 @@ channels:
   - conda-forge
 dependencies:
   - python=3.10
+  - pip
+  - pip:
+    - --index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple
+    - pyarrow
   - compilers
   - cmake
   - ninja
