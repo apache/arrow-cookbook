@@ -29,7 +29,7 @@ jobs:
     env:
       ARROW_NIGHTLY: 1
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Setup R
         uses: r-lib/actions/setup-r@v2
         with:
@@ -54,9 +54,9 @@ jobs:
       run:
         shell: bash -l {0}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Setup environment
-        uses: conda-incubator/setup-miniconda@v3
+        uses: conda-incubator/setup-miniconda@8ee1f361103df19b6f8c8655fd3967a8ecb162d5 # v4.0.1
         with:
           auto-update-conda: true
           activate-environment: cookbook-cpp-dev
@@ -69,7 +69,7 @@ jobs:
         run:
           make cpp
       - name: Upload cpp book
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: cpp_book
           path: build/cpp
@@ -80,7 +80,7 @@ jobs:
     env:
       ARROW_NIGHTLY: 1
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Install dependencies
         run: |
           sudo apt update
@@ -101,8 +101,8 @@ jobs:
     env:
       ARROW_NIGHTLY: ${{ matrix.arrow_nightly }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - uses: actions/setup-java@v5
@@ -125,8 +125,8 @@ jobs:
     env:
       ARROW_NIGHTLY: ${{ matrix.arrow_nightly }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - uses: actions/setup-java@v5
