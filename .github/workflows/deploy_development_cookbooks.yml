@@ -2,6 +2,9 @@ on:
   push:
      branches:
        - main
+  pull_request:
+    branches:
+      - main
 
 name: Deploy development Cookbooks
 
@@ -80,6 +83,7 @@ jobs:
     name: deploy
     runs-on: ubuntu-latest
     needs: [make_dev_cookbooks, make_dev_cpp]
+    if: github.event_name == 'push'
     steps:
       - name: Checkout repo
         uses: actions/checkout@v5
