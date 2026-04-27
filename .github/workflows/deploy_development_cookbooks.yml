@@ -15,7 +15,7 @@ jobs:
     env:
       ARROW_NIGHTLY: 1
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Setup R
         uses: r-lib/actions/setup-r@v2
         with:
@@ -35,7 +35,7 @@ jobs:
       - name: Build and render books
         run: make all
       - name: Upload book artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: build_book
           path: build/
@@ -47,9 +47,9 @@ jobs:
       run:
         shell: bash -l {0}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Cache conda
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         env:
           # Increase this value to reset cache if cpp/dev.yml has not changed
           CACHE_NUMBER: 0
@@ -58,7 +58,7 @@ jobs:
           key:
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('cpp/dev.yml') }}
       - name: Setup environment
-        uses: conda-incubator/setup-miniconda@v3
+        uses: conda-incubator/setup-miniconda@8ee1f361103df19b6f8c8655fd3967a8ecb162d5 # v4.0.1
         with:
           auto-update-conda: true
           python-version: "3.10"
@@ -74,7 +74,7 @@ jobs:
         run:
           make cpp
       - name: Upload cpp book
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: cpp_book
           path: build/cpp
@@ -86,7 +86,7 @@ jobs:
     if: github.event_name == 'push'
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: gh-pages
       - name: Prepare branch
@@ -95,12 +95,12 @@ jobs:
           git rm -rf --ignore-unmatch ./dev
           mkdir dev
       - name: Download book artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: build_book
           path: ./dev
       - name: Download cpp book
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: cpp_book
           path: ./dev/cpp
