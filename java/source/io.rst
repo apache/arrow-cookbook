@@ -320,6 +320,65 @@ We are providing a path with auto generated arrow files for testing purposes, ch
    Jhon    29
    Thomy    33
 
+Read - From Compressed File
+---------------------------
+
+We are providing a path with auto generated arrow files for testing purposes, change that at your convenience.
+
+Compressed file generated through this code example:
+
+.. code:: python
+
+   import pandas as pd
+   import pyarrow as pa
+
+   pd.DataFrame({'key': range(4)}).to_feather('lz4.arrow', compression='lz4')
+   pd.DataFrame({'key': range(4)}).to_feather('zstd.arrow', compression='zstd')
+
+.. note::
+
+   Java Vector module offer read files without compression codec, in case reading
+   compressed files is required consider to also add Java Compression module
+   dependency.
+
+.. testcode::
+
+   import org.apache.arrow.compression.CommonsCompressionFactory;
+   import org.apache.arrow.memory.BufferAllocator;
+   import org.apache.arrow.memory.RootAllocator;
+   import org.apache.arrow.vector.ipc.ArrowFileReader;
+   import org.apache.arrow.vector.ipc.message.ArrowBlock;
+   import org.apache.arrow.vector.VectorSchemaRoot;
+   import java.io.File;
+   import java.io.FileInputStream;
+   import java.io.IOException;
+
+   File file = new File("./thirdpartydeps/arrowfiles/lz4.arrow");
+   try(
+       BufferAllocator rootAllocator = new RootAllocator();
+       FileInputStream fileInputStream = new FileInputStream(file);
+       ArrowFileReader reader = new ArrowFileReader(fileInputStream.getChannel(),
+           rootAllocator, CommonsCompressionFactory.INSTANCE)
+   ){
+       System.out.println("Record batches in file: " + reader.getRecordBlocks().size());
+       for (ArrowBlock arrowBlock : reader.getRecordBlocks()) {
+           reader.loadRecordBatch(arrowBlock);
+           VectorSchemaRoot vectorSchemaRootRecover = reader.getVectorSchemaRoot();
+           System.out.print(vectorSchemaRootRecover.contentToTSVString());
+       }
+   } catch (IOException e) {
+       e.printStackTrace();
+   }
+
+.. testoutput::
+
+   Record batches in file: 1
+   key
+   0
+   1
+   2
+   3
+
 Read - From Buffer
 ------------------
 
