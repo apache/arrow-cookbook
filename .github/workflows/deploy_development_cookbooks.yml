@@ -61,7 +61,6 @@ jobs:
         uses: conda-incubator/setup-miniconda@8ee1f361103df19b6f8c8655fd3967a8ecb162d5 # v4.0.1
         with:
           auto-update-conda: true
-          python-version: "3.11"
           activate-environment: cookbook-cpp-dev
           environment-file: cpp/dev.yml
           auto-activate-base: false
