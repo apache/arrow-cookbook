@@ -33,4 +33,5 @@ dependencies:
   - zlib
   - openssl
   - rapidjson
+  - simdjson
   - snappy
