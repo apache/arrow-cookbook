@@ -42,6 +42,8 @@ if(DEFINED ENV{ARROW_NIGHTLY})
   set(ARROW_FLIGHT ON)
   set(ARROW_IPC ON)
   set(ARROW_PARQUET ON)
+  # Turn ARROW_JSON ON to trigger simdjson to resolve. Cookbook don't use it.
+  set(ARROW_JSON ON)
 
   find_package(OpenSSL REQUIRED)
 
