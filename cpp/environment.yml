@@ -18,13 +18,13 @@ name: cookbook-cpp
 channels:
   - conda-forge
 dependencies:
-  - python=3.10
+  - python=3.11
   - compilers
-  - libarrow==24.0.0
-  - libarrow-flight==24.0.0
+  - libarrow==25.0.0
+  - libarrow-flight==25.0.0
   - sphinx
   - gtest
   - gmock
-  - pyarrow==24.0.0
+  - pyarrow==25.0.0
   - clang-tools
   - zlib
