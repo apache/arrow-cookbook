@@ -23,6 +23,14 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
 endif()
 
+# Search the active conda environment before system paths. conda-forge's
+# compilers>=2 no longer pulls in the activation package that used to set
+# CMAKE_PREFIX_PATH, so without this a system OpenSSL can be picked up instead
+# of the one conda-forge's libcurl was built against.
+if(DEFINED ENV{CONDA_PREFIX})
+  list(PREPEND CMAKE_PREFIX_PATH "$ENV{CONDA_PREFIX}")
+endif()
+
 if(DEFINED ENV{ARROW_NIGHTLY})
   set(CMAKE_BUILD_TYPE Debug)
   set(ARROW_BUILD_SHARED True)
