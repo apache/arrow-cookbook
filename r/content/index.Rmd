@@ -44,5 +44,17 @@ If you have any requests for new recipes, please open a ticket via
 [the cookbook's GitHub Issues page](https://github.com/apache/arrow-cookbook/issues).
 
 If you have any Arrow feature requests to make or bugs to report, please 
-[open an issue on the project JIRA](https://issues.apache.org/jira/projects/ARROW/issues)
+[open an issue on the project GitHub repo](https://github.com/apache/arrow/issues)
 
+## How to cite
+
+Crane N, Hazlitt S, et al (2023). Apache Arrow R Cookbook. https://arrow.apache.org/cookbook/r/
+
+```
+@Manual{,
+  title = {Apache Arrow R Cookbook},
+  author = {Nicola Crane and Stephanie Hazlitt and Apache Arrow},
+  year = {2023},
+  note = {https://arrow.apache.org/cookbook/r/, https://github.com/apache/arrow-cookbook/},
+}
+```
