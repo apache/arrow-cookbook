@@ -84,9 +84,10 @@ class JavaDocTestBuilder(DocTestBuilder):
             modified_env["_JAVA_OPTIONS"] = "--add-opens=java.base/java.nio=ALL-UNNAMED"
 
             # Run Example.java by compiling it with Maven and then running it
-            # directly with java. We used to use mvn exec:java but a bug in
-            # Mavens' JLine dependency caused us to get stderr on our stdout. In
-            # theory this could be reverted back to exec:java if we ever wanted.
+            # directly with java. We previously used mvn exec:java but a bug in
+            # Mavens' JLine dependency caused us to get stderr on our stdout
+            # which makes tests fail. In theory this could be reverted back to
+            # use exec:java once Maven picks up a fixed JLine depdendency.
             classpath_file = pathlib.Path(project_dir) / "classpath.txt"
             build_proc = subprocess.run(
                 [
