@@ -43,7 +43,7 @@ class JavaDocTestBuilder(DocTestBuilder):
     Runs java test snippets in the documentation.
 
     The code in each testcode block is insert into a template Maven project,
-    run through exec:java, its output captured and post-processed, and finally
+    compiled with Maven and run with java, its stdout captured and post-processed, and finally
     compared to whatever's in the corresponding testoutput.
     """
 
@@ -83,23 +83,49 @@ class JavaDocTestBuilder(DocTestBuilder):
             modified_env = os.environ.copy()
             modified_env["_JAVA_OPTIONS"] = "--add-opens=java.base/java.nio=ALL-UNNAMED"
 
-            test_proc = subprocess.Popen(
+            # Run Example.java by compiling it with Maven and then running it
+            # directly with java. We previously used mvn exec:java but a bug in
+            # Mavens' JLine dependency caused us to get stderr on our stdout
+            # which makes tests fail. In theory this could be reverted back to
+            # use exec:java once Maven picks up a fixed JLine depdendency.
+            classpath_file = pathlib.Path(project_dir) / "classpath.txt"
+            build_proc = subprocess.run(
                 [
                     "mvn",
                     "--batch-mode",
+                    "--quiet",
                     "-f",
                     project_dir,
                     "compile",
-                    "exec:java",
-                    "-Dexec.mainClass=org.example.Example",
+                    "dependency:build-classpath",
+                    f"-Dmdep.outputFile={classpath_file}",
                 ],
-                stdin=subprocess.PIPE,
+                stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 text=True,
                 env=modified_env,
             )
 
-            out_java_arrow, err_java_arrow = test_proc.communicate()
+            if build_proc.returncode != 0:
+                # Let the build errors show up as the test's output
+                out_java_arrow = build_proc.stdout
+            else:
+                classpath = os.pathsep.join(
+                    [
+                        str(pathlib.Path(project_dir) / "target" / "classes"),
+                        classpath_file.read_text().strip(),
+                    ]
+                )
+
+                test_proc = subprocess.Popen(
+                    ["java", "-cp", classpath, "org.example.Example"],
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    text=True,
+                    env=modified_env,
+                )
+
+                out_java_arrow, err_java_arrow = test_proc.communicate()
 
         # continue with python logic code to do java output validation
         output = f"print('''{self.clean_output(out_java_arrow)}''')"
