@@ -186,6 +186,82 @@ Array of List
    [[1,2,3], [10,20,30], [100,200,300], [1000,2000,3000]]
 
 
+
+Array of Map
+------------
+
+A MapVector stores a collection of key-value pairs at each index. Each
+map entry contains a key and a value. In this example, the keys are
+BIGINT values and the values are INT values.
+
+.. testcode::
+
+   import org.apache.arrow.memory.BufferAllocator;
+   import org.apache.arrow.memory.RootAllocator;
+   import org.apache.arrow.vector.complex.MapVector;
+   import org.apache.arrow.vector.complex.impl.UnionMapReader;
+   import org.apache.arrow.vector.complex.impl.UnionMapWriter;
+
+   try (
+       BufferAllocator allocator = new RootAllocator();
+       MapVector mapVector = MapVector.empty("mapVector", allocator, false)
+   ) {
+       mapVector.allocateNew();
+
+       UnionMapWriter writer = mapVector.getWriter();
+
+       // Write the first map: {1 -> 100, 2 -> 200}
+       writer.setPosition(0);
+       writer.startMap();
+
+       writer.startEntry();
+       writer.key().bigInt().writeBigInt(1L);
+       writer.value().integer().writeInt(100);
+       writer.endEntry();
+
+       writer.startEntry();
+       writer.key().bigInt().writeBigInt(2L);
+       writer.value().integer().writeInt(200);
+       writer.endEntry();
+
+       writer.endMap();
+
+       // Write the second map: {3 -> 300}
+       writer.setPosition(1);
+       writer.startMap();
+
+       writer.startEntry();
+       writer.key().bigInt().writeBigInt(3L);
+       writer.value().integer().writeInt(300);
+       writer.endEntry();
+
+       writer.endMap();
+
+       writer.setValueCount(2);
+
+       // Read the maps
+       UnionMapReader reader = mapVector.getReader();
+
+       for (int i = 0; i < mapVector.getValueCount(); i++) {
+           reader.setPosition(i);
+
+           while (reader.next()) {
+               long key = reader.key().readLong();
+               int value = reader.value().readInteger();
+
+               System.out.println(key + " -> " + value);
+           }
+       }
+   }
+
+.. testoutput::
+
+   1 -> 100
+   2 -> 200
+   3 -> 300
+
+
+
 Slicing
 =======
 
