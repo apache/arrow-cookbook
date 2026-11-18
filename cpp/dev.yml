@@ -25,6 +25,7 @@ dependencies:
     - pyarrow
   - compilers
   - cmake
+  - libboost-devel
   - ninja
   - sphinx
   - gtest
